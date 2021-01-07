@@ -14,6 +14,7 @@
         android:id="@+id/headportrait"
         android:layout_width="80dp"
         android:layout_height="125dp"
+        android:layout_marginLeft="10dp"
         android:src="@drawable/testperson"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintLeft_toLeftOf="parent"
