@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="selectType">
+        <item>用户id</item>
+        <item>拼单id</item>
+        <item>类型</item>
+        <item>描述</item>
+        <item>开始时间</item>
+        <item>结束时间</item>
+        <item>最低价格</item>
+        <item>最高价格</item>
+        <item>距离</item>
+    </string-array>
+</resources>

@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/registerLogo"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintHeight_percent="0.25"
+        app:layout_constraintHorizontal_bias="0.497"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.094"
+        app:layout_constraintWidth_percent="0.5"
+        app:srcCompat="@drawable/register" />
+
+    <ImageView
+        android:id="@+id/telLogo"
+        android:layout_width="92dp"
+        android:layout_height="35dp"
+        android:layout_marginTop="68dp"
+        app:layout_constraintHorizontal_bias="0.112"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/registerLogo"
+        app:srcCompat="@drawable/login_tel2" />
+
+    <ImageView
+        android:id="@+id/userLogo"
+        android:layout_width="92dp"
+        android:layout_height="35dp"
+        android:layout_marginTop="30dp"
+        app:layout_constraintHorizontal_bias="0.112"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/telLogo"
+        app:srcCompat="@drawable/login_user4" />
+
+    <ImageView
+        android:id="@+id/passwordLogo"
+        android:layout_width="92dp"
+        android:layout_height="35dp"
+        android:layout_marginTop="30dp"
+        app:layout_constraintHorizontal_bias="0.112"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/userLogo"
+        app:srcCompat="@drawable/login_password" />
+
+    <ImageView
+        android:id="@+id/passwordReLogo"
+        android:layout_width="92dp"
+        android:layout_height="35dp"
+        android:layout_marginTop="30dp"
+        app:layout_constraintHorizontal_bias="0.112"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/passwordLogo"
+        app:srcCompat="@drawable/login_password" />
+
+    <EditText
+        android:id="@+id/phoneNumberInput"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="64dp"
+        android:ems="10"
+        android:hint="请输入手机号"
+        android:inputType="phone"
+        app:layout_constraintLeft_toRightOf="@id/telLogo"
+        app:layout_constraintTop_toBottomOf="@id/registerLogo" />
+
+    <EditText
+        android:id="@+id/nicknameInput"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:ems="10"
+        android:hint="请输入昵称"
+        android:inputType="textPersonName"
+        app:layout_constraintLeft_toRightOf="@id/userLogo"
+        app:layout_constraintTop_toBottomOf="@id/phoneNumberInput" />
+
+    <EditText
+        android:id="@+id/passwordInput"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:ems="10"
+        android:hint="请输入密码"
+        android:inputType="textPassword"
+        app:layout_constraintLeft_toRightOf="@id/passwordLogo"
+        app:layout_constraintTop_toBottomOf="@id/nicknameInput" />
+
+    <EditText
+        android:id="@+id/passwordReInput"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:ems="10"
+        android:hint="请再次输入密码"
+        android:inputType="textPassword"
+        app:layout_constraintLeft_toRightOf="@id/passwordReLogo"
+        app:layout_constraintTop_toBottomOf="@id/passwordInput" />
+
+    <Button
+        android:id="@+id/registerButton"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="100dp"
+        android:background="@drawable/button_circle_shape"
+        android:text="注 册"
+        android:textSize="18sp"
+        app:layout_constraintHeight_percent="0.065"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/passwordInput"
+        app:layout_constraintWidth_percent="0.5" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
