@@ -100,7 +100,7 @@ public class OneCaseActivity extends AppCompatActivity {
             @RequiresApi(api = Build.VERSION_CODES.KITKAT)
             @Override
             public void onClick(View v) {
-                String delOrderUrl = "http://123.57.12.189:8080/ShareBill/del/" + orderId;
+                String delOrderUrl = "http://123.57.12.189:8080/ShareBill/del/" + orderIdString;
                 int state = 0;
                 try {
                     state = delOrder(delOrderUrl);

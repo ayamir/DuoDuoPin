@@ -15,7 +15,41 @@ public class ContentBean {
     private String price;
     private String latitude;
     private String longitude;
+    private String distance;
     private String geohash;
+
+    public ContentBean(String billId, String userId, String nickname, String title, String type, String description, String address, String time, String curPeople, String maxPeople, String price) {
+        this.billId = billId;
+        this.userId = userId;
+        this.nickname = nickname;
+        this.title = title;
+        this.type = type;
+        this.description = description;
+        this.address = address;
+        this.time = time;
+        this.curPeople = curPeople;
+        this.maxPeople = maxPeople;
+        this.price = price;
+    }
+
+    public ContentBean(String billId, String userId, String nickname, String title, String type, String description, String address, String time, String curPeople, String maxPeople, String price, String latitude, String longitude, String geohash, String distance) {
+        this.billId = billId;
+        this.userId = userId;
+        this.nickname = nickname;
+        this.title = title;
+        this.type = type;
+        this.description = description;
+        this.address = address;
+        this.time = time;
+        this.curPeople = curPeople;
+        this.maxPeople = maxPeople;
+        this.price = price;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.geohash = geohash;
+        this.distance = distance;
+    }
+
 
     public String getBillId() {
         return billId;
@@ -117,6 +151,14 @@ public class ContentBean {
         return geohash;
     }
 
+    public String getDistance() {
+        return distance;
+    }
+
+    public void setDistance(String distance) {
+        this.distance = distance;
+    }
+
     public void setGeohash(String geohash) {
         this.geohash = geohash;
     }
@@ -128,5 +170,4 @@ public class ContentBean {
     public void setNickname(String nickname) {
         this.nickname = nickname;
     }
-
 }

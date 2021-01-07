@@ -70,6 +70,7 @@ public class HomeFragment extends Fragment {
             this.getView().setVisibility(menuVisible ? View.VISIBLE : View.INVISIBLE);
         }
     }
+
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
@@ -103,7 +104,7 @@ public class HomeFragment extends Fragment {
         selectLogo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getActivity(), "请从边缘向右滑动", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), "请从屏幕左边缘向右滑动", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -111,7 +112,7 @@ public class HomeFragment extends Fragment {
         select.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast.makeText(getActivity(), "请从边缘向右滑动", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(), "请从屏幕左边缘向右滑动", Toast.LENGTH_SHORT).show();
             }
         });
 
@@ -252,8 +253,8 @@ public class HomeFragment extends Fragment {
                         Intent toIntent = new Intent(getActivity(), OrderCaseActivity.class);
                         toIntent.putExtra("from", "info");
                         toIntent.putExtra("type", "all");
-                        toIntent.putExtra("timeStart", timeStartString.replace(' ', 'T') + ".0");
-                        toIntent.putExtra("timeEnd", timeEndString.replace(' ', 'T') + ".0");
+                        toIntent.putExtra("timeStart", timeStartString.replace(' ', 'T'));
+                        toIntent.putExtra("timeEnd", timeEndString.replace(' ', 'T'));
                         toIntent.putExtra("minPrice", minPriceString);
                         toIntent.putExtra("maxPrice", maxPriceString);
                         toIntent.putExtra("description", descriptionString);

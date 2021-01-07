@@ -50,6 +50,7 @@ import okhttp3.Response;
 
 import static com.example.duoduopin.activity.LoginActivity.JSON;
 import static com.example.duoduopin.activity.LoginActivity.idContent;
+import static com.example.duoduopin.activity.LoginActivity.nicknameContent;
 import static com.example.duoduopin.activity.LoginActivity.tokenContent;
 
 public class OrderFragment extends Fragment {
@@ -199,8 +200,10 @@ public class OrderFragment extends Fragment {
                         int state = postRequest(urlCreate, jsonObject.toString());
                         if (state == 1) {
                             Intent intent = new Intent(v.getContext(), OneCaseActivity.class);
-                            intent.putExtra("type", typeString);
                             intent.putExtra("orderId", orderId);
+                            intent.putExtra("userId", idContent);
+                            intent.putExtra("nickname", nicknameContent);
+                            intent.putExtra("type", typeString);
                             intent.putExtra("price", priceString);
                             intent.putExtra("address", addrString);
                             intent.putExtra("curPeople", curPeopleString);

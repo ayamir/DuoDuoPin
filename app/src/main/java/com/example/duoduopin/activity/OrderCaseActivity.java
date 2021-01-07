@@ -36,6 +36,7 @@ import okhttp3.Response;
 
 import static com.example.duoduopin.activity.LoginActivity.JSON;
 import static com.example.duoduopin.activity.LoginActivity.idContent;
+import static com.example.duoduopin.activity.LoginActivity.nicknameContent;
 import static com.example.duoduopin.activity.LoginActivity.tokenContent;
 
 public class OrderCaseActivity extends AppCompatActivity {
