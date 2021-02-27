@@ -28,11 +28,12 @@ import okhttp3.Response;
 
 import static com.example.duoduopin.activity.LoginActivity.tokenContent;
 import static com.example.duoduopin.activity.LoginActivity.idContent;
+import static com.example.duoduopin.tool.Constants.delOrderUrl;
+import static com.example.duoduopin.tool.Constants.getDelOrderUrl;
 
 public class OneCaseActivity extends AppCompatActivity {
 
     private String userIdString, nicknameString, orderIdString, typeString, priceString, addressString, curPeopleString, maxPeopleString, timeString, descriptionString, titleString;
-    private EditText orderId;
 
     private final OkHttpClient client = new OkHttpClient().newBuilder()
             .readTimeout(60, TimeUnit.SECONDS)
@@ -59,7 +60,7 @@ public class OneCaseActivity extends AppCompatActivity {
                 addressString = fromIntent.getStringExtra("address");
                 curPeopleString = fromIntent.getStringExtra("curPeople");
                 maxPeopleString = fromIntent.getStringExtra("maxPeople");
-                timeString = fromIntent.getStringExtra("time");
+                timeString = fromIntent.getStringExtra("time").replace('T', ' ');
                 descriptionString = fromIntent.getStringExtra("description");
                 titleString = fromIntent.getStringExtra("title");
             }
@@ -100,10 +101,9 @@ public class OneCaseActivity extends AppCompatActivity {
             @RequiresApi(api = Build.VERSION_CODES.KITKAT)
             @Override
             public void onClick(View v) {
-                String delOrderUrl = "http://123.57.12.189:8080/ShareBill/del/" + orderIdString;
                 int state = 0;
                 try {
-                    state = delOrder(delOrderUrl);
+                    state = delOrder(getDelOrderUrl(orderIdString));
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -149,7 +149,7 @@ public class OneCaseActivity extends AppCompatActivity {
     private void initValue() {
         EditText nickname = findViewById(R.id.nickname);
         EditText userId = findViewById(R.id.userId);
-        orderId = findViewById(R.id.orderId);
+        EditText orderId = findViewById(R.id.orderId);
         EditText type = findViewById(R.id.type);
         EditText price = findViewById(R.id.price);
         EditText address = findViewById(R.id.address);

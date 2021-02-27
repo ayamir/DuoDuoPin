@@ -52,6 +52,7 @@ import static com.example.duoduopin.activity.LoginActivity.JSON;
 import static com.example.duoduopin.activity.LoginActivity.idContent;
 import static com.example.duoduopin.activity.LoginActivity.nicknameContent;
 import static com.example.duoduopin.activity.LoginActivity.tokenContent;
+import static com.example.duoduopin.tool.Constants.createOrderUrl;
 
 public class OrderFragment extends Fragment {
     private String typeString;
@@ -195,9 +196,8 @@ public class OrderFragment extends Fragment {
                         e.printStackTrace();
                     }
                     Log.d("JSONBuild", jsonObject.toString());
-                    String urlCreate = "http://123.57.12.189:8080/ShareBill/add";
                     try {
-                        int state = postRequest(urlCreate, jsonObject.toString());
+                        int state = putRequest(jsonObject.toString());
                         if (state == 1) {
                             Intent intent = new Intent(v.getContext(), OneCaseActivity.class);
                             intent.putExtra("orderId", orderId);
@@ -222,12 +222,16 @@ public class OrderFragment extends Fragment {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    private int postRequest(String url, String jsonBody) throws IOException, JSONException {
+    private int putRequest(String jsonBody) throws IOException, JSONException {
+        final String TAG = "createOrder";
+        final String contentFromServer = "content";
+        final String orderIdFromServer = "id";
         int ret = 0;
+
         RequestBody body = RequestBody.create(jsonBody, JSON);
 
         final Request request = new Request.Builder()
-                .url(url)
+                .url(createOrderUrl)
                 .header("token", idContent + "_" + tokenContent)
                 .put(body)
                 .build();
@@ -235,16 +239,15 @@ public class OrderFragment extends Fragment {
         Call call = client.newCall(request);
         Response response = call.execute();
 
-        String TAG = "createOrder";
         if (response.code() == 200) {
             Toast.makeText(getActivity(), "创建成功", Toast.LENGTH_SHORT).show();
             JSONObject responseJson = new JSONObject(Objects.requireNonNull(response.body()).string());
-            JSONObject contentJson = new JSONObject(responseJson.getString("content"));
-            orderId = contentJson.optString("id");
+            JSONObject contentJson = new JSONObject(responseJson.getString(contentFromServer));
+            orderId = contentJson.optString(orderIdFromServer);
             ret = 1;
         } else {
-            Log.d(TAG, "postRequest: " + Objects.requireNonNull(response.body()).string());
-            Log.d(TAG, "postRequest: " + response.toString());
+            Log.d(TAG, Objects.requireNonNull(response.body()).string());
+            Log.d(TAG, response.toString());
         }
         return ret;
     }

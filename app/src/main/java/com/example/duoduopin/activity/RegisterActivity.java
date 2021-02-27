@@ -28,6 +28,7 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 import static com.example.duoduopin.activity.LoginActivity.JSON;
+import static com.example.duoduopin.tool.Constants.registerUrl;
 
 public class RegisterActivity extends AppCompatActivity {
 
@@ -82,15 +83,13 @@ public class RegisterActivity extends AppCompatActivity {
                     } catch (JSONException e) {
                         e.printStackTrace();
                     }
-                    //Log.d("JSON Build Success", jwt.toString());
 
                     try {
-                        String urlSignUp = "http://123.57.12.189:8080/User/register";
                         int SDK_INT = Build.VERSION.SDK_INT;
                         if (SDK_INT > 8) {
                             StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
                             StrictMode.setThreadPolicy(policy);
-                            int state = putRequest(urlSignUp, jwt.toString());
+                            int state = putRequest(jwt.toString());
                             if (state == 1) {
                                 Intent intent = new Intent(v.getContext(), LoginActivity.class);
                                 startActivity(intent);
@@ -106,11 +105,11 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    public int putRequest(String url, String jsonBody) throws IOException {
+    public int putRequest(String jsonBody) throws IOException {
         int ret = 0;
         RequestBody body = RequestBody.create(jsonBody, JSON);
         Request request = new Request.Builder()
-                .url(url)
+                .url(registerUrl)
                 .put(body)
                 .build();
 

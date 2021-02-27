@@ -33,10 +33,11 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+import static com.example.duoduopin.tool.Constants.loginUrl;
+
 public class LoginActivity extends AppCompatActivity {
 
     public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
-
 
     private SharedPreferences pref;
     public static String idContent;
@@ -104,13 +105,12 @@ public class LoginActivity extends AppCompatActivity {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                String urlLogin = "http://123.57.12.189:8080/User/login";
                 try {
                     int SDK_INT = Build.VERSION.SDK_INT;
                     if (SDK_INT > 8) {
                         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
                         StrictMode.setThreadPolicy(policy);
-                        int res = postRequest(urlLogin, jwt.toString());
+                        int res = postRequest(jwt.toString());
                         if (res == 1) {
                             Intent intent = new Intent(v.getContext(), MainActivity.class);
                             startActivity(intent);
@@ -126,11 +126,18 @@ public class LoginActivity extends AppCompatActivity {
 
     @SuppressLint("CommitPrefEdits")
     @RequiresApi(api = Build.VERSION_CODES.R)
-    private int postRequest(String url, String jsonBody) throws IOException, JSONException {
+    private int postRequest(String jsonBody) throws IOException, JSONException {
+
+        final String TAG = "LoginActivity";
+        final String idFromServer = "userId";
+        final String tokenFromServer = "token";
+        final String nicknameFromServer = "nickname";
+
         int ret = 0;
+
         RequestBody body = RequestBody.create(jsonBody, JSON);
         Request request = new Request.Builder()
-                .url(url)
+                .url(loginUrl)
                 .post(body)
                 .build();
 
@@ -139,9 +146,10 @@ public class LoginActivity extends AppCompatActivity {
         if (response.code() == 200) {
             JSONObject responseJson = new JSONObject(Objects.requireNonNull(response.body()).string());
             JSONObject contentJson = new JSONObject(responseJson.getString("content"));
-            idContent = contentJson.optString("id");
-            tokenContent = contentJson.optString("token");
-            nicknameContent = contentJson.optString("nickname");
+            // Get return value
+            idContent = contentJson.optString(idFromServer);
+            tokenContent = contentJson.optString(tokenFromServer);
+            nicknameContent = contentJson.optString(nicknameFromServer);
             nameContent = username;
             SharedPreferences.Editor editor = pref.edit();
             editor.putString("id", idContent);
@@ -150,7 +158,7 @@ public class LoginActivity extends AppCompatActivity {
             ret = 1;
         } else {
             response = response.newBuilder().removeHeader("Cache-Control").build();
-            Log.d("Login", response.toString());
+            Log.d(TAG, response.toString());
         }
         return ret;
     }

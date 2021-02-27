@@ -33,6 +33,7 @@ import static com.example.duoduopin.activity.LoginActivity.idContent;
 import static com.example.duoduopin.activity.LoginActivity.nicknameContent;
 import static com.example.duoduopin.activity.LoginActivity.tokenContent;
 import static com.example.duoduopin.activity.MainActivity.client;
+import static com.example.duoduopin.tool.Constants.logoutUrl;
 
 public class ProfileFragment extends Fragment {
     @Nullable
@@ -63,8 +64,7 @@ public class ProfileFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 try {
-                    String urlLogout = "http://123.57.12.189:8080/User/logout";
-                    delRequest(urlLogout, idContent, tokenContent);
+                    delRequest();
                     Intent intent = new Intent(v.getContext(), LoginActivity.class);
                     intent.putExtra("logout", "true");
                     startActivity(intent);
@@ -126,11 +126,12 @@ public class ProfileFragment extends Fragment {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.R)
-    private void delRequest(String url, String id, String token) throws IOException {
+    private void delRequest() throws IOException {
+        final String TAG = "logout";
 
         final Request request = new Request.Builder()
-                .url(url)
-                .header("token", id + "_" + token)
+                .url(logoutUrl)
+                .header("token", idContent + "_" + tokenContent)
                 .delete()
                 .build();
 
@@ -140,10 +141,8 @@ public class ProfileFragment extends Fragment {
         if (response.code() == 200) {
             Toast.makeText(getActivity(), "登出成功，请重新登录", Toast.LENGTH_SHORT).show();
         } else {
-            String TAG = "logout";
-            Log.d(TAG,"delRequest: " + Objects.requireNonNull(response.body()).string());
-            Log.d(TAG, "delRequest: " + response.toString());
-            Log.d(TAG, "delRequest: " + id + "_" + token);
+            Log.d(TAG, Objects.requireNonNull(response.body()).string());
+            Log.d(TAG,  response.toString());
         }
     }
 }

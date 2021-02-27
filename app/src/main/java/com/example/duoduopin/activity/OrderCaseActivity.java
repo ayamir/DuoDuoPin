@@ -36,8 +36,11 @@ import okhttp3.Response;
 
 import static com.example.duoduopin.activity.LoginActivity.JSON;
 import static com.example.duoduopin.activity.LoginActivity.idContent;
-import static com.example.duoduopin.activity.LoginActivity.nicknameContent;
 import static com.example.duoduopin.activity.LoginActivity.tokenContent;
+import static com.example.duoduopin.tool.Constants.getQueryUrlByOrderId;
+import static com.example.duoduopin.tool.Constants.getQueryUrlByUserId;
+import static com.example.duoduopin.tool.Constants.queryByInfoUrl;
+import static com.example.duoduopin.tool.Constants.queryUrl;
 
 public class OrderCaseActivity extends AppCompatActivity {
     private String type;
@@ -67,14 +70,12 @@ public class OrderCaseActivity extends AppCompatActivity {
         assert fromIntent != null;
         String from = fromIntent.getStringExtra("from");
         type = fromIntent.getStringExtra("type");
-        boolean isInfo = false;
 
-        String queryUrl = "http://123.57.12.189:8080/ShareBill/";
         switch (from) {
             case "userId":
                 String userId = fromIntent.getStringExtra("userId");
                 try {
-                    int state = postRequest(queryUrl + "user/" + userId, isInfo);
+                    int state = postRequest(getQueryUrlByUserId(userId), false);
                     if (state == 1) {
                         showItems();
                     }
@@ -87,7 +88,7 @@ public class OrderCaseActivity extends AppCompatActivity {
             case "orderId":
                 String orderId = fromIntent.getStringExtra("orderId");
                 try {
-                    int state = postRequest(queryUrl + orderId, isInfo);
+                    int state = postRequest(getQueryUrlByOrderId(orderId), false);
                     if (state == 1) {
                         showItems();
                     }
@@ -98,7 +99,6 @@ public class OrderCaseActivity extends AppCompatActivity {
                 }
                 break;
             case "info":
-                isInfo = true;
                 timeStart = fromIntent.getStringExtra("timeStart");
                 if (timeStart.isEmpty())
                     timeStart = null;
@@ -119,7 +119,7 @@ public class OrderCaseActivity extends AppCompatActivity {
                 longitude = fromIntent.getStringExtra("longitude");
                 latitude = fromIntent.getStringExtra("latitude");
                 try {
-                    int state = postRequest(queryUrl + "info", isInfo);
+                    int state = postRequest(queryByInfoUrl, true);
                     if (state == 1) {
                         showItems();
                     }
@@ -190,9 +190,10 @@ public class OrderCaseActivity extends AppCompatActivity {
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private int postRequest(String url, boolean isInfo) throws IOException, JSONException {
-        int ret = 0;
-
+        final String TAG = "queryOrderCase";
         Request request;
+
+        int ret = 0;
 
         if (isInfo) {
             JSONObject jsonObject = new JSONObject();
@@ -227,12 +228,11 @@ public class OrderCaseActivity extends AppCompatActivity {
         Call call = client.newCall(request);
         Response response = call.execute();
 
-        String TAG = "queryOrderCase";
         if (response.code() == 200) {
             JSONObject responseJson = new JSONObject(Objects.requireNonNull(response.body()).string());
             orderContent = new Gson().fromJson(responseJson.getString("content"), new TypeToken<List<ContentBean>>() {
             }.getType());
-            Log.d(TAG, "postRequest: " + orderContent.toString());
+            Log.d(TAG, orderContent.toString());
             if (orderContent != null) {
                 ret = 1;
             }
@@ -240,7 +240,6 @@ public class OrderCaseActivity extends AppCompatActivity {
             Log.d(TAG, Objects.requireNonNull(response.body()).string());
             Log.d(TAG, response.toString());
         }
-
         return ret;
     }
 }
