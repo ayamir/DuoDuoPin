@@ -39,6 +39,7 @@ import static com.example.duoduopin.activity.LoginActivity.idContent;
 import static com.example.duoduopin.activity.LoginActivity.tokenContent;
 import static com.example.duoduopin.tool.Constants.getQueryUrlByOrderId;
 import static com.example.duoduopin.tool.Constants.getQueryUrlByUserId;
+import static com.example.duoduopin.tool.Constants.getRealTimeString;
 import static com.example.duoduopin.tool.Constants.queryByInfoUrl;
 
 public class OrderCaseActivity extends AppCompatActivity {
@@ -148,7 +149,7 @@ public class OrderCaseActivity extends AppCompatActivity {
         dMap.put("address", content.getAddress());
         dMap.put("curPeople", content.getCurPeople());
         dMap.put("maxPeople", content.getMaxPeople());
-        dMap.put("time", content.getTime());
+        dMap.put("time", getRealTimeString(content.getTime()));
         dMap.put("description", content.getDescription());
         dMap.put("title", content.getTitle());
         if (!detailCases.contains(dMap)) {

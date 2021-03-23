@@ -46,6 +46,7 @@ import okhttp3.Response;
 import static com.example.duoduopin.activity.LoginActivity.idContent;
 import static com.example.duoduopin.activity.LoginActivity.tokenContent;
 import static com.example.duoduopin.tool.Constants.checkSysMsgUrl;
+import static com.example.duoduopin.tool.Constants.getRealTimeString;
 
 public class SysMsgCaseActivity extends AppCompatActivity {
     private SwipeRefreshLayout swipeRefreshLayout;
@@ -144,6 +145,7 @@ public class SysMsgCaseActivity extends AppCompatActivity {
                 ContentValues values = new ContentValues();
                 values.put("messageId", dCases.get((int) id).get("messageId"));
                 values.put("senderId", dCases.get((int) id).get("senderId"));
+                values.put("receiverId", dCases.get((int) id).get("receiverId"));
                 values.put("billId", dCases.get((int) id).get("billId"));
                 values.put("type", dCases.get((int) id).get("type"));
                 values.put("time", dCases.get((int) id).get("time"));
@@ -174,23 +176,25 @@ public class SysMsgCaseActivity extends AppCompatActivity {
         Cursor cursor = db.query("SysMsg", null, null, null, null, null, null, null);
         if (cursor.moveToFirst()) {
             do {
-                HashMap<String, String> mapFromDB = new HashMap<>();
-                mapFromDB.put("title", "系统消息");
-                mapFromDB.put("content", cursor.getString(cursor.getColumnIndex("content")));
-                mapFromDB.put("time", cursor.getString(cursor.getColumnIndex("time")));
-                if (!sysMsgCasesFromDB.contains(mapFromDB)) {
-                    sysMsgCasesFromDB.add(mapFromDB);
-                }
+                if (cursor.getString(cursor.getColumnIndex("receiverId")).equals(idContent)) {
+                    HashMap<String, String> mapFromDB = new HashMap<>();
+                    mapFromDB.put("title", "系统消息");
+                    mapFromDB.put("content", cursor.getString(cursor.getColumnIndex("content")));
+                    mapFromDB.put("time", cursor.getString(cursor.getColumnIndex("time")));
+                    if (!sysMsgCasesFromDB.contains(mapFromDB)) {
+                        sysMsgCasesFromDB.add(mapFromDB);
+                    }
 
-                HashMap<String, String> dmapFromDB = new HashMap<>();
-                dmapFromDB.put("messageId", cursor.getString(cursor.getColumnIndex("messageId")));
-                dmapFromDB.put("senderId", cursor.getString(cursor.getColumnIndex("senderId")));
-                dmapFromDB.put("billId", cursor.getString(cursor.getColumnIndex("billId")));
-                dmapFromDB.put("type", cursor.getString(cursor.getColumnIndex("type")));
-                dmapFromDB.put("time", cursor.getString(cursor.getColumnIndex("time")));
-                dmapFromDB.put("content", cursor.getString(cursor.getColumnIndex("content")));
-                if (!sysMsgDetailedCasesFromDB.contains(dmapFromDB)) {
-                    sysMsgDetailedCasesFromDB.add(dmapFromDB);
+                    HashMap<String, String> dmapFromDB = new HashMap<>();
+                    dmapFromDB.put("messageId", cursor.getString(cursor.getColumnIndex("messageId")));
+                    dmapFromDB.put("senderId", cursor.getString(cursor.getColumnIndex("senderId")));
+                    dmapFromDB.put("billId", cursor.getString(cursor.getColumnIndex("billId")));
+                    dmapFromDB.put("type", cursor.getString(cursor.getColumnIndex("type")));
+                    dmapFromDB.put("time", cursor.getString(cursor.getColumnIndex("time")));
+                    dmapFromDB.put("content", cursor.getString(cursor.getColumnIndex("content")));
+                    if (!sysMsgDetailedCasesFromDB.contains(dmapFromDB)) {
+                        sysMsgDetailedCasesFromDB.add(dmapFromDB);
+                    }
                 }
             } while (cursor.moveToNext());
         }
@@ -201,8 +205,9 @@ public class SysMsgCaseActivity extends AppCompatActivity {
         for (MessageContentBean content : messageContent) {
             HashMap<String, String> map = new HashMap<>();
             map.put("title", "系统消息");
-            map.put("content", content.getContent());
-            map.put("time", content.getTime().replace('T', ' '));
+            String contentString = content.getContent();
+            map.put("content", contentString);
+            map.put("time", getRealTimeString(content.getTime().replace('T', ' ')));
             if (!sysMsgCasesFromServer.contains(map)) {
                 sysMsgCasesFromServer.add(map);
             }
@@ -210,10 +215,11 @@ public class SysMsgCaseActivity extends AppCompatActivity {
             HashMap<String, String> dmap = new HashMap<>();
             dmap.put("messageId", content.getMessageId());
             dmap.put("senderId", content.getSenderId());
+            dmap.put("receiverId", content.getReceiverId());
             dmap.put("billId", content.getBillId());
             dmap.put("type", content.getType());
-            dmap.put("time", content.getTime().replace('T', ' '));
-            dmap.put("content", content.getContent());
+            dmap.put("time", getRealTimeString(content.getTime().replace('T', ' ')));
+            dmap.put("content", contentString);
             if (!sysMsgDetailedCasesFromServer.contains(dmap)) {
                 sysMsgDetailedCasesFromServer.add(dmap);
             }

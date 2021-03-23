@@ -41,7 +41,7 @@ public class Constants {
     }
 
     public static String getDelOrderUrl(String orderId) {
-         return delOrderUrl + orderId;
+        return delOrderUrl + orderId;
     }
 
     public static String getJoinUrl(String orderId) {
@@ -81,6 +81,10 @@ public class Constants {
     }
 
     public static URI getSysMsgUri(String userId) throws URISyntaxException {
-        return new URI(sysMessageUrl +userId);
+        return new URI(sysMessageUrl + userId);
+    }
+
+    public static String getRealTimeString(String timeString) {
+        return timeString.replace('T', ' ').substring(0, timeString.length() - 9);
     }
 }

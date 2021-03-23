@@ -36,6 +36,7 @@ import static com.example.duoduopin.activity.LoginActivity.tokenContent;
 import static com.example.duoduopin.tool.Constants.getAllowUrl;
 import static com.example.duoduopin.tool.Constants.getQueryUrlByOrderId;
 import static com.example.duoduopin.tool.Constants.getQueryUserUrl;
+import static com.example.duoduopin.tool.Constants.getRealTimeString;
 import static com.example.duoduopin.tool.Constants.getRejectUrl;
 
 public class OneSysMsgCaseActivity extends AppCompatActivity {
@@ -139,7 +140,7 @@ public class OneSysMsgCaseActivity extends AppCompatActivity {
                         toIntent.putExtra("address", orderContentJSON.getString("address"));
                         toIntent.putExtra("curPeople", orderContentJSON.getString("curPeople"));
                         toIntent.putExtra("maxPeople", orderContentJSON.getString("maxPeople"));
-                        toIntent.putExtra("time", orderContentJSON.getString("time"));
+                        toIntent.putExtra("time", getRealTimeString(orderContentJSON.getString("time")));
                         toIntent.putExtra("description", orderContentJSON.getString("description"));
                         toIntent.putExtra("title", orderContentJSON.getString("title"));
                         startActivity(toIntent);
