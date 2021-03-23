@@ -74,7 +74,7 @@ public class OrderCaseActivity extends AppCompatActivity {
             case "userId":
                 String userId = fromIntent.getStringExtra("userId");
                 try {
-                    int state = postRequest(getQueryUrlByUserId(userId), false);
+                    int state = postQueryOrder(getQueryUrlByUserId(userId), false);
                     if (state == 1) {
                         showItems();
                     }
@@ -87,7 +87,7 @@ public class OrderCaseActivity extends AppCompatActivity {
             case "orderId":
                 String orderId = fromIntent.getStringExtra("orderId");
                 try {
-                    int state = postRequest(getQueryUrlByOrderId(orderId), false);
+                    int state = postQueryOrder(getQueryUrlByOrderId(orderId), false);
                     if (state == 1) {
                         showItems();
                     }
@@ -118,7 +118,7 @@ public class OrderCaseActivity extends AppCompatActivity {
                 longitude = fromIntent.getStringExtra("longitude");
                 latitude = fromIntent.getStringExtra("latitude");
                 try {
-                    int state = postRequest(queryByInfoUrl, true);
+                    int state = postQueryOrder(queryByInfoUrl, true);
                     if (state == 1) {
                         showItems();
                     }
@@ -135,13 +135,15 @@ public class OrderCaseActivity extends AppCompatActivity {
         map.put("title", content.getTitle());
         map.put("description", content.getDescription());
         map.put("curNumContent", content.getCurPeople());
-        cases.add(map);
+        if (!cases.contains(map)) {
+            cases.add(map);
+        }
 
         HashMap<String, String> dMap = new HashMap<>();
         dMap.put("userId", content.getUserId());
         dMap.put("nickname", content.getNickname());
         dMap.put("orderId", content.getBillId());
-        dMap.put("type", content.getOrderType());
+        dMap.put("type", content.getType());
         dMap.put("price", content.getPrice());
         dMap.put("address", content.getAddress());
         dMap.put("curPeople", content.getCurPeople());
@@ -149,7 +151,9 @@ public class OrderCaseActivity extends AppCompatActivity {
         dMap.put("time", content.getTime());
         dMap.put("description", content.getDescription());
         dMap.put("title", content.getTitle());
-        detailCases.add(dMap);
+        if (!detailCases.contains(dMap)) {
+            detailCases.add(dMap);
+        }
     }
 
     private void showItems() {
@@ -157,7 +161,7 @@ public class OrderCaseActivity extends AppCompatActivity {
             if (type.equals("all")) {
                 fillCases(content);
             } else {
-                if (content.getOrderType().equals(type)) {
+                if (content.getType().equals(type)) {
                     fillCases(content);
                 }
             }
@@ -188,7 +192,7 @@ public class OrderCaseActivity extends AppCompatActivity {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    private int postRequest(String url, boolean isInfo) throws IOException, JSONException {
+    private int postQueryOrder(String url, boolean isInfo) throws IOException, JSONException {
         final String TAG = "queryOrderCase";
         Request request;
 
@@ -231,7 +235,6 @@ public class OrderCaseActivity extends AppCompatActivity {
             JSONObject responseJson = new JSONObject(Objects.requireNonNull(response.body()).string());
             orderContent = new Gson().fromJson(responseJson.getString("content"), new TypeToken<List<OrderContentBean>>() {
             }.getType());
-            Log.d(TAG, orderContent.toString());
             if (orderContent != null) {
                 ret = 1;
             }

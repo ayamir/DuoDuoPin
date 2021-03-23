@@ -116,8 +116,10 @@ public class OrderFragment extends Fragment {
                 String selected = parent.getItemAtPosition(position).toString();
                 if (selected.equals("拼车")) {
                     typeString = "CAR";
+                    Toast.makeText(view.getContext(), typeString, Toast.LENGTH_SHORT).show();
                 } else if (selected.equals("拼单")) {
                     typeString = "BILL";
+                    Toast.makeText(view.getContext(), typeString, Toast.LENGTH_SHORT).show();
                 }
                 Log.d("select order type", "onItemSelected: typeString = " + typeString);
             }

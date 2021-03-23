@@ -1,16 +1,11 @@
 package com.example.duoduopin.bean;
 
 public class OrderContentBean {
-    public enum OrderType {
-        BILL,
-        CAR
-    }
-
     private String billId;
     private String userId;
     private String nickname;
     private String title;
-    private OrderType orderType;
+    private String type;
     private String description;
     private String address;
     private String time;
@@ -22,12 +17,12 @@ public class OrderContentBean {
     private String distance;
     private String geohash;
 
-    public OrderContentBean(String billId, String userId, String nickname, OrderType orderType, String type, String description, String address, String time, String curPeople, String maxPeople, String price) {
+    public OrderContentBean(String billId, String userId, String nickname, String orderType, String type, String description, String address, String time, String curPeople, String maxPeople, String price) {
         this.billId = billId;
         this.userId = userId;
         this.nickname = nickname;
         this.title = title;
-        this.orderType = orderType;
+        this.type = orderType;
         this.description = description;
         this.address = address;
         this.time = time;
@@ -36,12 +31,12 @@ public class OrderContentBean {
         this.price = price;
     }
 
-    public OrderContentBean(String billId, String userId, String nickname, String title, OrderType orderType, String description, String address, String time, String curPeople, String maxPeople, String price, String latitude, String longitude, String geohash, String distance) {
+    public OrderContentBean(String billId, String userId, String nickname, String title, String type, String description, String address, String time, String curPeople, String maxPeople, String price, String latitude, String longitude, String geohash, String distance) {
         this.billId = billId;
         this.userId = userId;
         this.nickname = nickname;
         this.title = title;
-        this.orderType = orderType;
+        this.type = type;
         this.description = description;
         this.address = address;
         this.time = time;
@@ -79,23 +74,12 @@ public class OrderContentBean {
         this.title = title;
     }
 
-    public String getOrderType() {
-        if (orderType == OrderType.BILL) {
-            return "BILL";
-        } else {
-            return "CAR";
-        }
+    public String getType() {
+        return type;
     }
 
-    public void setType(String orderTypeStr) {
-        switch (orderTypeStr) {
-            case "BILL":
-                this.orderType = OrderType.BILL;
-                break;
-            case "CAR":
-                this.orderType = OrderType.CAR;
-                break;
-        }
+    public void setType(String type) {
+        this.type = type;
     }
 
     public String getDescription() {
