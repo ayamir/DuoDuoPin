@@ -65,9 +65,7 @@ public class ProfileFragment extends Fragment {
             public void onClick(View v) {
                 try {
                     delRequest();
-                    Intent intent = new Intent(v.getContext(), LoginActivity.class);
-                    intent.putExtra("logout", "true");
-                    startActivity(intent);
+                    getActivity().finish();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -139,7 +137,7 @@ public class ProfileFragment extends Fragment {
         Response response = call.execute();
 
         if (response.code() == 200) {
-            Toast.makeText(getActivity(), "登出成功，请重新登录", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), "登出成功", Toast.LENGTH_SHORT).show();
         } else {
             Log.d(TAG, Objects.requireNonNull(response.body()).string());
             Log.d(TAG,  response.toString());
