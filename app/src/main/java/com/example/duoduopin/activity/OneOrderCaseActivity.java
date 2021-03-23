@@ -133,7 +133,7 @@ public class OneOrderCaseActivity extends AppCompatActivity {
                     } else if (state == 2) {
                         Toast.makeText(v.getContext(), "您已发送过请求，无需重复发送！", Toast.LENGTH_SHORT).show();
                     } else if (state == 3) {
-                        Toast.makeText(v.getContext(), "遇到未知错误，请稍后再试", Toast.LENGTH_SHORT).show();
+                        Toast.makeText(v.getContext(), "当前小组人数已满！", Toast.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(v.getContext(), "请检查网络状况稍后再试", Toast.LENGTH_SHORT).show();
                     }

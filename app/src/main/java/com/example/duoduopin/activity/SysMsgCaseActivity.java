@@ -1,16 +1,19 @@
 package com.example.duoduopin.activity;
 
+import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.Switch;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -20,7 +23,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.duoduopin.R;
 import com.example.duoduopin.bean.MessageContentBean;
-import com.example.duoduopin.tool.MyDBHelperr;
+import com.example.duoduopin.tool.MyDBHelper;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -47,12 +50,18 @@ import static com.example.duoduopin.tool.Constants.checkSysMsgUrl;
 public class SysMsgCaseActivity extends AppCompatActivity {
     private SwipeRefreshLayout swipeRefreshLayout;
     private ListView listView;
+    @SuppressLint("UseSwitchCompatOrMaterialCode")
+    private Switch switchMsg;
+    private boolean isFromServer = true;
 
     private List<MessageContentBean> messageContent;
-    private final ArrayList<HashMap<String, String>> sysMsgCases = new ArrayList<>();
-    private final ArrayList<HashMap<String, String>> sysMsgDetailedCases = new ArrayList<>();
+    private final ArrayList<HashMap<String, String>> sysMsgCasesFromServer = new ArrayList<>();
+    private final ArrayList<HashMap<String, String>> sysMsgDetailedCasesFromServer = new ArrayList<>();
 
-    private final MyDBHelperr myDBHelper = new MyDBHelperr(this, "DuoDuoPin.db", null, 1);
+    private final ArrayList<HashMap<String, String>> sysMsgCasesFromDB = new ArrayList<>();
+    private final ArrayList<HashMap<String, String>> sysMsgDetailedCasesFromDB = new ArrayList<>();
+
+    private final MyDBHelper myDBHelper = new MyDBHelper(this, "DuoDuoPin.db", null, 1);
     private final Context mContext = this;
 
     private final OkHttpClient client = new OkHttpClient().newBuilder()
@@ -76,7 +85,13 @@ public class SysMsgCaseActivity extends AppCompatActivity {
                 try {
                     int state = postCheckSysMessage();
                     if (state == 1) {
-                        showItems();
+                        if (isFromServer) {
+                            readFromServer();
+                            showItems(sysMsgCasesFromServer, sysMsgDetailedCasesFromServer);
+                        } else {
+                            readFromDB();
+                            showItems(sysMsgCasesFromDB, sysMsgDetailedCasesFromDB);
+                        }
                         Toast.makeText(mContext, "加载系统消息成功！", Toast.LENGTH_SHORT).show();
                     } else {
                         Toast.makeText(mContext, "加载系统消息失败！", Toast.LENGTH_SHORT).show();
@@ -91,21 +106,34 @@ public class SysMsgCaseActivity extends AppCompatActivity {
         try {
             int state = postCheckSysMessage();
             if (state == 1) {
-                showItems();
+                showItems(sysMsgCasesFromServer, sysMsgDetailedCasesFromServer);
             } else {
                 Toast.makeText(mContext, "遇到未知错误，请稍后再试！", Toast.LENGTH_SHORT).show();
             }
         } catch (IOException | JSONException e) {
             e.printStackTrace();
         }
+
+        switchMsg = findViewById(R.id.switch_msg);
+        switchMsg.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (buttonView.isChecked()) {
+                    isFromServer = false;
+                    readFromDB();
+                    showItems(sysMsgCasesFromDB, sysMsgDetailedCasesFromDB);
+                } else {
+                    isFromServer = true;
+                    readFromServer();
+                    showItems(sysMsgCasesFromServer, sysMsgDetailedCasesFromServer);
+                }
+            }
+        });
     }
 
-    private void showItems() {
-        for (MessageContentBean content : messageContent) {
-            fillCases(content);
-        }
+    private void showItems(ArrayList<HashMap<String, String>> cases, final ArrayList<HashMap<String, String>> dCases) {
 
-        SimpleAdapter adapter = new SimpleAdapter(this, sysMsgCases, R.layout.system_message_tip,
+        SimpleAdapter adapter = new SimpleAdapter(this, cases, R.layout.system_message_tip,
                 new String[]{"title", "content", "time"},
                 new int[]{R.id.sys_msg_title, R.id.sys_msg_content, R.id.sys_msg_time});
         listView.setAdapter(adapter);
@@ -114,41 +142,75 @@ public class SysMsgCaseActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 SQLiteDatabase db = myDBHelper.getWritableDatabase();
                 ContentValues values = new ContentValues();
-                values.put("messageId", sysMsgDetailedCases.get((int) id).get("messageId"));
-                values.put("senderId", sysMsgDetailedCases.get((int) id).get("senderId"));
-                values.put("billId", sysMsgDetailedCases.get((int) id).get("billId"));
-                values.put("messageType", sysMsgDetailedCases.get((int) id).get("messageType"));
-                values.put("time", sysMsgDetailedCases.get((int) id).get("time"));
-                values.put("content", sysMsgDetailedCases.get((int) id).get("content"));
+                values.put("messageId", dCases.get((int) id).get("messageId"));
+                values.put("senderId", dCases.get((int) id).get("senderId"));
+                values.put("billId", dCases.get((int) id).get("billId"));
+                values.put("type", dCases.get((int) id).get("type"));
+                values.put("time", dCases.get((int) id).get("time"));
+                values.put("content", dCases.get((int) id).get("content"));
                 db.insert("SysMsg", null, values);
 
                 Intent toIntent = new Intent(view.getContext(), OneSysMsgCaseActivity.class);
-                toIntent.putExtra("messageId", sysMsgDetailedCases.get((int) id).get("messageId"));
-                toIntent.putExtra("senderId", sysMsgDetailedCases.get((int) id).get("senderId"));
-                toIntent.putExtra("billId", sysMsgDetailedCases.get((int) id).get("billId"));
-                toIntent.putExtra("messageType", sysMsgDetailedCases.get((int) id).get("type"));
-                toIntent.putExtra("time", sysMsgDetailedCases.get((int) id).get("time"));
-                toIntent.putExtra("content", sysMsgDetailedCases.get((int) id).get("content"));
+                toIntent.putExtra("messageId", dCases.get((int) id).get("messageId"));
+                toIntent.putExtra("senderId", dCases.get((int) id).get("senderId"));
+                toIntent.putExtra("billId", dCases.get((int) id).get("billId"));
+                toIntent.putExtra("messageType", dCases.get((int) id).get("type"));
+                toIntent.putExtra("time", dCases.get((int) id).get("time"));
+                toIntent.putExtra("content", dCases.get((int) id).get("content"));
                 startActivity(toIntent);
             }
         });
     }
 
-    private void fillCases(MessageContentBean content) {
-        HashMap<String, String> map = new HashMap<>();
-        map.put("title", "系统消息");
-        map.put("content", content.getContent());
-        map.put("time", content.getTime());
-        sysMsgCases.add(map);
+    private void readFromDB() {
+        SQLiteDatabase db = myDBHelper.getWritableDatabase();
+        Cursor cursor = db.query("SysMsg", null, null, null, null, null, null, null);
+        if (cursor.moveToFirst()) {
+            do {
+                HashMap<String, String> mapFromDB = new HashMap<>();
+                mapFromDB.put("title", "系统消息");
+                mapFromDB.put("content", cursor.getString(cursor.getColumnIndex("content")));
+                mapFromDB.put("time", cursor.getString(cursor.getColumnIndex("time")));
+                if (!sysMsgCasesFromDB.contains(mapFromDB)) {
+                    sysMsgCasesFromDB.add(mapFromDB);
+                }
 
-        HashMap<String, String> dmap = new HashMap<>();
-        dmap.put("messageId", content.getMessageId());
-        dmap.put("senderId", content.getSenderId());
-        dmap.put("billId", content.getBillId());
-        dmap.put("type", content.getType());
-        dmap.put("time", content.getTime());
-        dmap.put("content", content.getContent());
-        sysMsgDetailedCases.add(dmap);
+                HashMap<String, String> dmapFromDB = new HashMap<>();
+                dmapFromDB.put("messageId", cursor.getString(cursor.getColumnIndex("messageId")));
+                dmapFromDB.put("senderId", cursor.getString(cursor.getColumnIndex("senderId")));
+                dmapFromDB.put("billId", cursor.getString(cursor.getColumnIndex("billId")));
+                dmapFromDB.put("type", cursor.getString(cursor.getColumnIndex("type")));
+                dmapFromDB.put("time", cursor.getString(cursor.getColumnIndex("time")));
+                dmapFromDB.put("content", cursor.getString(cursor.getColumnIndex("content")));
+                if (!sysMsgDetailedCasesFromDB.contains(dmapFromDB)) {
+                    sysMsgDetailedCasesFromDB.add(dmapFromDB);
+                }
+            } while (cursor.moveToNext());
+        }
+        cursor.close();
+    }
+
+    private void readFromServer() {
+        for (MessageContentBean content : messageContent) {
+            HashMap<String, String> map = new HashMap<>();
+            map.put("title", "系统消息");
+            map.put("content", content.getContent());
+            map.put("time", content.getTime().replace('T', ' '));
+            if (!sysMsgCasesFromServer.contains(map)) {
+                sysMsgCasesFromServer.add(map);
+            }
+
+            HashMap<String, String> dmap = new HashMap<>();
+            dmap.put("messageId", content.getMessageId());
+            dmap.put("senderId", content.getSenderId());
+            dmap.put("billId", content.getBillId());
+            dmap.put("type", content.getType());
+            dmap.put("time", content.getTime().replace('T', ' '));
+            dmap.put("content", content.getContent());
+            if (!sysMsgDetailedCasesFromServer.contains(dmap)) {
+                sysMsgDetailedCasesFromServer.add(dmap);
+            }
+        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)

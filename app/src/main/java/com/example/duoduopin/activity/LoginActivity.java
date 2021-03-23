@@ -18,7 +18,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.duoduopin.R;
-import com.example.duoduopin.tool.MyDBHelperr;
+import com.example.duoduopin.tool.MyDBHelper;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -48,7 +48,7 @@ public class LoginActivity extends AppCompatActivity {
 
     private String username;
 
-    private final MyDBHelperr myDBHelperr = new MyDBHelperr(this, "DuoDuoPin.db", null, 1);
+    private final MyDBHelper myDBHelper = new MyDBHelper(this, "DuoDuoPin.db", null, 1);
 
     private final OkHttpClient client = new OkHttpClient().newBuilder()
             .readTimeout(60, TimeUnit.SECONDS)
@@ -116,7 +116,7 @@ public class LoginActivity extends AppCompatActivity {
                         if (res == 1) {
                             Intent intent = new Intent(v.getContext(), MainActivity.class);
                             startActivity(intent);
-                            myDBHelperr.getWritableDatabase();
+                            myDBHelper.getWritableDatabase();
                             Toast.makeText(v.getContext(), "登录成功！", Toast.LENGTH_SHORT).show();
                         } else if (res == 2) {
                             Toast.makeText(v.getContext(), "用户名或密码错误！", Toast.LENGTH_SHORT).show();

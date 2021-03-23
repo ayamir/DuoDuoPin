@@ -119,6 +119,7 @@ public class OrderFragment extends Fragment {
                 } else if (selected.equals("拼单")) {
                     typeString = "BILL";
                 }
+                Log.d("select order type", "onItemSelected: typeString = " + typeString);
             }
 
             @Override
