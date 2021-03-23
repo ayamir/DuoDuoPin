@@ -1,5 +1,8 @@
 package com.example.duoduopin.tool;
 
+import java.net.URI;
+import java.net.URISyntaxException;
+
 public class Constants {
     private static final String baseUrl = "http://123.57.12.189:8080/";
     private static final String wsUrl = "ws://123.57.12.189:8080/";
@@ -8,20 +11,21 @@ public class Constants {
     public static final String logoutUrl = baseUrl + "User/logout/";
 
     public static final String queryUrl = baseUrl + "ShareBill/";
-    public static final String queryByInfoUrl = baseUrl + "ShareBill/info/";
-    public static final String createOrderUrl = baseUrl + "ShareBill/add/";
-    public static final String delOrderUrl = baseUrl + "ShareBill/del/";
-    public static final String applyUrl = baseUrl + "ShareBill/apply/";
-    public static final String joinUrl = baseUrl + "ShareBill/join/";
-    public static final String quitUrl = baseUrl + "ShareBill/quit/";
+    public static final String queryByInfoUrl = queryUrl + "info/";
+    public static final String createOrderUrl = queryUrl + "add/";
+    public static final String delOrderUrl = queryUrl + "del/";
+    public static final String applyUrl = queryUrl + "apply/";
+    public static final String joinUrl = queryUrl + "join/";
+    public static final String quitUrl = queryUrl + "quit/";
+    public static final String queryMemberUrl = queryUrl + "team/";
 
     public static final String queryUserUrl = baseUrl + "User/";
 
     public static final String chatUrl = wsUrl + "ws/chat/";
-    public static final String queryChatMessageUrl = baseUrl + "chat/";
+    public static final String queryChatMsgUrl = baseUrl + "chat/";
 
     public static final String sysMessageUrl = wsUrl + "ws/system/";
-    public static final String checkSysMessageUrl = baseUrl + "system/check/";
+    public static final String checkSysMsgUrl = baseUrl + "system/check/";
     public static final String broadMessageUrl = baseUrl + "system/broad/";
 
     public static String getQueryUserUrl(String userId) {
@@ -56,23 +60,27 @@ public class Constants {
         return quitUrl + orderId + "/" + userId;
     }
 
+    public static String getQueryMemberUrl(String orderId) {
+        return queryMemberUrl + orderId;
+    }
+
     public static String getChatUrl(String orderId) {
         return chatUrl + orderId;
     }
 
     public static String getQueryChatMessageUrl(String orderId) {
-        return queryChatMessageUrl + orderId;
+        return queryChatMsgUrl + orderId;
     }
 
     public static String getQueryUserMessageUrl(String orderId, String userId) {
-        return queryChatMessageUrl + orderId + "/" + userId;
+        return queryChatMsgUrl + orderId + "/" + userId;
     }
 
     public static String getOfflineMessageUrl(String orderId) {
         return baseUrl + orderId + "/unchecked";
     }
 
-    public static String getSysMessageUrl(String userId) {
-        return sysMessageUrl +userId;
+    public static URI getSysMsgUri(String userId) throws URISyntaxException {
+        return new URI(sysMessageUrl +userId);
     }
 }

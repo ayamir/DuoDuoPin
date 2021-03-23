@@ -32,7 +32,7 @@ import com.bigkoo.pickerview.listener.OnTimeSelectListener;
 import com.bigkoo.pickerview.view.TimePickerView;
 import com.example.duoduopin.R;
 import com.example.duoduopin.activity.AssistantLocationActivity;
-import com.example.duoduopin.activity.OneCaseActivity;
+import com.example.duoduopin.activity.OneOrderCaseActivity;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -199,7 +199,7 @@ public class OrderFragment extends Fragment {
                     try {
                         int state = putRequest(jsonObject.toString());
                         if (state == 1) {
-                            Intent intent = new Intent(v.getContext(), OneCaseActivity.class);
+                            Intent intent = new Intent(v.getContext(), OneOrderCaseActivity.class);
                             intent.putExtra("orderId", orderId);
                             intent.putExtra("userId", idContent);
                             intent.putExtra("nickname", nicknameContent);

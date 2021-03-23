@@ -19,6 +19,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
@@ -94,9 +95,13 @@ public class RegisterActivity extends AppCompatActivity {
                                 Intent intent = new Intent(v.getContext(), LoginActivity.class);
                                 startActivity(intent);
                                 Toast.makeText(v.getContext(), "注册成功！", Toast.LENGTH_SHORT).show();
+                            } else if (state == 2) {
+                                Toast.makeText(v.getContext(), "此用户已存在！", Toast.LENGTH_SHORT).show();
+                            } else {
+                                Toast.makeText(v.getContext(), "未知错误", Toast.LENGTH_SHORT).show();
                             }
                         }
-                    } catch (IOException e) {
+                    } catch (IOException | JSONException e) {
                         e.printStackTrace();
                     }
                 }
@@ -105,8 +110,9 @@ public class RegisterActivity extends AppCompatActivity {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    public int putRequest(String jsonBody) throws IOException {
+    public int putRequest(String jsonBody) throws IOException, JSONException {
         int ret = 0;
+        final String TAG = "RegisterActivity";
         RequestBody body = RequestBody.create(jsonBody, JSON);
         Request request = new Request.Builder()
                 .url(registerUrl)
@@ -115,11 +121,16 @@ public class RegisterActivity extends AppCompatActivity {
 
         Call call = client.newCall(request);
         Response response = call.execute();
+        JSONObject responseJSON = new JSONObject(Objects.requireNonNull(response.body()).string());
+        String codeString = responseJSON.getString("code");
+        int code = Integer.parseInt(codeString);
 
-        if (response.code() == 200) {
+        if (code == 100) {
             ret = 1;
+        } else if (code == -1004) {
+            ret = 2;
         }
-        Log.d("Register", "putRequest: " + response.toString());
+        Log.d(TAG, "ret = " + ret);
         return ret;
     }
 

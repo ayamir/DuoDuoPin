@@ -14,7 +14,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.duoduopin.R;
-import com.example.duoduopin.bean.ContentBean;
+import com.example.duoduopin.bean.OrderContentBean;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -40,13 +40,12 @@ import static com.example.duoduopin.activity.LoginActivity.tokenContent;
 import static com.example.duoduopin.tool.Constants.getQueryUrlByOrderId;
 import static com.example.duoduopin.tool.Constants.getQueryUrlByUserId;
 import static com.example.duoduopin.tool.Constants.queryByInfoUrl;
-import static com.example.duoduopin.tool.Constants.queryUrl;
 
 public class OrderCaseActivity extends AppCompatActivity {
     private String type;
     private ListView listView;
 
-    private List<ContentBean> orderContent;
+    private List<OrderContentBean> orderContent;
     private final ArrayList<HashMap<String, String>> cases = new ArrayList<>();
     private final ArrayList<HashMap<String, String>> detailCases = new ArrayList<>();
 
@@ -131,7 +130,7 @@ public class OrderCaseActivity extends AppCompatActivity {
 
     }
 
-    private void fillCases(ContentBean content) {
+    private void fillCases(OrderContentBean content) {
         HashMap<String, String> map = new HashMap<>();
         map.put("title", content.getTitle());
         map.put("description", content.getDescription());
@@ -142,7 +141,7 @@ public class OrderCaseActivity extends AppCompatActivity {
         dMap.put("userId", content.getUserId());
         dMap.put("nickname", content.getNickname());
         dMap.put("orderId", content.getBillId());
-        dMap.put("type", content.getType());
+        dMap.put("type", content.getOrderType());
         dMap.put("price", content.getPrice());
         dMap.put("address", content.getAddress());
         dMap.put("curPeople", content.getCurPeople());
@@ -154,24 +153,24 @@ public class OrderCaseActivity extends AppCompatActivity {
     }
 
     private void showItems() {
-        for (ContentBean content : orderContent) {
+        for (OrderContentBean content : orderContent) {
             if (type.equals("all")) {
                 fillCases(content);
             } else {
-                if (content.getType().equals(type)) {
+                if (content.getOrderType().equals(type)) {
                     fillCases(content);
                 }
             }
         }
 
-        SimpleAdapter adapter = new SimpleAdapter(this, cases, R.layout.one_item,
+        SimpleAdapter adapter = new SimpleAdapter(this, cases, R.layout.order_info_tip,
                 new String[]{"title", "description", "curNumContent"},
                 new int[]{R.id.title, R.id.description, R.id.curNumContent});
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent toIntent = new Intent(view.getContext(), OneCaseActivity.class);
+                Intent toIntent = new Intent(view.getContext(), OneOrderCaseActivity.class);
                 toIntent.putExtra("userId", detailCases.get((int) id).get("userId"));
                 toIntent.putExtra("nickname", detailCases.get((int) id).get("nickname"));
                 toIntent.putExtra("type", detailCases.get((int) id).get("type"));
@@ -230,7 +229,7 @@ public class OrderCaseActivity extends AppCompatActivity {
 
         if (response.code() == 200) {
             JSONObject responseJson = new JSONObject(Objects.requireNonNull(response.body()).string());
-            orderContent = new Gson().fromJson(responseJson.getString("content"), new TypeToken<List<ContentBean>>() {
+            orderContent = new Gson().fromJson(responseJson.getString("content"), new TypeToken<List<OrderContentBean>>() {
             }.getType());
             Log.d(TAG, orderContent.toString());
             if (orderContent != null) {
@@ -239,6 +238,7 @@ public class OrderCaseActivity extends AppCompatActivity {
         } else {
             Log.d(TAG, Objects.requireNonNull(response.body()).string());
             Log.d(TAG, response.toString());
+            ret = -1;
         }
         return ret;
     }

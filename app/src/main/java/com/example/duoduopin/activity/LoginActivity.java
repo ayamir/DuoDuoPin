@@ -18,6 +18,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.duoduopin.R;
+import com.example.duoduopin.tool.MyDBHelperr;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -46,6 +47,8 @@ public class LoginActivity extends AppCompatActivity {
     public static String nicknameContent;
 
     private String username;
+
+    private final MyDBHelperr myDBHelperr = new MyDBHelperr(this, "DuoDuoPin.db", null, 1);
 
     private final OkHttpClient client = new OkHttpClient().newBuilder()
             .readTimeout(60, TimeUnit.SECONDS)
@@ -97,7 +100,6 @@ public class LoginActivity extends AppCompatActivity {
                 username = usernameInput.getText().toString();
                 String password = passwordInput.getText().toString();
 
-                //String jwt = createLoginJwt(account, password, ttlMills);
                 JSONObject jwt = new JSONObject();
                 try {
                     jwt.put("username", username);
@@ -114,7 +116,17 @@ public class LoginActivity extends AppCompatActivity {
                         if (res == 1) {
                             Intent intent = new Intent(v.getContext(), MainActivity.class);
                             startActivity(intent);
+                            myDBHelperr.getWritableDatabase();
                             Toast.makeText(v.getContext(), "登录成功！", Toast.LENGTH_SHORT).show();
+                        } else if (res == 2) {
+                            Toast.makeText(v.getContext(), "用户名或密码错误！", Toast.LENGTH_SHORT).show();
+                        } else if (res == 3) {
+                            Toast.makeText(v.getContext(), "请先注册！", Toast.LENGTH_SHORT).show();
+
+                            Intent intent = new Intent(v.getContext(),RegisterActivity.class);
+                            startActivity(intent);
+                        } else {
+                            Toast.makeText(v.getContext(), "未知错误", Toast.LENGTH_SHORT).show();
                         }
                     }
                 } catch (IOException | JSONException e) {
@@ -126,7 +138,7 @@ public class LoginActivity extends AppCompatActivity {
 
     @SuppressLint("CommitPrefEdits")
     @RequiresApi(api = Build.VERSION_CODES.R)
-    private int postRequest(String jsonBody) throws IOException, JSONException {
+    private int postRequest(String jsonString) throws IOException, JSONException {
 
         final String TAG = "LoginActivity";
         final String idFromServer = "userId";
@@ -135,7 +147,7 @@ public class LoginActivity extends AppCompatActivity {
 
         int ret = 0;
 
-        RequestBody body = RequestBody.create(jsonBody, JSON);
+        RequestBody body = RequestBody.create(jsonString, JSON);
         Request request = new Request.Builder()
                 .url(loginUrl)
                 .post(body)
@@ -143,10 +155,12 @@ public class LoginActivity extends AppCompatActivity {
 
         Call call = client.newCall(request);
         Response response = call.execute();
-        if (response.code() == 200) {
-            JSONObject responseJson = new JSONObject(Objects.requireNonNull(response.body()).string());
-            JSONObject contentJson = new JSONObject(responseJson.getString("content"));
-            // Get return value
+        JSONObject responseJSON = new JSONObject(Objects.requireNonNull(response.body()).string());
+        String codeString = responseJSON.getString("code");
+        int code = Integer.parseInt(codeString);
+
+        if (code == 100) {
+            JSONObject contentJson = new JSONObject(responseJSON.getString("content"));
             idContent = contentJson.optString(idFromServer);
             tokenContent = contentJson.optString(tokenFromServer);
             nicknameContent = contentJson.optString(nicknameFromServer);
@@ -157,8 +171,12 @@ public class LoginActivity extends AppCompatActivity {
             editor.putString("name", nameContent);
             ret = 1;
         } else {
-            response = response.newBuilder().removeHeader("Cache-Control").build();
-            Log.d(TAG, response.toString());
+            Log.d(TAG, "responseJSON = " + responseJSON.toString());
+            if (code == -1001) {
+                ret = 2;
+            } else if (code == -1000) {
+                ret = 3;
+            }
         }
         return ret;
     }
