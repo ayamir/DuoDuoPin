@@ -17,6 +17,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.duoduopin.R;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -44,6 +45,7 @@ public class OneSysMsgCaseActivity extends AppCompatActivity {
     private String messageTypeString;
     private String timeString;
     private String contentString;
+    private String isFromServerString;
     private JSONObject orderContentJSON;
 
     private String nickname;
@@ -81,6 +83,7 @@ public class OneSysMsgCaseActivity extends AppCompatActivity {
             messageTypeString = fromIntent.getStringExtra("messageType");
             timeString = fromIntent.getStringExtra("time");
             contentString = fromIntent.getStringExtra("content");
+            isFromServerString = fromIntent.getStringExtra("isFromServer");
         }
     }
 
@@ -93,7 +96,7 @@ public class OneSysMsgCaseActivity extends AppCompatActivity {
         agree = findViewById(R.id.agree_button);
         reject = findViewById(R.id.reject_button);
 
-        if (!messageTypeString.equals("APPLY")) {
+        if (!messageTypeString.equals("APPLY") || isFromServerString.equals("false")) {
             Log.d("bindViews", "bindViews: messageTypeString = " + messageTypeString);
             agree.setVisibility(View.INVISIBLE);
             reject.setVisibility(View.INVISIBLE);
@@ -128,6 +131,7 @@ public class OneSysMsgCaseActivity extends AppCompatActivity {
                     int state = postSearchOrder(getQueryUrlByOrderId(billIdString));
                     if (state == 1) {
                         Intent toIntent = new Intent(v.getContext(), OneOrderCaseActivity.class);
+                        toIntent.putExtra("orderId", orderContentJSON.getString("billId"));
                         toIntent.putExtra("userId", orderContentJSON.getString("userId"));
                         toIntent.putExtra("nickname", orderContentJSON.getString("nickname"));
                         toIntent.putExtra("type", orderContentJSON.getString("type"));
@@ -207,7 +211,8 @@ public class OneSysMsgCaseActivity extends AppCompatActivity {
             String codeString = responseJSON.getString("code");
             int code = Integer.parseInt(codeString);
             if (code == 100) {
-                orderContentJSON = new JSONObject(responseJSON.getString("content"));
+                JSONArray orderContentArray = new JSONArray(responseJSON.getString("content"));
+                orderContentJSON = orderContentArray.getJSONObject(0);
                 ret = 1;
             }
         } else {

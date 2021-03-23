@@ -157,6 +157,13 @@ public class SysMsgCaseActivity extends AppCompatActivity {
                 toIntent.putExtra("messageType", dCases.get((int) id).get("type"));
                 toIntent.putExtra("time", dCases.get((int) id).get("time"));
                 toIntent.putExtra("content", dCases.get((int) id).get("content"));
+                String isFromServerString;
+                if (isFromServer) {
+                    isFromServerString = "true";
+                } else {
+                    isFromServerString = "false";
+                }
+                toIntent.putExtra("isFromServer", isFromServerString);
                 startActivity(toIntent);
             }
         });
