@@ -36,6 +36,7 @@ import okhttp3.Response;
 
 import static com.example.duoduopin.activity.LoginActivity.idContent;
 import static com.example.duoduopin.activity.LoginActivity.tokenContent;
+import static com.example.duoduopin.activity.MainActivity.client;
 import static com.example.duoduopin.tool.Constants.getDelOrderUrl;
 import static com.example.duoduopin.tool.Constants.getJoinUrl;
 import static com.example.duoduopin.tool.Constants.getQueryMemberUrl;
@@ -44,16 +45,10 @@ import static com.example.duoduopin.tool.Constants.getQuitUrl;
 public class OneOrderCaseActivity extends AppCompatActivity {
 
     private String userIdString, nicknameString, orderIdString, typeString, priceString, addressString, curPeopleString, maxPeopleString, timeString, descriptionString, titleString;
-    private ArrayList<String> members = new ArrayList<>();
+    private final ArrayList<String> members = new ArrayList<>();
 
     private Button delete, join, leave;
     private ImageView back;
-
-    private final OkHttpClient client = new OkHttpClient().newBuilder()
-            .readTimeout(60, TimeUnit.SECONDS)
-            .writeTimeout(60, TimeUnit.SECONDS)
-            .connectTimeout(60, TimeUnit.SECONDS)
-            .build();
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {

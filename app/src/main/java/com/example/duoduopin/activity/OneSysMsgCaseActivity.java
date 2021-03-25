@@ -33,6 +33,7 @@ import okhttp3.Response;
 
 import static com.example.duoduopin.activity.LoginActivity.idContent;
 import static com.example.duoduopin.activity.LoginActivity.tokenContent;
+import static com.example.duoduopin.activity.MainActivity.client;
 import static com.example.duoduopin.tool.Constants.getAllowUrl;
 import static com.example.duoduopin.tool.Constants.getQueryUrlByOrderId;
 import static com.example.duoduopin.tool.Constants.getQueryUserUrl;
@@ -57,12 +58,6 @@ public class OneSysMsgCaseActivity extends AppCompatActivity {
     private LinearLayout checkDetailsLayout;
     private Button agree;
     private Button reject;
-
-    private final OkHttpClient client = new OkHttpClient().newBuilder()
-            .readTimeout(60, TimeUnit.SECONDS)
-            .writeTimeout(60, TimeUnit.SECONDS)
-            .connectTimeout(60, TimeUnit.SECONDS)
-            .build();
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override

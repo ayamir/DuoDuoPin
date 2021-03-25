@@ -22,7 +22,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.duoduopin.R;
-import com.example.duoduopin.bean.MessageContentBean;
+import com.example.duoduopin.bean.SysMsgContent;
 import com.example.duoduopin.tool.MyDBHelper;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -45,6 +45,7 @@ import okhttp3.Response;
 
 import static com.example.duoduopin.activity.LoginActivity.idContent;
 import static com.example.duoduopin.activity.LoginActivity.tokenContent;
+import static com.example.duoduopin.activity.MainActivity.client;
 import static com.example.duoduopin.tool.Constants.checkSysMsgUrl;
 import static com.example.duoduopin.tool.Constants.getRealTimeString;
 
@@ -55,7 +56,7 @@ public class SysMsgCaseActivity extends AppCompatActivity {
     private Switch switchMsg;
     private boolean isFromServer = true;
 
-    private List<MessageContentBean> messageContent;
+    private List<SysMsgContent> sysMsgContent;
     private final ArrayList<HashMap<String, String>> sysMsgCasesFromServer = new ArrayList<>();
     private final ArrayList<HashMap<String, String>> sysMsgDetailedCasesFromServer = new ArrayList<>();
 
@@ -64,12 +65,6 @@ public class SysMsgCaseActivity extends AppCompatActivity {
 
     private final MyDBHelper myDBHelper = new MyDBHelper(this, "DuoDuoPin.db", null, 1);
     private final Context mContext = this;
-
-    private final OkHttpClient client = new OkHttpClient().newBuilder()
-            .readTimeout(60, TimeUnit.SECONDS)
-            .writeTimeout(60, TimeUnit.SECONDS)
-            .connectTimeout(60, TimeUnit.SECONDS)
-            .build();
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
@@ -202,7 +197,7 @@ public class SysMsgCaseActivity extends AppCompatActivity {
     }
 
     private void readFromServer() {
-        for (MessageContentBean content : messageContent) {
+        for (SysMsgContent content : sysMsgContent) {
             HashMap<String, String> map = new HashMap<>();
             map.put("title", "系统消息");
             String contentString = content.getContent();
@@ -247,9 +242,9 @@ public class SysMsgCaseActivity extends AppCompatActivity {
 
         if (response.code() == 200) {
             if (code == 100) {
-                messageContent = new Gson().fromJson(jsonObject.getString("content"), new TypeToken<List<MessageContentBean>>() {
+                sysMsgContent = new Gson().fromJson(jsonObject.getString("content"), new TypeToken<List<SysMsgContent>>() {
                 }.getType());
-                if (messageContent != null) {
+                if (sysMsgContent != null) {
                     ret = 1;
                 }
             } else {

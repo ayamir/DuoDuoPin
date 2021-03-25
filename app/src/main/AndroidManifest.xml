@@ -37,6 +37,7 @@
         <activity android:name=".activity.MainActivity" />
         <activity android:name=".activity.SysMsgCaseActivity" />
         <activity android:name=".activity.OneSysMsgCaseActivity" />
+        <activity android:name=".activity.OneGrpMsgCaseActivity" />
         <activity android:name=".activity.LoginActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

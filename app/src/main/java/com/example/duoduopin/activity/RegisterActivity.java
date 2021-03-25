@@ -33,7 +33,7 @@ import static com.example.duoduopin.tool.Constants.registerUrl;
 
 public class RegisterActivity extends AppCompatActivity {
 
-    OkHttpClient client = new OkHttpClient().newBuilder()
+    private final OkHttpClient client = new OkHttpClient().newBuilder()
             .readTimeout(60, TimeUnit.SECONDS)
             .writeTimeout(60, TimeUnit.SECONDS)
             .connectTimeout(60, TimeUnit.SECONDS)

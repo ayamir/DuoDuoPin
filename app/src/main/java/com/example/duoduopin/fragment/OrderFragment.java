@@ -52,6 +52,7 @@ import static com.example.duoduopin.activity.LoginActivity.JSON;
 import static com.example.duoduopin.activity.LoginActivity.idContent;
 import static com.example.duoduopin.activity.LoginActivity.nicknameContent;
 import static com.example.duoduopin.activity.LoginActivity.tokenContent;
+import static com.example.duoduopin.activity.MainActivity.client;
 import static com.example.duoduopin.tool.Constants.createOrderUrl;
 
 public class OrderFragment extends Fragment {
@@ -60,12 +61,6 @@ public class OrderFragment extends Fragment {
     private TextView time;
     private TimePickerView pvTime;
     private String orderId;
-
-    private final OkHttpClient client = new OkHttpClient().newBuilder()
-            .readTimeout(60, TimeUnit.SECONDS)
-            .writeTimeout(60, TimeUnit.SECONDS)
-            .connectTimeout(60, TimeUnit.SECONDS)
-            .build();
 
     @Nullable
     @Override
@@ -116,12 +111,9 @@ public class OrderFragment extends Fragment {
                 String selected = parent.getItemAtPosition(position).toString();
                 if (selected.equals("拼车")) {
                     typeString = "CAR";
-                    Toast.makeText(view.getContext(), typeString, Toast.LENGTH_SHORT).show();
                 } else if (selected.equals("拼单")) {
                     typeString = "BILL";
-                    Toast.makeText(view.getContext(), typeString, Toast.LENGTH_SHORT).show();
                 }
-                Log.d("select order type", "onItemSelected: typeString = " + typeString);
             }
 
             @Override

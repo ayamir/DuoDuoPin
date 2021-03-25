@@ -19,7 +19,6 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.example.duoduopin.R;
-import com.example.duoduopin.activity.LoginActivity;
 import com.example.duoduopin.activity.OrderCaseActivity;
 
 import java.io.IOException;

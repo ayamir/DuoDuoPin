@@ -1,8 +1,5 @@
 package com.example.duoduopin.tool;
 
-import java.net.URI;
-import java.net.URISyntaxException;
-
 public class Constants {
     private static final String baseUrl = "http://123.57.12.189:8080/";
     private static final String wsUrl = "ws://123.57.12.189:8080/";
@@ -77,11 +74,11 @@ public class Constants {
     }
 
     public static String getOfflineMessageUrl(String orderId) {
-        return baseUrl + orderId + "/unchecked";
+        return queryChatMsgUrl + orderId + "/unchecked";
     }
 
-    public static URI getSysMsgUri(String userId) throws URISyntaxException {
-        return new URI(sysMessageUrl + userId);
+    public static String getSysMsgUrl(String userId) {
+        return sysMessageUrl + userId;
     }
 
     public static String getRealTimeString(String timeString) {

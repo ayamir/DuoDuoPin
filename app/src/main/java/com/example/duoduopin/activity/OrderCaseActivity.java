@@ -14,7 +14,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.duoduopin.R;
-import com.example.duoduopin.bean.OrderContentBean;
+import com.example.duoduopin.bean.OrderContent;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -37,6 +37,7 @@ import okhttp3.Response;
 import static com.example.duoduopin.activity.LoginActivity.JSON;
 import static com.example.duoduopin.activity.LoginActivity.idContent;
 import static com.example.duoduopin.activity.LoginActivity.tokenContent;
+import static com.example.duoduopin.activity.MainActivity.client;
 import static com.example.duoduopin.tool.Constants.getQueryUrlByOrderId;
 import static com.example.duoduopin.tool.Constants.getQueryUrlByUserId;
 import static com.example.duoduopin.tool.Constants.getRealTimeString;
@@ -46,17 +47,11 @@ public class OrderCaseActivity extends AppCompatActivity {
     private String type;
     private ListView listView;
 
-    private List<OrderContentBean> orderContent;
+    private List<OrderContent> orderContent;
     private final ArrayList<HashMap<String, String>> cases = new ArrayList<>();
     private final ArrayList<HashMap<String, String>> detailCases = new ArrayList<>();
 
     private String timeStart, timeEnd, minPrice, maxPrice, description, orderType, distance, longitude, latitude;
-
-    private final OkHttpClient client = new OkHttpClient().newBuilder()
-            .readTimeout(60, TimeUnit.SECONDS)
-            .writeTimeout(60, TimeUnit.SECONDS)
-            .connectTimeout(60, TimeUnit.SECONDS)
-            .build();
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
@@ -131,7 +126,7 @@ public class OrderCaseActivity extends AppCompatActivity {
 
     }
 
-    private void fillCases(OrderContentBean content) {
+    private void fillCases(OrderContent content) {
         HashMap<String, String> map = new HashMap<>();
         map.put("title", content.getTitle());
         map.put("description", content.getDescription());
@@ -158,7 +153,7 @@ public class OrderCaseActivity extends AppCompatActivity {
     }
 
     private void showItems() {
-        for (OrderContentBean content : orderContent) {
+        for (OrderContent content : orderContent) {
             if (type.equals("all")) {
                 fillCases(content);
             } else {
@@ -234,7 +229,7 @@ public class OrderCaseActivity extends AppCompatActivity {
 
         if (response.code() == 200) {
             JSONObject responseJson = new JSONObject(Objects.requireNonNull(response.body()).string());
-            orderContent = new Gson().fromJson(responseJson.getString("content"), new TypeToken<List<OrderContentBean>>() {
+            orderContent = new Gson().fromJson(responseJson.getString("content"), new TypeToken<List<OrderContent>>() {
             }.getType());
             if (orderContent != null) {
                 ret = 1;
