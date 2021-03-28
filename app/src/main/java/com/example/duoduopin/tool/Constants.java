@@ -80,8 +80,4 @@ public class Constants {
     public static String getSysMsgUrl(String userId) {
         return sysMessageUrl + userId;
     }
-
-    public static String getRealTimeString(String timeString) {
-        return timeString.replace('T', ' ').substring(0, timeString.length() - 9);
-    }
 }

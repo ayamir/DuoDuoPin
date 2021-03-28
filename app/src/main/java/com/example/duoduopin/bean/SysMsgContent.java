@@ -6,7 +6,7 @@ public class SysMsgContent {
     private final String senderId;
     private final String billId;
     private final String type;
-    private final String time;
+    private String time;
     private final String content;
 
     public SysMsgContent(String messageId, String senderId, String receiverId, String billId, String type, String time, String content) {
@@ -45,5 +45,9 @@ public class SysMsgContent {
 
     public String getContent() {
         return content;
+    }
+
+    public void setTime(String time) {
+        this.time = time;
     }
 }

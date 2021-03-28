@@ -9,7 +9,6 @@ import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
-import com.example.duoduopin.bean.BriefGrpMsg;
 import com.example.duoduopin.bean.GrpMsgContent;
 import com.example.duoduopin.bean.OrderContent;
 import com.google.gson.Gson;
@@ -23,6 +22,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -45,6 +45,7 @@ import static com.example.duoduopin.tool.Constants.getQueryUrlByUserId;
 public class RecGrpMsgService extends Service {
     private ArrayList<OrderContent> orderContent;
     private final ArrayList<String> grpIdList = new ArrayList<>();
+    private final HashMap<String, WebSocket> webSocketMap = new HashMap<>();
 
     private final OkHttpClient socketClient = new OkHttpClient().newBuilder()
             .readTimeout(0, TimeUnit.SECONDS)
@@ -77,6 +78,10 @@ public class RecGrpMsgService extends Service {
         return grpIdList;
     }
 
+    public HashMap<String, WebSocket> getWebSocketMap() {
+        return webSocketMap;
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void loadGrpTips() {
         final String TAG = "loadGrpTips";
@@ -94,12 +99,13 @@ public class RecGrpMsgService extends Service {
             e.printStackTrace();
         }
 
+        // Establish websockets for all groups
         for (final String grpId : grpIdList) {
             Request request = new Request.Builder()
                     .url(getChatUrl(grpId))
                     .header("token", idContent + "_" + tokenContent)
                     .build();
-            socketClient.newWebSocket(request, new WebSocketListener() {
+            WebSocket webSocket = socketClient.newWebSocket(request, new WebSocketListener() {
                 @Override
                 public void onClosed(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
                     super.onClosed(webSocket, code, reason);
@@ -125,15 +131,12 @@ public class RecGrpMsgService extends Service {
                     GrpMsgContent newMsg = new Gson().fromJson(text, GrpMsgContent.class);
                     long oldTime = Long.parseLong(newMsg.getTime());
                     newMsg.setTime(Instant.ofEpochMilli(oldTime).atZone(ZoneOffset.ofHours(8)).toLocalDateTime().toString().replace('T', ' '));
-
-                    // Convert to brief message to display on message fragment
-                    BriefGrpMsg briefGrpMsg = convertToBrief(newMsg);
+                    Log.d(TAG, "onMessage: newMsg is " + newMsg.toString());
 
                     // Broadcast brief message to display on UI thread
                     Intent intent = new Intent();
-                    intent.putExtra("briefGrpMsg", briefGrpMsg);
-                    intent.putExtra("grpId", newMsg.getBillId());
-                    intent.setAction("com.example.duoduopin.grpmsg.brief");
+                    intent.putExtra("newMsg", newMsg);
+                    intent.setAction("com.example.duoduopin.grpmsg.new");
                     sendBroadcast(intent);
                 }
 
@@ -148,6 +151,7 @@ public class RecGrpMsgService extends Service {
                     Log.e(TAG, "websocket for " + grpId + " opened!");
                 }
             });
+            webSocketMap.put(grpId, webSocket);
         }
     }
 
@@ -176,14 +180,5 @@ public class RecGrpMsgService extends Service {
         }
 
         return ret;
-    }
-
-    private BriefGrpMsg convertToBrief(GrpMsgContent newMsg) {
-        String grpTitle = newMsg.getBillTitle();
-        String msgOwnerNickname = newMsg.getNickname();
-        String content = newMsg.getContent();
-        String time = newMsg.getTime();
-
-        return new BriefGrpMsg(grpTitle, msgOwnerNickname, content, time);
     }
 }

@@ -8,7 +8,6 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
-import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -24,14 +23,14 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
-import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
@@ -42,7 +41,6 @@ import static com.example.duoduopin.activity.LoginActivity.tokenContent;
 import static com.example.duoduopin.activity.MainActivity.client;
 import static com.example.duoduopin.tool.Constants.getQueryUrlByOrderId;
 import static com.example.duoduopin.tool.Constants.getQueryUrlByUserId;
-import static com.example.duoduopin.tool.Constants.getRealTimeString;
 import static com.example.duoduopin.tool.Constants.queryByInfoUrl;
 
 public class OrderCaseActivity extends AppCompatActivity {
@@ -51,14 +49,14 @@ public class OrderCaseActivity extends AppCompatActivity {
     private String from;
     private ListView listView;
 
-    private List<OrderContent> orderContent;
+    private ArrayList<OrderContent> orderContentList;
     private final ArrayList<HashMap<String, String>> cases = new ArrayList<>();
     private final ArrayList<HashMap<String, String>> detailCases = new ArrayList<>();
     private SwipeRefreshLayout orderCaseSwipeRefresh;
 
     private String timeStart, timeEnd, minPrice, maxPrice, description, orderType, distance, longitude, latitude;
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -87,7 +85,7 @@ public class OrderCaseActivity extends AppCompatActivity {
 
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    @RequiresApi(api = Build.VERSION_CODES.O)
     private void switchShow() {
         switch (from) {
             case "userId":
@@ -166,7 +164,7 @@ public class OrderCaseActivity extends AppCompatActivity {
         dMap.put("address", content.getAddress());
         dMap.put("curPeople", content.getCurPeople());
         dMap.put("maxPeople", content.getMaxPeople());
-        dMap.put("time", getRealTimeString(content.getTime()));
+        dMap.put("time", content.getTime());
         dMap.put("description", content.getDescription());
         dMap.put("title", content.getTitle());
         if (!detailCases.contains(dMap)) {
@@ -175,7 +173,7 @@ public class OrderCaseActivity extends AppCompatActivity {
     }
 
     private void showItems() {
-        for (OrderContent content : orderContent) {
+        for (OrderContent content : orderContentList) {
             if (type.equals("all")) {
                 fillCases(content);
             } else {
@@ -209,7 +207,7 @@ public class OrderCaseActivity extends AppCompatActivity {
         });
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -220,7 +218,7 @@ public class OrderCaseActivity extends AppCompatActivity {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    @RequiresApi(api = Build.VERSION_CODES.O)
     private int postQueryOrder(String url, boolean isInfo) throws IOException, JSONException {
         final String TAG = "queryOrderCase";
         Request request;
@@ -262,9 +260,14 @@ public class OrderCaseActivity extends AppCompatActivity {
 
         if (response.code() == 200) {
             JSONObject responseJson = new JSONObject(Objects.requireNonNull(response.body()).string());
-            orderContent = new Gson().fromJson(responseJson.getString("content"), new TypeToken<List<OrderContent>>() {
+            orderContentList = new Gson().fromJson(responseJson.getString("content"), new TypeToken<List<OrderContent>>() {
             }.getType());
-            if (orderContent != null) {
+            if (orderContentList != null) {
+                for (OrderContent orderContent : orderContentList) {
+                    long oldTime = Long.parseLong(orderContent.getTime());
+                    String newTime = Instant.ofEpochMilli(oldTime).atZone(ZoneOffset.ofHours(8)).toLocalDateTime().toString().replace('T', ' ');
+                    orderContent.setTime(newTime);
+                }
                 ret = 1;
             }
         } else {

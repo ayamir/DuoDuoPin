@@ -49,7 +49,6 @@ public class OrderContent {
         this.distance = distance;
     }
 
-
     public String getBillId() {
         return billId;
     }

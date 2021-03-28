@@ -32,6 +32,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -46,7 +48,6 @@ import static com.example.duoduopin.activity.LoginActivity.idContent;
 import static com.example.duoduopin.activity.LoginActivity.tokenContent;
 import static com.example.duoduopin.activity.MainActivity.client;
 import static com.example.duoduopin.tool.Constants.checkSysMsgUrl;
-import static com.example.duoduopin.tool.Constants.getRealTimeString;
 
 public class SysMsgCaseActivity extends AppCompatActivity {
     private SwipeRefreshLayout swipeRefreshLayout;
@@ -55,7 +56,7 @@ public class SysMsgCaseActivity extends AppCompatActivity {
     private Switch switchMsg;
     private boolean isFromServer = true;
 
-    private List<SysMsgContent> sysMsgContent;
+    private ArrayList<SysMsgContent> sysMsgContentList;
     private final ArrayList<HashMap<String, String>> sysMsgCasesFromServer = new ArrayList<>();
     private final ArrayList<HashMap<String, String>> sysMsgDetailedCasesFromServer = new ArrayList<>();
 
@@ -65,7 +66,7 @@ public class SysMsgCaseActivity extends AppCompatActivity {
     private final MyDBHelper myDBHelper = new MyDBHelper(this, "DuoDuoPin.db", null, 1);
     private final Context mContext = this;
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -108,7 +109,7 @@ public class SysMsgCaseActivity extends AppCompatActivity {
         });
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    @RequiresApi(api = Build.VERSION_CODES.O)
     private void checkSysMsgFromServer() {
         try {
             int state = postCheckSysMessage();
@@ -189,22 +190,22 @@ public class SysMsgCaseActivity extends AppCompatActivity {
         cursor.close();
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    @RequiresApi(api = Build.VERSION_CODES.O)
     private void readFromServer() {
         sysMsgDetailedCasesFromServer.clear();
         sysMsgCasesFromServer.clear();
 
-        if (sysMsgContent != null) {
-            sysMsgContent.clear();
+        if (sysMsgContentList != null) {
+            sysMsgContentList.clear();
         }
         checkSysMsgFromServer();
 
-        for (SysMsgContent content : sysMsgContent) {
+        for (SysMsgContent content : sysMsgContentList) {
             HashMap<String, String> map = new HashMap<>();
             map.put("title", "系统消息");
             String contentString = content.getContent();
             map.put("content", contentString);
-            map.put("time", getRealTimeString(content.getTime().replace('T', ' ')));
+            map.put("time", content.getTime());
             sysMsgCasesFromServer.add(map);
 
             HashMap<String, String> dmap = new HashMap<>();
@@ -213,13 +214,13 @@ public class SysMsgCaseActivity extends AppCompatActivity {
             dmap.put("receiverId", content.getReceiverId());
             dmap.put("billId", content.getBillId());
             dmap.put("type", content.getType());
-            dmap.put("time", getRealTimeString(content.getTime().replace('T', ' ')));
+            dmap.put("time", content.getTime());
             dmap.put("content", contentString);
             sysMsgDetailedCasesFromServer.add(dmap);
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    @RequiresApi(api = Build.VERSION_CODES.O)
     private int postCheckSysMessage() throws IOException, JSONException {
         final String TAG = "checkSysMessgae";
         int ret = 0;
@@ -233,17 +234,23 @@ public class SysMsgCaseActivity extends AppCompatActivity {
         Call call = client.newCall(request);
         Response response = call.execute();
 
-        JSONObject jsonObject = new JSONObject(Objects.requireNonNull(response.body()).string());
+        String responseString = Objects.requireNonNull(response.body()).string();
+        Log.e(TAG, "postCheckSysMessage: responseString = " + responseString);
+        JSONObject jsonObject = new JSONObject(responseString);
         String codeString = jsonObject.getString("code");
         int code = Integer.parseInt(codeString);
 
         if (response.code() == 200) {
             if (code == 100) {
-                sysMsgContent = new Gson().fromJson(jsonObject.getString("content"), new TypeToken<List<SysMsgContent>>() {
+                sysMsgContentList = new Gson().fromJson(jsonObject.getString("content"), new TypeToken<List<SysMsgContent>>() {
                 }.getType());
-                if (sysMsgContent != null) {
+                if (sysMsgContentList != null) {
                     ret = 1;
-                    Log.e(TAG, "jsonObject = " + jsonObject.toString(2));
+                    for (SysMsgContent content : sysMsgContentList) {
+                        long oldTime = Long.parseLong(content.getTime());
+                        String newTime = Instant.ofEpochMilli(oldTime).atZone(ZoneOffset.ofHours(8)).toLocalDateTime().toString().replace('T', ' ');
+                        content.setTime(newTime);
+                    }
                 }
             } else {
                 ret = 2;

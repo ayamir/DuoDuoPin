@@ -85,7 +85,7 @@ public class GrpMsgAdapter extends RecyclerView.Adapter<GrpMsgAdapter.GrpMsgView
             holder.msgContent.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Toast.makeText(v.getContext(), "点击自己的消息", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(v.getContext(), "点击别人的消息", Toast.LENGTH_SHORT).show();
                 }
             });
             return holder;
@@ -95,7 +95,7 @@ public class GrpMsgAdapter extends RecyclerView.Adapter<GrpMsgAdapter.GrpMsgView
             holder.msgContent.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    Toast.makeText(v.getContext(), "点击别人的消息", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(v.getContext(), "点击自己的消息", Toast.LENGTH_SHORT).show();
                 }
             });
             return holder;

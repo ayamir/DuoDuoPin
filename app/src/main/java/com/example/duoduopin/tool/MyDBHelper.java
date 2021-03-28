@@ -29,28 +29,21 @@ public class MyDBHelper extends SQLiteOpenHelper {
             + "userId integer not null, "
             + "nickname text not null, "
             + "content text not null, "
-            + "time text not null primary key)";
-
-    public String CREATE_GRP_NEW_MSG_TABLE = "create table GrpNewMsg ("
-            + "groupOwnerId text not null primary key, "
-            + "msgOwnerNickname text not null, "
-            + "groupTitle text not null, "
-            + "content text not null, "
-            + "time text not null)";
+            + "time text not null, "
+            + "primary key (groupId, userId, time))"
+            ;
 
 
     @Override
     public void onCreate(SQLiteDatabase db) {
         db.execSQL(CREATE_SYS_MSG_TABLE);
         db.execSQL(CREATE_GRP_MSG_TABLE);
-        db.execSQL(CREATE_GRP_NEW_MSG_TABLE);
     }
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
         db.execSQL("drop table if exists SysMsg");
         db.execSQL("drop table if exists GrpMsg");
-        db.execSQL("drop table if exists GrpNewMsg");
         onCreate(db);
     }
 }

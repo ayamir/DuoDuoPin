@@ -58,6 +58,12 @@ public class GrpMsgContent implements Serializable {
     @NonNull
     @Override
     public String toString() {
-        return userId + " " + billId + " " + billTitle + " " + nickname + " " + type + " " + time + " " + content;
+        return "\nuserId=" + userId + "\n" +
+                "billId=" + billId + "\n" +
+                "billTitle=" + billTitle + "\n" +
+                "nickname=" + nickname + "\n" +
+                "type=" + type + "\n" +
+                "time=" + time + "\n" +
+                "content=" + content + "\n";
     }
 }

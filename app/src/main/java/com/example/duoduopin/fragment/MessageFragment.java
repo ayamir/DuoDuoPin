@@ -43,6 +43,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -54,33 +56,56 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+import static android.app.Activity.RESULT_OK;
 import static com.example.duoduopin.activity.LoginActivity.idContent;
 import static com.example.duoduopin.activity.LoginActivity.tokenContent;
 import static com.example.duoduopin.activity.MainActivity.client;
-import static com.example.duoduopin.activity.MainActivity.isMessageClicked;
 import static com.example.duoduopin.tool.Constants.getOfflineMessageUrl;
 import static com.example.duoduopin.tool.Constants.getQueryChatMessageUrl;
-import static com.example.duoduopin.tool.Constants.getRealTimeString;
 
 public class MessageFragment extends Fragment {
     private ListView listView;
+    private ConstraintLayout sysMsgClick;
+    private SwipeRefreshLayout swipeRefreshLayout;
 
     private ArrayList<String> grpIdList;
-    private List<GrpMsgContent> grpMsgContentListFromPost;
-    private final HashMap<String, BriefGrpMsg> briefGrpMsgMap = new HashMap<>();
+    private HashMap<String, ArrayList<GrpMsgContent>> allGrpsMsgListMap = new HashMap<>();
+    private HashMap<String, BriefGrpMsg> briefGrpMsgMap = new HashMap<>();
 
     private MyDBHelper myDBHelper;
+    public static RecGrpMsgService recGrpMsgService;
+
+    private GrpMsgReceiverBrief grpMsgReceiverBrief;
+    private GrpQuitReceiver grpQuitReceiver;
 
     private final ServiceConnection connection = new ServiceConnection() {
-        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+        @RequiresApi(api = Build.VERSION_CODES.O)
         @Override
         public void onServiceConnected(ComponentName name, IBinder iBinder) {
             Log.e("MessageFragment", "onServiceConnected");
+
+            // Bind service
             RecGrpMsgService.RecGrpMsgBinder binder = (RecGrpMsgService.RecGrpMsgBinder) iBinder;
-            RecGrpMsgService recGrpMsgService = binder.getService();
+            recGrpMsgService = binder.getService();
             grpIdList = recGrpMsgService.getGrpIdList();
+
+            // Get full message records from server
             checkOfflineMsg(false);
-            insertToDB(false);
+            for (Map.Entry<String, ArrayList<GrpMsgContent>> entry : allGrpsMsgListMap.entrySet()) {
+                ArrayList<GrpMsgContent> msgList = entry.getValue();
+                for (GrpMsgContent msgContent : msgList) {
+                    Log.d("onServiceConnected", "insert for grpId=" + entry.getKey());
+                    insertToDB(msgContent);
+                }
+            }
+
+            // Query From DB and Display Latest Message
+            for (String grpId : grpIdList) {
+                Log.d("onServiceConnected", "query for grpId=" + grpId);
+                queryFromDB(grpId);
+            }
+
+            showItems();
         }
 
         @Override
@@ -92,20 +117,41 @@ public class MessageFragment extends Fragment {
     private class GrpMsgReceiverBrief extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            BriefGrpMsg briefGrpMsg = (BriefGrpMsg) intent.getSerializableExtra("briefGrpMsg");
-            String grpId = intent.getStringExtra("grpId");
-            Log.e("Receiver", "onReceive: grpId = " + grpId);
-            briefGrpMsgMap.put(grpId, briefGrpMsg);
-            showItems();
+            GrpMsgContent newMsg = (GrpMsgContent) intent.getSerializableExtra("newMsg");
+
+            // Insert to DB
+            insertToDB(newMsg);
+            queryFromDB(newMsg.getBillId());
+            if (context == getActivity()) {
+                showItems();
+            }
+        }
+    }
+
+    private class GrpQuitReceiver extends BroadcastReceiver {
+        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String quitGrpId = intent.getStringExtra("quitGrpId");
+
+            Objects.requireNonNull(recGrpMsgService.getWebSocketMap().get(quitGrpId)).close(1000, "You have quited " + quitGrpId + " group!");
+            recGrpMsgService.getWebSocketMap().remove(quitGrpId);
+            briefGrpMsgMap.remove(quitGrpId);
+            if (context == getActivity())
+                showItems();
+            cleanDB(quitGrpId);
         }
     }
 
     private void doRegisterReceiver() {
-        GrpMsgReceiverBrief grpMsgReceiverBrief = new GrpMsgReceiverBrief();
-        IntentFilter intentFilter = new IntentFilter("com.example.duoduopin.grpmsg.brief");
-        getActivity().registerReceiver(grpMsgReceiverBrief, intentFilter);
-    }
+        grpMsgReceiverBrief = new GrpMsgReceiverBrief();
+        IntentFilter msgFilter = new IntentFilter("com.example.duoduopin.grpmsg.new");
+        getActivity().registerReceiver(grpMsgReceiverBrief, msgFilter);
 
+        grpQuitReceiver = new GrpQuitReceiver();
+        IntentFilter quitFilter = new IntentFilter("com.example.duoduopin.quitGrp");
+        getActivity().registerReceiver(grpQuitReceiver, quitFilter);
+    }
 
     @Nullable
     @Override
@@ -123,23 +169,31 @@ public class MessageFragment extends Fragment {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         myDBHelper = new MyDBHelper(getActivity(), "DuoDuoPin.db", null, 1);
-        listView = getActivity().findViewById(R.id.grp_msg_list);
+        bindItemsAndOps();
 
         Intent bindIntent = new Intent(this.getActivity(), RecGrpMsgService.class);
         getActivity().bindService(bindIntent, connection, Context.BIND_AUTO_CREATE);
         doRegisterReceiver();
+    }
 
-        if (isMessageClicked) {
-            queryFromDB();
-            showItems();
-        }
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        getActivity().unregisterReceiver(grpMsgReceiverBrief);
+        getActivity().unregisterReceiver(grpQuitReceiver);
 
-        ConstraintLayout sysMsgClick = getActivity().findViewById(R.id.sys_msg_click);
+        getActivity().unbindService(connection);
+    }
+
+    private void bindItemsAndOps() {
+        listView = getActivity().findViewById(R.id.grp_msg_list);
+
+        sysMsgClick = getActivity().findViewById(R.id.sys_msg_click);
         sysMsgClick.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -148,40 +202,51 @@ public class MessageFragment extends Fragment {
             }
         });
 
-        final SwipeRefreshLayout swipeRefreshLayout = getActivity().findViewById(R.id.grp_msg_layout);
+        swipeRefreshLayout = getActivity().findViewById(R.id.grp_msg_layout);
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onRefresh() {
-                // clear old instances
-                briefGrpMsgMap.clear();
-
                 // Get new from db and server
-                queryFromDB();
-                checkOfflineMsg(true);
+                int res = checkOfflineMsg(true);
+                if (res != -1) {
+                    for (Map.Entry<String, ArrayList<GrpMsgContent>> entry : allGrpsMsgListMap.entrySet()) {
+                        ArrayList<GrpMsgContent> msgList = entry.getValue();
+                        for (GrpMsgContent msgContent : msgList) {
+                            insertToDB(msgContent);
+                        }
+                    }
+                    for (String grpId : grpIdList) {
+                        queryFromDB(grpId);
+                    }
+                }
 
                 // Show new result
                 showItems();
-
                 swipeRefreshLayout.setRefreshing(false);
-                insertToDB(true);
             }
         });
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-    private void checkOfflineMsg(boolean isOffLine) {
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private int checkOfflineMsg(boolean isOffLine) {
+        int res = 1;
         for (final String grpId : grpIdList) {
             try {
                 int state = postQueryMsgs(grpId, isOffLine);
                 if (state != 1) {
-                    Toast.makeText(getActivity(), "获取离线消息失败！", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(getActivity(), "第" + grpId + "号拼单已被创建者删除！", Toast.LENGTH_LONG).show();
+                    briefGrpMsgMap.remove(grpId);
+                    res = -1;
                 }
             } catch (IOException | JSONException e) {
                 e.printStackTrace();
             }
         }
+        return res;
     }
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
     private int postQueryMsgs(String grpId, boolean isOffLine) throws IOException, JSONException {
         final String TAG = "QueryMsgs";
         int ret = 0;
@@ -207,14 +272,17 @@ public class MessageFragment extends Fragment {
             String codeString = responseJSON.getString("code");
             int code = Integer.parseInt(codeString);
             if (code == 100) {
-                grpMsgContentListFromPost = new Gson().fromJson(responseJSON.getString("content"), new TypeToken<List<GrpMsgContent>>() {
+                ArrayList<GrpMsgContent> allGrpsMsgList = new Gson().fromJson(responseJSON.getString("content"), new TypeToken<List<GrpMsgContent>>() {
                 }.getType());
-                if (grpMsgContentListFromPost != null) {
-                    Log.e(TAG, "isOffLineMsg: " + isOffLine + ", grpMsgContentListFromPost isEmpty: " + grpMsgContentListFromPost.isEmpty());
-                    for (GrpMsgContent grpMsgContent : grpMsgContentListFromPost) {
-                        BriefGrpMsg briefGrpMsg = new BriefGrpMsg(grpMsgContent.getBillTitle(), grpMsgContent.getNickname(), grpMsgContent.getContent(), getRealTimeString(grpMsgContent.getTime()));
-                        briefGrpMsgMap.put(grpMsgContent.getBillId(), briefGrpMsg);
+                if (allGrpsMsgList != null) {
+                    Log.e(TAG, "msgList from " + grpId + " isOffLineMsg: " + isOffLine + ", grpMsgContentListFromPost isEmpty: " + allGrpsMsgList.isEmpty());
+                    for (GrpMsgContent msgContent : allGrpsMsgList) {
+                        long oldTime = Long.parseLong(msgContent.getTime());
+                        String newTime = Instant.ofEpochMilli(oldTime).atZone(ZoneOffset.ofHours(8)).toLocalDateTime().toString().replace('T', ' ');
+                        msgContent.setTime(newTime);
+                        Log.e(TAG, msgContent.getTime());
                     }
+                    allGrpsMsgListMap.put(grpId, allGrpsMsgList);
                     ret = 1;
                 }
             } else {
@@ -251,60 +319,61 @@ public class MessageFragment extends Fragment {
                 Intent toIntent = new Intent(getActivity(), OneGrpMsgCaseActivity.class);
                 toIntent.putExtra("grpId", cases.get((int) id).get("grpId"));
                 toIntent.putExtra("grpTitle", cases.get((int) id).get("grpTitle"));
-                startActivity(toIntent);
+                startActivityForResult(toIntent, 1);
             }
         });
     }
 
-    private void queryFromDB() {
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            showItems();
+        }
+    }
+
+    private void queryFromDB(String grpId) {
         final String TAG = "queryFromDB";
+        String[] args = new String[]{grpId};
         SQLiteDatabase db = myDBHelper.getWritableDatabase();
-        Cursor cursor = db.query("GrpNewMsg", new String[]{"groupOwnerId", "groupTitle", "msgOwnerNickname", "content", "time"}, null, null, null, null, "time", null);
+        Cursor cursor = db.query("GrpMsg",
+                new String[]{"groupTitle", "nickname", "content", "time", "ownerId"},
+                "groupId=?", args, null, null, "time desc", "1");
         if (cursor.moveToFirst()) {
             do {
-                String groupOwnerId = cursor.getString(cursor.getColumnIndex("groupOwnerId"));
-                int start = groupOwnerId.indexOf("_");
-                String idFromDB = groupOwnerId.substring(start + 1);
-                if (idFromDB.equals(idContent)) {
-                    String groupId = groupOwnerId.substring(0, start);
+                String ownerId = cursor.getString(cursor.getColumnIndex("ownerId"));
+                Log.e(TAG, "queryFromDB: ownerId = " + ownerId);
+                if (ownerId.equals(idContent)) {
                     String groupTitle = cursor.getString(cursor.getColumnIndex("groupTitle"));
-                    String msgOwnerNickname = cursor.getString(cursor.getColumnIndex("msgOwnerNickname"));
+                    String nickname = cursor.getString(cursor.getColumnIndex("nickname"));
                     String content = cursor.getString(cursor.getColumnIndex("content"));
                     String time = cursor.getString(cursor.getColumnIndex("time"));
-                    BriefGrpMsg briefGrpMsg = new BriefGrpMsg(groupTitle, msgOwnerNickname,content, time);
-                    Log.e(TAG, "queryFromDB: grpId = " + groupId);
-                    briefGrpMsgMap.put(groupId, briefGrpMsg);
+                    BriefGrpMsg briefGrpMsg = new BriefGrpMsg(groupTitle, nickname, content, time);
+                    Log.e(TAG, "queryFromDB: grpId = " + grpId);
+                    briefGrpMsgMap.put(grpId, briefGrpMsg);
                 }
             } while (cursor.moveToNext());
         }
         cursor.close();
     }
 
-    private void insertToDB(boolean isOffLine) {
-        if (null != grpMsgContentListFromPost) {
-            for (GrpMsgContent content : grpMsgContentListFromPost) {
-                SQLiteDatabase db = myDBHelper.getWritableDatabase();
-                ContentValues valuesToNewMsg = new ContentValues();
-                valuesToNewMsg.put("groupOwnerId", content.getBillId() + "_" + idContent);
-                valuesToNewMsg.put("groupTitle", content.getBillTitle());
-                valuesToNewMsg.put("msgOwnerNickname", content.getNickname());
-                valuesToNewMsg.put("time", getRealTimeString(content.getTime()));
-                valuesToNewMsg.put("content", content.getContent());
-                db.replace("GrpNewMsg", null, valuesToNewMsg);
+    private void insertToDB(GrpMsgContent msgContent) {
+        SQLiteDatabase db = myDBHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("groupId", msgContent.getBillId());
+        values.put("groupTitle", msgContent.getBillTitle());
+        values.put("userId", msgContent.getUserId());
+        values.put("ownerId", idContent);
+        values.put("nickname", msgContent.getNickname());
+        values.put("content", msgContent.getContent());
+        values.put("time", msgContent.getTime());
+        long position = db.insertWithOnConflict("GrpMsg", null, values, SQLiteDatabase.CONFLICT_IGNORE);
+        Log.e("insertToDB", "from " + msgContent.getBillTitle() + "'s message " + msgContent.getContent() + " has been inserted to " + position + "th");
+    }
 
-                // Get all messages for the first time
-                if (!isOffLine) {
-                    ContentValues valuesToFullMsg = new ContentValues();
-                    valuesToFullMsg.put("groupId", Integer.valueOf(content.getBillId()));
-                    valuesToFullMsg.put("groupTitle", content.getBillTitle());
-                    valuesToFullMsg.put("ownerId", Integer.valueOf(idContent));
-                    valuesToFullMsg.put("userId", Integer.valueOf(content.getUserId()));
-                    valuesToFullMsg.put("nickname", content.getNickname());
-                    valuesToFullMsg.put("content", content.getContent());
-                    valuesToFullMsg.put("time", content.getTime());
-                    db.insertWithOnConflict("GrpMsg", null, valuesToFullMsg, SQLiteDatabase.CONFLICT_IGNORE);
-                }
-            }
-        }
+    private void cleanDB(String grpId) {
+        SQLiteDatabase db = myDBHelper.getWritableDatabase();
+        String[] args = new String[]{grpId};
+        db.delete("GrpMsg", "groupId=?", args);
     }
 }

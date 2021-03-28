@@ -2,7 +2,6 @@ package com.example.duoduopin.activity;
 
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -11,6 +10,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -49,6 +49,7 @@ import okhttp3.WebSocketListener;
 import static com.example.duoduopin.activity.LoginActivity.idContent;
 import static com.example.duoduopin.activity.LoginActivity.nicknameContent;
 import static com.example.duoduopin.activity.LoginActivity.tokenContent;
+import static com.example.duoduopin.fragment.MessageFragment.recGrpMsgService;
 import static com.example.duoduopin.tool.Constants.getChatUrl;
 
 public class OneGrpMsgCaseActivity extends AppCompatActivity {
@@ -59,6 +60,7 @@ public class OneGrpMsgCaseActivity extends AppCompatActivity {
     private Button msgSendButton;
     private TextView grpTitleView;
     private RecyclerView grpMsgRecyclerview;
+    private LinearLayoutManager grpMsgLayoutManager;
     private SwipeRefreshLayout grpMsgSwipeRefresh;
 
     private final ArrayList<GrpMsgDisplay> grpMsgDisplayList = new ArrayList<>();
@@ -66,22 +68,16 @@ public class OneGrpMsgCaseActivity extends AppCompatActivity {
 
     private final MyDBHelper myDBHelper = new MyDBHelper(this, "DuoDuoPin.db", null, 1);
 
-    private final OkHttpClient websocketClient = new OkHttpClient().newBuilder()
-            .readTimeout(0, TimeUnit.SECONDS)
-            .writeTimeout(0, TimeUnit.SECONDS)
-            .connectTimeout(0, TimeUnit.SECONDS)
-            .pingInterval(10, TimeUnit.SECONDS)
-            .build();
-
-    private Request socketRequest;
     private WebSocket grpMsgWebSocket;
 
     private class GrpMsgReceiverDisplay extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            GrpMsgContent newMsg = (GrpMsgContent) intent.getSerializableExtra("msgToDisplay");
-            displayMsg(newMsg, newMsg.getUserId().equals(idContent));
-            insertToDB(newMsg);
+            GrpMsgContent newMsg = (GrpMsgContent) intent.getSerializableExtra("newMsg");
+
+            // Just handle UI
+            displayNewMsg(newMsg, newMsg.getUserId().equals(idContent));
+            grpMsgLayoutManager.scrollToPosition(grpMsgAdapter.getItemCount() + 1);
         }
     }
 
@@ -94,11 +90,15 @@ public class OneGrpMsgCaseActivity extends AppCompatActivity {
         getInfoFromIntent();
         bindItemsAndOps();
 
-        queryFromDB();
+        loadHistoryMsgs();
 
+        doRegisterReceiver(this);
+    }
+
+    private void doRegisterReceiver(Context context) {
         GrpMsgReceiverDisplay grpMsgReceiverDisplay = new GrpMsgReceiverDisplay();
-        IntentFilter intentFilter = new IntentFilter("com.example.duoduopin.grpmsg.display");
-        this.registerReceiver(grpMsgReceiverDisplay, intentFilter);
+        IntentFilter intentFilter = new IntentFilter("com.example.duoduopin.grpmsg.new");
+        context.registerReceiver(grpMsgReceiverDisplay, intentFilter);
     }
 
     private void getInfoFromIntent() {
@@ -112,11 +112,8 @@ public class OneGrpMsgCaseActivity extends AppCompatActivity {
     private void bindItemsAndOps() {
         setContentView(R.layout.activity_one_grpmsg_case);
 
-        if (grpId != null) {
-            socketRequest = new Request.Builder()
-                    .url(getChatUrl(grpId))
-                    .header("token", idContent + "_" + tokenContent)
-                    .build();
+        if (grpId != null && recGrpMsgService != null) {
+            grpMsgWebSocket = recGrpMsgService.getWebSocketMap().get(grpId);
         }
 
         grpTitleView = findViewById(R.id.one_grp_title);
@@ -128,19 +125,21 @@ public class OneGrpMsgCaseActivity extends AppCompatActivity {
         backButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                setResult(RESULT_OK);
                 finish();
             }
         });
 
+        grpMsgLayoutManager = new LinearLayoutManager(this, RecyclerView.VERTICAL, false);
         grpMsgRecyclerview = findViewById(R.id.grp_msg_recyclerview);
-        grpMsgRecyclerview.setLayoutManager(new LinearLayoutManager(this, RecyclerView.VERTICAL, false));
+        grpMsgRecyclerview.setLayoutManager(grpMsgLayoutManager);
         grpMsgRecyclerview.setAdapter(grpMsgAdapter);
 
         grpMsgSwipeRefresh = findViewById(R.id.grp_msg_swipe_refresh);
         grpMsgSwipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                queryFromDB();
+                loadHistoryMsgs();
                 grpMsgSwipeRefresh.setRefreshing(false);
             }
         });
@@ -160,58 +159,19 @@ public class OneGrpMsgCaseActivity extends AppCompatActivity {
                     final GrpMsgContent msgContent = new GrpMsgContent(idContent, grpId, grpTitle, nicknameContent, "CHAT", nowTimeToServer, msgInputString);
                     grpMsgWebSocket.send(new Gson().toJson(msgContent));
                     msgInput.setText("");
+                    grpMsgLayoutManager.scrollToPosition(grpMsgAdapter.getItemCount() + 1);
                 }
-            }
-        });
-
-        grpMsgWebSocket = websocketClient.newWebSocket(socketRequest, new WebSocketListener() {
-            final String TAG = "grpMsgWebSocket";
-
-            @Override
-            public void onOpen(@NotNull WebSocket webSocket, @NotNull Response response) {
-                Log.e(TAG, "onOpen: grpMsgWebSocket opened!");
-            }
-
-            @Override
-            public void onClosed(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
-                super.onClosed(webSocket, code, reason);
-                Log.e(TAG, "onClosed: grpMsgWebSocket closed due to" + code + "/" + reason);
-            }
-
-            @Override
-            public void onClosing(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
-                super.onClosing(webSocket, code, reason);
-                Log.e(TAG, "onClosing: grpMsgWebSocket is closing due to" + code + "/" + reason);
-            }
-
-            @Override
-            public void onFailure(@NotNull WebSocket webSocket, @NotNull Throwable t, @org.jetbrains.annotations.Nullable Response response) {
-                super.onFailure(webSocket, t, response);
-                Log.e(TAG, "onFailure: Failure!" + t.getClass());
-            }
-
-            @RequiresApi(api = Build.VERSION_CODES.O)
-            @Override
-            public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
-                Log.e(TAG, "onMessage: " + text);
-                GrpMsgContent newMsg = new Gson().fromJson(text, GrpMsgContent.class);
-                long oldTime = Long.parseLong(newMsg.getTime());
-                newMsg.setTime(Instant.ofEpochMilli(oldTime).atZone(ZoneOffset.ofHours(8)).toLocalDateTime().toString().replace('T', ' '));
-                Log.e(TAG, "onMessage: " + newMsg.toString());
-                Intent intent = new Intent();
-                intent.putExtra("msgToDisplay", newMsg);
-                intent.setAction("com.example.duoduopin.grpmsg.display");
-                sendBroadcast(intent);
             }
         });
     }
 
-    private void queryFromDB() {
+    private void loadHistoryMsgs() {
         SQLiteDatabase db = myDBHelper.getWritableDatabase();
         String[] args = new String[]{grpId};
         @SuppressLint("Recycle") Cursor cursor = db.query("GrpMsg", new String[]{"userId", "nickname", "content", "time"}, "groupId = ?", args, null, null, "time ASC", null);
         if (cursor.moveToFirst()) {
             do {
+                // query from DB
                 String userId = cursor.getString(cursor.getColumnIndex("userId"));
                 String nickname = cursor.getString(cursor.getColumnIndex("nickname"));
                 String content = cursor.getString(cursor.getColumnIndex("content"));
@@ -220,29 +180,18 @@ public class OneGrpMsgCaseActivity extends AppCompatActivity {
                 if (userId.equals(idContent)) {
                     isMine = true;
                 }
+                // handle UI
                 GrpMsgDisplay grpMsgDisplay = new GrpMsgDisplay(content, R.drawable.testperson, nickname, time, isMine);
                 if (!grpMsgDisplayList.contains(grpMsgDisplay)) {
                     grpMsgAdapter.addHistory(grpMsgDisplay);
+                    grpMsgLayoutManager.scrollToPosition(grpMsgAdapter.getItemCount() - 1);
                 }
             } while (cursor.moveToNext());
         }
         cursor.close();
     }
 
-    private void insertToDB(GrpMsgContent msgContent) {
-        SQLiteDatabase db = myDBHelper.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put("groupId", msgContent.getBillId());
-        values.put("groupTitle", msgContent.getBillTitle());
-        values.put("userId", msgContent.getUserId());
-        values.put("ownerId", idContent);
-        values.put("nickname", msgContent.getNickname());
-        values.put("content", msgContent.getContent());
-        values.put("time", msgContent.getTime().replace('T', ' '));
-        db.insertWithOnConflict("GrpMsg", null, values, SQLiteDatabase.CONFLICT_IGNORE);
-    }
-
-    private void displayMsg(GrpMsgContent msgContent, boolean isMine) {
+    private void displayNewMsg(GrpMsgContent msgContent, boolean isMine) {
         String nickname = msgContent.getNickname();
         String content = msgContent.getContent();
         String time = msgContent.getTime().replace('T', ' ');
@@ -250,5 +199,15 @@ public class OneGrpMsgCaseActivity extends AppCompatActivity {
         if (!grpMsgDisplayList.contains(msgDisplay)) {
             grpMsgAdapter.add(msgDisplay);
         }
+    }
+
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            setResult(RESULT_OK);
+            finish();
+        }
+
+        return super.onKeyDown(keyCode, event);
     }
 }

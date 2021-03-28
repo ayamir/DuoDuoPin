@@ -146,6 +146,13 @@ public class OneOrderCaseActivity extends AppCompatActivity {
                             int state = delQuitOrder(getQuitUrl(orderIdString, idContent));
                             if (state == 1) {
                                 Toast.makeText(OneOrderCaseActivity.this, "您已成功退出该小组", Toast.LENGTH_SHORT).show();
+                                // To close websocket, remove tip
+                                Intent quitIntent = new Intent();
+                                quitIntent.putExtra("quitGrpId", orderIdString);
+                                Log.e("quitOrder", "quitGrpId =" + orderIdString);
+                                quitIntent.setAction("com.example.duoduopin.quitGrp");
+                                sendBroadcast(quitIntent);
+
                             } else if (state == 2) {
                                 Toast.makeText(OneOrderCaseActivity.this, "退出小组失败，请稍后再试", Toast.LENGTH_SHORT).show();
                             } else {
@@ -188,6 +195,12 @@ public class OneOrderCaseActivity extends AppCompatActivity {
                             int state = delDisbandOrder(getDelOrderUrl(orderIdString));
                             if (state == 1) {
                                 Toast.makeText(OneOrderCaseActivity.this, "解散成功！", Toast.LENGTH_SHORT).show();
+                                // To close websocket, remove tip
+                                Intent delIntent = new Intent();
+                                delIntent.putExtra("quitGrpId", orderIdString);
+                                Log.e("delOrder", "quitGrpId =" + orderIdString);
+                                delIntent.setAction("com.example.duoduopin.quitGrp");
+                                sendBroadcast(delIntent);
                             } else {
                                 Toast.makeText(OneOrderCaseActivity.this, "解散失败！", Toast.LENGTH_SHORT).show();
                             }
@@ -228,7 +241,7 @@ public class OneOrderCaseActivity extends AppCompatActivity {
 
     private int postQueryGrpMem(String url) throws IOException, JSONException {
         final String TAG = "postQueryGrpMem";
-        int ret = 1;
+        int ret = 0;
 
         final Request request = new Request.Builder()
                 .url(url)
@@ -246,10 +259,8 @@ public class OneOrderCaseActivity extends AppCompatActivity {
             if (code == 100) {
                 ret = 1;
                 JSONArray contentArray = new JSONArray(responseJSON.getString("content"));
-                if (contentArray != null) {
-                    for (int i = 0; i < contentArray.length(); i++) {
-                        members.add(contentArray.getJSONObject(i).getString("userId"));
-                    }
+                for (int i = 0; i < contentArray.length(); i++) {
+                    members.add(contentArray.getJSONObject(i).getString("userId"));
                 }
             } else {
                 ret = 2;

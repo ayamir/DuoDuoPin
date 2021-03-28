@@ -23,10 +23,8 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
-import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
@@ -37,7 +35,6 @@ import static com.example.duoduopin.activity.MainActivity.client;
 import static com.example.duoduopin.tool.Constants.getAllowUrl;
 import static com.example.duoduopin.tool.Constants.getQueryUrlByOrderId;
 import static com.example.duoduopin.tool.Constants.getQueryUserUrl;
-import static com.example.duoduopin.tool.Constants.getRealTimeString;
 import static com.example.duoduopin.tool.Constants.getRejectUrl;
 
 public class OneSysMsgCaseActivity extends AppCompatActivity {
@@ -135,7 +132,7 @@ public class OneSysMsgCaseActivity extends AppCompatActivity {
                         toIntent.putExtra("address", orderContentJSON.getString("address"));
                         toIntent.putExtra("curPeople", orderContentJSON.getString("curPeople"));
                         toIntent.putExtra("maxPeople", orderContentJSON.getString("maxPeople"));
-                        toIntent.putExtra("time", getRealTimeString(orderContentJSON.getString("time")));
+                        toIntent.putExtra("time", orderContentJSON.getString("time"));
                         toIntent.putExtra("description", orderContentJSON.getString("description"));
                         toIntent.putExtra("title", orderContentJSON.getString("title"));
                         startActivity(toIntent);
