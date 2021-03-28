@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string-array name="itemType">
+        <item>不限制</item>
         <item>拼单</item>
         <item>拼车</item>
     </string-array>

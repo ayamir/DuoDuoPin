@@ -163,6 +163,8 @@ public class HomeFragment extends Fragment {
                     typeString = "CAR";
                 } else if (selected.equals("拼单")) {
                     typeString = "BILL";
+                } else {
+                    typeString = "";
                 }
             }
 
@@ -199,6 +201,9 @@ public class HomeFragment extends Fragment {
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 String selected = parent.getItemAtPosition(position).toString();
                 switch (selected) {
+                    case "不限制":
+                        distanceString = "";
+                        break;
                     case "500米":
                         distanceString = "M500";
                         break;

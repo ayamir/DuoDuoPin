@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
     <string-array name="distanceType">
+        <item>不限制</item>
         <item>500米</item>
         <item>1千米</item>
         <item>2千米</item>

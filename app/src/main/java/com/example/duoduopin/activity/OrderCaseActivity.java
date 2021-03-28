@@ -134,6 +134,7 @@ public class OrderCaseActivity extends AppCompatActivity {
                 distance = fromIntent.getStringExtra("distance");
                 longitude = fromIntent.getStringExtra("longitude");
                 latitude = fromIntent.getStringExtra("latitude");
+                Log.e("Search By Info", "orderType = " + orderType + ", distance = " + distance + ", longitude = " + longitude + ", latitude = " + latitude);
                 try {
                     int state = postQueryOrder(queryByInfoUrl, true);
                     if (state == 1) {
