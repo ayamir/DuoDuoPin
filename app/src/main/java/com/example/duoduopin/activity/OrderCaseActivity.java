@@ -8,10 +8,12 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.Toast;
 
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.duoduopin.R;
 import com.example.duoduopin.bean.OrderContent;
@@ -44,12 +46,15 @@ import static com.example.duoduopin.tool.Constants.getRealTimeString;
 import static com.example.duoduopin.tool.Constants.queryByInfoUrl;
 
 public class OrderCaseActivity extends AppCompatActivity {
+    private Intent fromIntent;
     private String type;
+    private String from;
     private ListView listView;
 
     private List<OrderContent> orderContent;
     private final ArrayList<HashMap<String, String>> cases = new ArrayList<>();
     private final ArrayList<HashMap<String, String>> detailCases = new ArrayList<>();
+    private SwipeRefreshLayout orderCaseSwipeRefresh;
 
     private String timeStart, timeEnd, minPrice, maxPrice, description, orderType, distance, longitude, latitude;
 
@@ -61,11 +66,29 @@ public class OrderCaseActivity extends AppCompatActivity {
 
         listView = findViewById(R.id.orderCase);
 
-        Intent fromIntent = getIntent();
+        fromIntent = getIntent();
         assert fromIntent != null;
-        String from = fromIntent.getStringExtra("from");
+
+        from = fromIntent.getStringExtra("from");
         type = fromIntent.getStringExtra("type");
 
+        switchShow();
+
+        orderCaseSwipeRefresh = findViewById(R.id.order_case_swipe_refresh);
+        orderCaseSwipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                cases.clear();
+                detailCases.clear();
+                switchShow();
+                orderCaseSwipeRefresh.setRefreshing(false);
+            }
+        });
+
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    private void switchShow() {
         switch (from) {
             case "userId":
                 String userId = fromIntent.getStringExtra("userId");
@@ -123,7 +146,6 @@ public class OrderCaseActivity extends AppCompatActivity {
                 }
                 break;
         }
-
     }
 
     private void fillCases(OrderContent content) {
@@ -182,9 +204,20 @@ public class OrderCaseActivity extends AppCompatActivity {
                 toIntent.putExtra("time", detailCases.get((int) id).get("time"));
                 toIntent.putExtra("description", detailCases.get((int) id).get("description"));
                 toIntent.putExtra("title", detailCases.get((int) id).get("title"));
-                startActivity(toIntent);
+                startActivityForResult(toIntent, 1);
             }
         });
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            cases.clear();
+            detailCases.clear();
+            switchShow();
+        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)

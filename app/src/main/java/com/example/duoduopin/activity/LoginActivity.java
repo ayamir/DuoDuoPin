@@ -20,11 +20,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.duoduopin.R;
 import com.example.duoduopin.tool.MyDBHelper;
 
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
@@ -33,7 +37,10 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import okhttp3.WebSocket;
+import okhttp3.WebSocketListener;
 
+import static com.example.duoduopin.tool.Constants.getSysMsgUrl;
 import static com.example.duoduopin.tool.Constants.loginUrl;
 
 public class LoginActivity extends AppCompatActivity {
@@ -54,6 +61,7 @@ public class LoginActivity extends AppCompatActivity {
             .readTimeout(60, TimeUnit.SECONDS)
             .writeTimeout(60, TimeUnit.SECONDS)
             .connectTimeout(60, TimeUnit.SECONDS)
+            .pingInterval(10, TimeUnit.SECONDS)
             .build();
 
     private EditText usernameInput;
@@ -112,12 +120,58 @@ public class LoginActivity extends AppCompatActivity {
                     if (SDK_INT > 8) {
                         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
                         StrictMode.setThreadPolicy(policy);
-                        int res = postRequest(jwt.toString());
+                        final int res = postRequest(jwt.toString());
                         if (res == 1) {
                             Intent intent = new Intent(v.getContext(), MainActivity.class);
                             startActivity(intent);
                             myDBHelper.getWritableDatabase();
                             Toast.makeText(v.getContext(), "登录成功！", Toast.LENGTH_SHORT).show();
+                            Log.e("Login Succeed", "idContent = " + idContent + ", TokenContent = " + tokenContent);
+                            Request request = new Request.Builder()
+                                    .url(getSysMsgUrl(idContent))
+                                    .header("token", idContent + "_" + tokenContent)
+                                    .build();
+                            final String TAG = "SysMsg WebSocket";
+                            WebSocket mWebSocket = client.newWebSocket(request, new WebSocketListener() {
+                                final ExecutorService writeExecutor = Executors.newSingleThreadExecutor();
+                                WebSocket webSocket = null;
+                                @Override
+                                public void onOpen(@NotNull final WebSocket webSocket, @NotNull Response response) {
+                                    super.onOpen(webSocket, response);
+                                    Log.e(TAG, "onOpen: SysMsg WebSocket opened!");
+                                    this.webSocket = webSocket;
+                                    writeExecutor.execute(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            webSocket.send("这里是客户端");
+                                        }
+                                    });
+                                }
+
+                                @Override
+                                public void onClosed(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
+                                    super.onClosed(webSocket, code, reason);
+                                    Log.e(TAG, "onOpen: SysMsg WebSocket closed, because of " + code + "/" + reason);
+                                    writeExecutor.shutdown();
+                                }
+
+                                @Override
+                                public void onClosing(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
+                                    super.onClosing(webSocket, code, reason);
+                                    Log.e(TAG, "onOpen: SysMsg WebSocket is closing, because of " + code + "/" + reason);
+                                }
+
+                                @Override
+                                public void onFailure(@NotNull WebSocket webSocket, @NotNull Throwable t, @Nullable Response response) {
+                                    super.onFailure(webSocket, t, response);
+                                }
+
+                                @Override
+                                public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
+                                    super.onMessage(webSocket, text);
+                                    Log.e(TAG, "onMessage: new message is " + text);
+                                }
+                            });
                         } else if (res == 2) {
                             Toast.makeText(v.getContext(), "用户名或密码错误！", Toast.LENGTH_SHORT).show();
                         } else if (res == 3) {

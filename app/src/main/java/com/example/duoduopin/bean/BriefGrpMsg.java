@@ -1,12 +1,16 @@
 package com.example.duoduopin.bean;
 
-public class BriefGrpMsg {
+import java.io.Serializable;
+
+public class BriefGrpMsg implements Serializable {
     final String grpTitle;
+    final String grpMsgOwnNickname;
     final String grpMsgContent;
     final String grpMsgTime;
 
-    public BriefGrpMsg(String grpTitle, String grpMsgContent, String grpMsgTime) {
+    public BriefGrpMsg(String grpTitle, String grpMsgOwnNickname, String grpMsgContent, String grpMsgTime) {
         this.grpTitle = grpTitle;
+        this.grpMsgOwnNickname = grpMsgOwnNickname;
         this.grpMsgContent = grpMsgContent;
         this.grpMsgTime = grpMsgTime;
     }
@@ -14,6 +18,8 @@ public class BriefGrpMsg {
     public String getGrpTitle() {
         return grpTitle;
     }
+
+    public String getGrpMsgOwnNickname() { return grpMsgOwnNickname; }
 
     public String getGrpMsgContent() {
         return grpMsgContent;

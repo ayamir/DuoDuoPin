@@ -8,6 +8,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.CompoundButton;
@@ -35,10 +36,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
-import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
@@ -78,37 +77,19 @@ public class SysMsgCaseActivity extends AppCompatActivity {
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                try {
-                    int state = postCheckSysMessage();
-                    if (state == 1) {
-                        if (isFromServer) {
-                            readFromServer();
-                            showItems(sysMsgCasesFromServer, sysMsgDetailedCasesFromServer);
-                        } else {
-                            readFromDB();
-                            showItems(sysMsgCasesFromDB, sysMsgDetailedCasesFromDB);
-                        }
-                        Toast.makeText(mContext, "加载系统消息成功！", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(mContext, "加载系统消息失败！", Toast.LENGTH_SHORT).show();
-                    }
-                    swipeRefreshLayout.setRefreshing(false);
-                } catch (IOException | JSONException e) {
-                    e.printStackTrace();
+                final String TAG = "pull-to-refresh";
+                if (isFromServer) {
+                    Log.e(TAG, "onRefresh: isFromServer = " + isFromServer);
+                    readFromServer();
+                    showItems(sysMsgCasesFromServer, sysMsgDetailedCasesFromServer);
+                } else {
+                    Log.e(TAG, "onRefresh: isFromServer = " + isFromServer);
+                    readFromDB();
+                    showItems(sysMsgCasesFromDB, sysMsgDetailedCasesFromDB);
                 }
+                swipeRefreshLayout.setRefreshing(false);
             }
         });
-
-        try {
-            int state = postCheckSysMessage();
-            if (state == 1) {
-                showItems(sysMsgCasesFromServer, sysMsgDetailedCasesFromServer);
-            } else {
-                Toast.makeText(mContext, "遇到未知错误，请稍后再试！", Toast.LENGTH_SHORT).show();
-            }
-        } catch (IOException | JSONException e) {
-            e.printStackTrace();
-        }
 
         switchMsg = findViewById(R.id.switch_msg);
         switchMsg.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -125,6 +106,20 @@ public class SysMsgCaseActivity extends AppCompatActivity {
                 }
             }
         });
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    private void checkSysMsgFromServer() {
+        try {
+            int state = postCheckSysMessage();
+            if (state == 1) {
+                Toast.makeText(mContext, "从云端加载消息成功！", Toast.LENGTH_SHORT).show();
+            } else {
+                Toast.makeText(mContext, "遇到未知错误，请稍后再试！", Toast.LENGTH_SHORT).show();
+            }
+        } catch (IOException | JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     private void showItems(ArrayList<HashMap<String, String>> cases, final ArrayList<HashMap<String, String>> dCases) {
@@ -167,45 +162,50 @@ public class SysMsgCaseActivity extends AppCompatActivity {
     }
 
     private void readFromDB() {
+        sysMsgCasesFromDB.clear();
+        sysMsgDetailedCasesFromDB.clear();
+
         SQLiteDatabase db = myDBHelper.getWritableDatabase();
-        Cursor cursor = db.query("SysMsg", null, null, null, null, null, null, null);
+        String[] args = new String[]{idContent};
+        Cursor cursor = db.query("SysMsg", null, "receiverId=?", args, null, null, "time", null);
         if (cursor.moveToFirst()) {
             do {
-                if (cursor.getString(cursor.getColumnIndex("receiverId")).equals(idContent)) {
-                    HashMap<String, String> mapFromDB = new HashMap<>();
-                    mapFromDB.put("title", "系统消息");
-                    mapFromDB.put("content", cursor.getString(cursor.getColumnIndex("content")));
-                    mapFromDB.put("time", cursor.getString(cursor.getColumnIndex("time")));
-                    if (!sysMsgCasesFromDB.contains(mapFromDB)) {
-                        sysMsgCasesFromDB.add(mapFromDB);
-                    }
+                HashMap<String, String> mapFromDB = new HashMap<>();
+                mapFromDB.put("title", "系统消息");
+                mapFromDB.put("content", cursor.getString(cursor.getColumnIndex("content")));
+                mapFromDB.put("time", cursor.getString(cursor.getColumnIndex("time")));
+                sysMsgCasesFromDB.add(mapFromDB);
 
-                    HashMap<String, String> dmapFromDB = new HashMap<>();
-                    dmapFromDB.put("messageId", cursor.getString(cursor.getColumnIndex("messageId")));
-                    dmapFromDB.put("senderId", cursor.getString(cursor.getColumnIndex("senderId")));
-                    dmapFromDB.put("billId", cursor.getString(cursor.getColumnIndex("billId")));
-                    dmapFromDB.put("type", cursor.getString(cursor.getColumnIndex("type")));
-                    dmapFromDB.put("time", cursor.getString(cursor.getColumnIndex("time")));
-                    dmapFromDB.put("content", cursor.getString(cursor.getColumnIndex("content")));
-                    if (!sysMsgDetailedCasesFromDB.contains(dmapFromDB)) {
-                        sysMsgDetailedCasesFromDB.add(dmapFromDB);
-                    }
-                }
+                HashMap<String, String> dmapFromDB = new HashMap<>();
+                dmapFromDB.put("messageId", cursor.getString(cursor.getColumnIndex("messageId")));
+                dmapFromDB.put("senderId", cursor.getString(cursor.getColumnIndex("senderId")));
+                dmapFromDB.put("billId", cursor.getString(cursor.getColumnIndex("billId")));
+                dmapFromDB.put("type", cursor.getString(cursor.getColumnIndex("type")));
+                dmapFromDB.put("time", cursor.getString(cursor.getColumnIndex("time")));
+                dmapFromDB.put("content", cursor.getString(cursor.getColumnIndex("content")));
+                sysMsgDetailedCasesFromDB.add(dmapFromDB);
             } while (cursor.moveToNext());
         }
         cursor.close();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void readFromServer() {
+        sysMsgDetailedCasesFromServer.clear();
+        sysMsgCasesFromServer.clear();
+
+        if (sysMsgContent != null) {
+            sysMsgContent.clear();
+        }
+        checkSysMsgFromServer();
+
         for (SysMsgContent content : sysMsgContent) {
             HashMap<String, String> map = new HashMap<>();
             map.put("title", "系统消息");
             String contentString = content.getContent();
             map.put("content", contentString);
             map.put("time", getRealTimeString(content.getTime().replace('T', ' ')));
-            if (!sysMsgCasesFromServer.contains(map)) {
-                sysMsgCasesFromServer.add(map);
-            }
+            sysMsgCasesFromServer.add(map);
 
             HashMap<String, String> dmap = new HashMap<>();
             dmap.put("messageId", content.getMessageId());
@@ -215,16 +215,13 @@ public class SysMsgCaseActivity extends AppCompatActivity {
             dmap.put("type", content.getType());
             dmap.put("time", getRealTimeString(content.getTime().replace('T', ' ')));
             dmap.put("content", contentString);
-            if (!sysMsgDetailedCasesFromServer.contains(dmap)) {
-                sysMsgDetailedCasesFromServer.add(dmap);
-            }
+            sysMsgDetailedCasesFromServer.add(dmap);
         }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private int postCheckSysMessage() throws IOException, JSONException {
         final String TAG = "checkSysMessgae";
-
         int ret = 0;
 
         Request request = new Request.Builder()
@@ -246,6 +243,7 @@ public class SysMsgCaseActivity extends AppCompatActivity {
                 }.getType());
                 if (sysMsgContent != null) {
                     ret = 1;
+                    Log.e(TAG, "jsonObject = " + jsonObject.toString(2));
                 }
             } else {
                 ret = 2;

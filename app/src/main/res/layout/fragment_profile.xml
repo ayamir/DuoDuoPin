@@ -39,7 +39,7 @@
             android:orientation="horizontal">
 
             <LinearLayout
-                android:id="@+id/ownOrderCaseButtoncar"
+                android:id="@+id/order_case_layout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -61,7 +61,7 @@
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/carCaseButton"
+                android:id="@+id/car_case_layout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -83,6 +83,7 @@
             </LinearLayout>
 
             <LinearLayout
+                android:id="@+id/clear_storage_layout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
@@ -99,7 +100,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:text="待添加功能1"
+                    android:text="清除缓存"
                     android:textSize="18sp" />
             </LinearLayout>
 

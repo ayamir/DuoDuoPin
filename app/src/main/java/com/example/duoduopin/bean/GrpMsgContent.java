@@ -1,12 +1,16 @@
 package com.example.duoduopin.bean;
 
-public class GrpMsgContent {
+import androidx.annotation.NonNull;
+
+import java.io.Serializable;
+
+public class GrpMsgContent implements Serializable {
     private final String userId;
     private final String billId;
     private final String billTitle;
     private final String nickname;
     private final String type;
-    private final String time;
+    private String time;
     private final String content;
 
     public GrpMsgContent(String userId, String billId, String billTitle, String nickname, String type, String time, String content) {
@@ -35,6 +39,10 @@ public class GrpMsgContent {
         return time;
     }
 
+    public void setTime(String time) {
+        this.time = time;
+    }
+
     public String getContent() {
         return content;
     }
@@ -43,9 +51,13 @@ public class GrpMsgContent {
         return userId;
     }
 
-
     public String getBillTitle() {
         return billTitle;
     }
 
+    @NonNull
+    @Override
+    public String toString() {
+        return userId + " " + billId + " " + billTitle + " " + nickname + " " + type + " " + time + " " + content;
+    }
 }

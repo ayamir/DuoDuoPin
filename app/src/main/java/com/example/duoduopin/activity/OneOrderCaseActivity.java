@@ -26,10 +26,8 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
-import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
@@ -156,6 +154,8 @@ public class OneOrderCaseActivity extends AppCompatActivity {
                         } catch (IOException | JSONException e) {
                             e.printStackTrace();
                         }
+                        setResult(RESULT_OK, null);
+                        finish();
                         break;
                     case DialogInterface.BUTTON_NEGATIVE:
                         dialog.dismiss();
@@ -187,8 +187,6 @@ public class OneOrderCaseActivity extends AppCompatActivity {
                         try {
                             int state = delDisbandOrder(getDelOrderUrl(orderIdString));
                             if (state == 1) {
-                                // finish之后应该返回上上层activity
-                                finish();
                                 Toast.makeText(OneOrderCaseActivity.this, "解散成功！", Toast.LENGTH_SHORT).show();
                             } else {
                                 Toast.makeText(OneOrderCaseActivity.this, "解散失败！", Toast.LENGTH_SHORT).show();
@@ -196,6 +194,8 @@ public class OneOrderCaseActivity extends AppCompatActivity {
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
+                        setResult(RESULT_OK, null);
+                        finish();
                         break;
                     case DialogInterface.BUTTON_NEGATIVE:
                         dialog.dismiss();
@@ -346,7 +346,7 @@ public class OneOrderCaseActivity extends AppCompatActivity {
     }
 
     private void initValue() {
-        EditText nickname = findViewById(R.id.nickname);
+        EditText nickname = findViewById(R.id.msg_nickname_left);
         EditText userId = findViewById(R.id.userId);
         EditText orderId = findViewById(R.id.orderId);
         EditText type = findViewById(R.id.type);
@@ -354,7 +354,7 @@ public class OneOrderCaseActivity extends AppCompatActivity {
         EditText address = findViewById(R.id.address);
         EditText curPeople = findViewById(R.id.curNumber);
         EditText maxPeople = findViewById(R.id.maxNumber);
-        TextView time = findViewById(R.id.time);
+        TextView time = findViewById(R.id.msg_time_left);
         TextView description = findViewById(R.id.description);
         TextView title = findViewById(R.id.title);
 

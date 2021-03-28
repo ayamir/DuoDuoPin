@@ -27,7 +27,13 @@
         android:theme="@style/AppTheme"
         android:usesCleartextTraffic="true"
         tools:targetApi="m">
-
+        <service
+            android:name=".service.RecGrpMsgService"
+            android:enabled="true"
+            android:exported="true"></service>
+        <service
+            android:name=".service.QueryUserOrderService"
+            android:exported="false" />
         <service android:name="com.amap.api.location.APSService" />
 
         <activity android:name=".activity.RegisterActivity" />
