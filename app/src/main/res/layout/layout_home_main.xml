@@ -61,7 +61,7 @@
             android:inputType="textPersonName" />
 
         <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
+            android:layout_width="wrap_content"
             android:layout_height="51dp"
             android:layout_marginTop="10dp">
 

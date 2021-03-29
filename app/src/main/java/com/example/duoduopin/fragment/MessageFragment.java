@@ -34,7 +34,7 @@ import com.example.duoduopin.activity.OneGrpMsgCaseActivity;
 import com.example.duoduopin.activity.SysMsgCaseActivity;
 import com.example.duoduopin.bean.BriefGrpMsg;
 import com.example.duoduopin.bean.GrpMsgContent;
-import com.example.duoduopin.service.RecGrpMsgService;
+import com.example.duoduopin.service.RecMsgService;
 import com.example.duoduopin.tool.MyDBHelper;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -73,7 +73,7 @@ public class MessageFragment extends Fragment {
     private HashMap<String, BriefGrpMsg> briefGrpMsgMap = new HashMap<>();
 
     private MyDBHelper myDBHelper;
-    public static RecGrpMsgService recGrpMsgService;
+    public static RecMsgService recMsgService;
 
     private GrpMsgReceiverBrief grpMsgReceiverBrief;
     private GrpQuitReceiver grpQuitReceiver;
@@ -85,9 +85,9 @@ public class MessageFragment extends Fragment {
             Log.e("MessageFragment", "onServiceConnected");
 
             // Bind service
-            RecGrpMsgService.RecGrpMsgBinder binder = (RecGrpMsgService.RecGrpMsgBinder) iBinder;
-            recGrpMsgService = binder.getService();
-            grpIdList = recGrpMsgService.getGrpIdList();
+            RecMsgService.RecGrpMsgBinder binder = (RecMsgService.RecGrpMsgBinder) iBinder;
+            recMsgService = binder.getService();
+            grpIdList = recMsgService.getGrpIdList();
 
             // Get full message records from server
             checkOfflineMsg(false);
@@ -134,8 +134,8 @@ public class MessageFragment extends Fragment {
         public void onReceive(Context context, Intent intent) {
             String quitGrpId = intent.getStringExtra("quitGrpId");
 
-            Objects.requireNonNull(recGrpMsgService.getWebSocketMap().get(quitGrpId)).close(1000, "You have quited " + quitGrpId + " group!");
-            recGrpMsgService.getWebSocketMap().remove(quitGrpId);
+            Objects.requireNonNull(recMsgService.getWebSocketMap().get(quitGrpId)).close(1000, "You have quited " + quitGrpId + " group!");
+            recMsgService.getWebSocketMap().remove(quitGrpId);
             briefGrpMsgMap.remove(quitGrpId);
             if (context == getActivity())
                 showItems();
@@ -176,7 +176,7 @@ public class MessageFragment extends Fragment {
         myDBHelper = new MyDBHelper(getActivity(), "DuoDuoPin.db", null, 1);
         bindItemsAndOps();
 
-        Intent bindIntent = new Intent(this.getActivity(), RecGrpMsgService.class);
+        Intent bindIntent = new Intent(this.getActivity(), RecMsgService.class);
         getActivity().bindService(bindIntent, connection, Context.BIND_AUTO_CREATE);
         doRegisterReceiver();
     }

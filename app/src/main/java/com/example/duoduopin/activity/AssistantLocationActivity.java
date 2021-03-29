@@ -14,7 +14,7 @@ import android.webkit.WebViewClient;
 import com.amap.api.location.AMapLocationClient;
 import com.amap.api.navi.CheckPermissionsActivity;
 import com.example.duoduopin.R;
-import com.example.duoduopin.tool.Utils;
+import com.example.duoduopin.tool.MapInvoker;
 
 public class AssistantLocationActivity extends CheckPermissionsActivity {
 	private AMapLocationClient locationClient = null;
@@ -42,7 +42,7 @@ public class AssistantLocationActivity extends CheckPermissionsActivity {
 	 */
 	@SuppressLint("SetJavaScriptEnabled")
 	private void setWebView(){
-		webView.loadUrl(Utils.URL_H5LOCATION);
+		webView.loadUrl(MapInvoker.URL_H5LOCATION);
 		WebSettings webSettings = webView.getSettings();
 		// 允许webview执行javaScript脚本
 		webSettings.setJavaScriptEnabled(true);

@@ -9,7 +9,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
@@ -31,26 +30,15 @@ import com.example.duoduopin.tool.GrpMsgAdapter;
 import com.example.duoduopin.tool.MyDBHelper;
 import com.google.gson.Gson;
 
-import org.jetbrains.annotations.NotNull;
-
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.concurrent.TimeUnit;
 
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
 import okhttp3.WebSocket;
-import okhttp3.WebSocketListener;
 
 import static com.example.duoduopin.activity.LoginActivity.idContent;
 import static com.example.duoduopin.activity.LoginActivity.nicknameContent;
-import static com.example.duoduopin.activity.LoginActivity.tokenContent;
-import static com.example.duoduopin.fragment.MessageFragment.recGrpMsgService;
-import static com.example.duoduopin.tool.Constants.getChatUrl;
+import static com.example.duoduopin.fragment.MessageFragment.recMsgService;
 
 public class OneGrpMsgCaseActivity extends AppCompatActivity {
     private String grpId;
@@ -77,7 +65,7 @@ public class OneGrpMsgCaseActivity extends AppCompatActivity {
 
             // Just handle UI
             displayNewMsg(newMsg, newMsg.getUserId().equals(idContent));
-            grpMsgLayoutManager.scrollToPosition(grpMsgAdapter.getItemCount() + 1);
+            grpMsgLayoutManager.scrollToPosition(grpMsgAdapter.getItemCount()-1);
         }
     }
 
@@ -112,8 +100,8 @@ public class OneGrpMsgCaseActivity extends AppCompatActivity {
     private void bindItemsAndOps() {
         setContentView(R.layout.activity_one_grpmsg_case);
 
-        if (grpId != null && recGrpMsgService != null) {
-            grpMsgWebSocket = recGrpMsgService.getWebSocketMap().get(grpId);
+        if (grpId != null && recMsgService != null) {
+            grpMsgWebSocket = recMsgService.getWebSocketMap().get(grpId);
         }
 
         grpTitleView = findViewById(R.id.one_grp_title);
@@ -159,7 +147,6 @@ public class OneGrpMsgCaseActivity extends AppCompatActivity {
                     final GrpMsgContent msgContent = new GrpMsgContent(idContent, grpId, grpTitle, nicknameContent, "CHAT", nowTimeToServer, msgInputString);
                     grpMsgWebSocket.send(new Gson().toJson(msgContent));
                     msgInput.setText("");
-                    grpMsgLayoutManager.scrollToPosition(grpMsgAdapter.getItemCount() + 1);
                 }
             }
         });

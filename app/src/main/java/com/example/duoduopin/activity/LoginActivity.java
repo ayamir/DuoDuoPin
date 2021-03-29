@@ -50,7 +50,7 @@ public class LoginActivity extends AppCompatActivity {
     private SharedPreferences pref;
     public static String idContent;
     public static String tokenContent;
-    public static String nameContent;
+    public static String usernameContent;
     public static String nicknameContent;
 
     private String username;
@@ -218,11 +218,11 @@ public class LoginActivity extends AppCompatActivity {
             idContent = contentJson.optString(idFromServer);
             tokenContent = contentJson.optString(tokenFromServer);
             nicknameContent = contentJson.optString(nicknameFromServer);
-            nameContent = username;
+            usernameContent = username;
             SharedPreferences.Editor editor = pref.edit();
             editor.putString("id", idContent);
             editor.putString("token", tokenContent);
-            editor.putString("name", nameContent);
+            editor.putString("name", usernameContent);
             ret = 1;
         } else {
             Log.d(TAG, "responseJSON = " + responseJSON.toString());

@@ -28,7 +28,7 @@
         android:usesCleartextTraffic="true"
         tools:targetApi="m">
         <service
-            android:name=".service.RecGrpMsgService"
+            android:name=".service.RecMsgService"
             android:enabled="true"
             android:exported="true"></service>
         <service

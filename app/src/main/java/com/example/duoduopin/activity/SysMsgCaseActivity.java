@@ -75,6 +75,22 @@ public class SysMsgCaseActivity extends AppCompatActivity {
         listView = findViewById(R.id.sysMsgCase);
         swipeRefreshLayout = findViewById(R.id.sys_msg_swipe_refresh);
 
+        switchMsg = findViewById(R.id.switch_msg);
+        switchMsg.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if (buttonView.isChecked()) {
+                    isFromServer = false;
+                    readFromDB();
+                    showItems(sysMsgCasesFromDB, sysMsgDetailedCasesFromDB);
+                } else {
+                    isFromServer = true;
+                    readFromServer();
+                    showItems(sysMsgCasesFromServer, sysMsgDetailedCasesFromServer);
+                }
+            }
+        });
+
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
@@ -89,22 +105,6 @@ public class SysMsgCaseActivity extends AppCompatActivity {
                     showItems(sysMsgCasesFromDB, sysMsgDetailedCasesFromDB);
                 }
                 swipeRefreshLayout.setRefreshing(false);
-            }
-        });
-
-        switchMsg = findViewById(R.id.switch_msg);
-        switchMsg.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (buttonView.isChecked()) {
-                    isFromServer = false;
-                    readFromDB();
-                    showItems(sysMsgCasesFromDB, sysMsgDetailedCasesFromDB);
-                } else {
-                    isFromServer = true;
-                    readFromServer();
-                    showItems(sysMsgCasesFromServer, sysMsgDetailedCasesFromServer);
-                }
             }
         });
     }
@@ -222,7 +222,7 @@ public class SysMsgCaseActivity extends AppCompatActivity {
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private int postCheckSysMessage() throws IOException, JSONException {
-        final String TAG = "checkSysMessgae";
+        final String TAG = "checkSysMessage";
         int ret = 0;
 
         Request request = new Request.Builder()
