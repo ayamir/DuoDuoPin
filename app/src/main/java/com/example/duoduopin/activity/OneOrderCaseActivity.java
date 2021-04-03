@@ -1,10 +1,13 @@
 package com.example.duoduopin.activity;
 
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -13,6 +16,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
@@ -32,13 +36,18 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-import static com.example.duoduopin.activity.LoginActivity.idContent;
-import static com.example.duoduopin.activity.LoginActivity.tokenContent;
 import static com.example.duoduopin.activity.MainActivity.client;
+import static com.example.duoduopin.activity.MainActivity.idContent;
+import static com.example.duoduopin.activity.MainActivity.tokenContent;
+import static com.example.duoduopin.handler.GeneralMsgHandler.ERROR;
+import static com.example.duoduopin.handler.GeneralMsgHandler.GROUP_FULL;
+import static com.example.duoduopin.handler.GeneralMsgHandler.JOIN_REPEAT;
+import static com.example.duoduopin.handler.GeneralMsgHandler.SUCCESS;
 import static com.example.duoduopin.tool.Constants.getDelOrderUrl;
 import static com.example.duoduopin.tool.Constants.getJoinUrl;
 import static com.example.duoduopin.tool.Constants.getQueryMemberUrl;
 import static com.example.duoduopin.tool.Constants.getQuitUrl;
+import static com.example.duoduopin.tool.Constants.group_quit_signal;
 
 public class OneOrderCaseActivity extends AppCompatActivity {
 
@@ -68,20 +77,37 @@ public class OneOrderCaseActivity extends AppCompatActivity {
             delete.setVisibility(View.INVISIBLE);
         }
 
-        try {
-            int state = postQueryGrpMem(getQueryMemberUrl(orderIdString));
-            if (state == 1) {
-                if (isInMembers()) {
-                    leave.setVisibility(View.VISIBLE);
-                    join.setVisibility(View.INVISIBLE);
-                } else {
-                    leave.setVisibility(View.INVISIBLE);
-                    join.setVisibility(View.VISIBLE);
+        @SuppressLint("HandlerLeak")
+        final Handler isInHandler = new Handler() {
+            @Override
+            public void handleMessage(@NonNull Message msg) {
+                super.handleMessage(msg);
+                if (msg.what == SUCCESS) {
+                    if (isInMembers()) {
+                        leave.setVisibility(View.VISIBLE);
+                        join.setVisibility(View.INVISIBLE);
+                    } else {
+                        leave.setVisibility(View.INVISIBLE);
+                        join.setVisibility(View.VISIBLE);
+                    }
                 }
             }
-        } catch (IOException | JSONException e) {
-            e.printStackTrace();
-        }
+        };
+
+        new Thread(new Runnable() {
+            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+            @Override
+            public void run() {
+                Message message = new Message();
+                try {
+                    message.what = postQueryGrpMem(getQueryMemberUrl(orderIdString));
+                    isInHandler.sendMessage(message);
+                } catch (IOException | JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+
     }
 
     private boolean isInMembers() {
@@ -118,21 +144,42 @@ public class OneOrderCaseActivity extends AppCompatActivity {
         join.setOnClickListener(new View.OnClickListener() {
             @RequiresApi(api = Build.VERSION_CODES.KITKAT)
             @Override
-            public void onClick(View v) {
-                try {
-                    int state = putJoin(getJoinUrl(orderIdString));
-                    if (state == 1) {
-                        Toast.makeText(v.getContext(), "请求发送成功！", Toast.LENGTH_SHORT).show();
-                    } else if (state == 2) {
-                        Toast.makeText(v.getContext(), "您已发送过请求，无需重复发送！", Toast.LENGTH_SHORT).show();
-                    } else if (state == 3) {
-                        Toast.makeText(v.getContext(), "当前小组人数已满！", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(v.getContext(), "请检查网络状况稍后再试", Toast.LENGTH_SHORT).show();
+            public void onClick(final View v) {
+                new Thread(new Runnable() {
+
+                    @SuppressLint("HandlerLeak")
+                    final Handler joinHandler = new Handler(){
+                        @Override
+                        public void handleMessage(@NonNull Message msg) {
+                            switch (msg.what) {
+                                case SUCCESS:
+                                    Toast.makeText(v.getContext(), "请求发送成功！", Toast.LENGTH_SHORT).show();
+                                    break;
+                                case ERROR:
+                                    Toast.makeText(v.getContext(), "请检查网络状况稍后再试", Toast.LENGTH_SHORT).show();
+                                    break;
+                                case JOIN_REPEAT:
+                                    Toast.makeText(v.getContext(), "您已发送过请求，无需重复发送！", Toast.LENGTH_SHORT).show();
+                                    break;
+                                case GROUP_FULL:
+                                    Toast.makeText(v.getContext(), "当前小组人数已满！", Toast.LENGTH_SHORT).show();
+                                    break;
+                                default:
+                                    break;
+                            }
+                        }
+                    };
+                    @Override
+                    public void run() {
+                        try {
+                            Message message = new Message();
+                            message.what = putJoin(getJoinUrl(orderIdString));
+                            joinHandler.sendMessage(message);
+                        } catch (IOException | JSONException e) {
+                            e.printStackTrace();
+                        }
                     }
-                } catch (IOException | JSONException e) {
-                    e.printStackTrace();
-                }
+                }).start();
             }
         });
 
@@ -142,25 +189,43 @@ public class OneOrderCaseActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
                 switch (which) {
                     case DialogInterface.BUTTON_POSITIVE:
-                        try {
-                            int state = delQuitOrder(getQuitUrl(orderIdString, idContent));
-                            if (state == 1) {
-                                Toast.makeText(OneOrderCaseActivity.this, "您已成功退出该小组", Toast.LENGTH_SHORT).show();
-                                // To close websocket, remove tip
-                                Intent quitIntent = new Intent();
-                                quitIntent.putExtra("quitGrpId", orderIdString);
-                                Log.e("quitOrder", "quitGrpId =" + orderIdString);
-                                quitIntent.setAction("com.example.duoduopin.quitGrp");
-                                sendBroadcast(quitIntent);
+                        @SuppressLint("HandlerLeak")
+                        final Handler quitHandler = new Handler(){
+                            @Override
+                            public void handleMessage(@NonNull Message msg) {
+                                switch (msg.what) {
+                                    case SUCCESS:
+                                        Toast.makeText(OneOrderCaseActivity.this, "您已成功退出该小组", Toast.LENGTH_SHORT).show();
 
-                            } else if (state == 2) {
-                                Toast.makeText(OneOrderCaseActivity.this, "退出小组失败，请稍后再试", Toast.LENGTH_SHORT).show();
-                            } else {
-                                Toast.makeText(OneOrderCaseActivity.this, "遇到未知错误，请稍后再试", Toast.LENGTH_SHORT).show();
+                                        // To close websocket, remove tip
+                                        Intent quitIntent = new Intent();
+                                        quitIntent.putExtra("quitGrpId", orderIdString);
+                                        Log.e("quitOrder", "quitGrpId =" + orderIdString);
+                                        quitIntent.setAction(group_quit_signal);
+                                        sendBroadcast(quitIntent);
+                                        break;
+                                    case ERROR:
+                                        Toast.makeText(OneOrderCaseActivity.this, "遇到未知错误，请稍后再试", Toast.LENGTH_SHORT).show();
+                                        break;
+                                    default:
+                                        Toast.makeText(OneOrderCaseActivity.this, "退出小组失败，请稍后再试", Toast.LENGTH_SHORT).show();
+                                        break;
+                                }
                             }
-                        } catch (IOException | JSONException e) {
-                            e.printStackTrace();
-                        }
+                        };
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                try {
+                                    Message message = new Message();
+                                    message.what = delQuitOrder(getQuitUrl(orderIdString, idContent));
+                                    quitHandler.sendMessage(message);
+                                } catch (IOException | JSONException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        }).start();
+
                         setResult(RESULT_OK, null);
                         finish();
                         break;
@@ -191,22 +256,38 @@ public class OneOrderCaseActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
                 switch (which) {
                     case DialogInterface.BUTTON_POSITIVE:
-                        try {
-                            int state = delDisbandOrder(getDelOrderUrl(orderIdString));
-                            if (state == 1) {
-                                Toast.makeText(OneOrderCaseActivity.this, "解散成功！", Toast.LENGTH_SHORT).show();
-                                // To close websocket, remove tip
-                                Intent delIntent = new Intent();
-                                delIntent.putExtra("quitGrpId", orderIdString);
-                                Log.e("delOrder", "quitGrpId =" + orderIdString);
-                                delIntent.setAction("com.example.duoduopin.quitGrp");
-                                sendBroadcast(delIntent);
-                            } else {
-                                Toast.makeText(OneOrderCaseActivity.this, "解散失败！", Toast.LENGTH_SHORT).show();
+                        new Thread(new Runnable() {
+                            @SuppressLint("HandlerLeak")
+                            final Handler deleteHandler = new Handler(){
+                                @SuppressLint("HandlerLeak")
+                                @Override
+                                public void handleMessage(@NonNull Message msg) {
+                                    if (msg.what == SUCCESS) {
+                                        Toast.makeText(OneOrderCaseActivity.this, "解散成功！", Toast.LENGTH_SHORT).show();
+
+                                        // To close websocket, remove tip
+                                        Intent delIntent = new Intent();
+                                        delIntent.putExtra("quitGrpId", orderIdString);
+                                        Log.e("delOrder", "quitGrpId =" + orderIdString);
+                                        delIntent.setAction(group_quit_signal);
+                                        sendBroadcast(delIntent);
+                                    } else {
+                                        Toast.makeText(OneOrderCaseActivity.this, "解散失败！", Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+                            };
+                            @Override
+                            public void run() {
+                                try {
+                                    Message message = new Message();
+                                    message.what = delDisbandOrder(getDelOrderUrl(orderIdString));
+                                    deleteHandler.sendMessage(message);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
                             }
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                        }).start();
+
                         setResult(RESULT_OK, null);
                         finish();
                         break;
@@ -239,6 +320,7 @@ public class OneOrderCaseActivity extends AppCompatActivity {
         });
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private int postQueryGrpMem(String url) throws IOException, JSONException {
         final String TAG = "postQueryGrpMem";
         int ret = 0;
@@ -253,7 +335,7 @@ public class OneOrderCaseActivity extends AppCompatActivity {
         Response response = call.execute();
 
         if (response.code() == 200) {
-            JSONObject responseJSON = new JSONObject(response.body().string());
+            JSONObject responseJSON = new JSONObject(Objects.requireNonNull(response.body()).string());
             String codeString = responseJSON.getString("code");
             int code = Integer.parseInt(codeString);
             if (code == 100) {
@@ -366,8 +448,8 @@ public class OneOrderCaseActivity extends AppCompatActivity {
         EditText curPeople = findViewById(R.id.curNumber);
         EditText maxPeople = findViewById(R.id.maxNumber);
         TextView time = findViewById(R.id.msg_time_left);
-        TextView description = findViewById(R.id.description);
-        TextView title = findViewById(R.id.title);
+        TextView description = findViewById(R.id.tv_description);
+        TextView title = findViewById(R.id.tv_title);
 
         nickname.setText(nicknameString);
         userId.setText(userIdString);

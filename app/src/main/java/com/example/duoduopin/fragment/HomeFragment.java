@@ -26,6 +26,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.bigkoo.pickerview.builder.TimePickerBuilder;
 import com.bigkoo.pickerview.listener.OnTimeSelectChangeListener;
@@ -76,46 +78,12 @@ public class HomeFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        FloatingActionButton carBtn = getActivity().findViewById(R.id.carBtn);
-        carBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(getActivity(), "等待进一步开发...", Toast.LENGTH_SHORT).show();
-            }
-        });
+        bindMainItems();
+        bindMenuItems();
+    }
 
-        FloatingActionButton orderBtn = getActivity().findViewById(R.id.orderBtn);
-        orderBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(getActivity(), "等待进一步开发...", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        EditText searchBar = getActivity().findViewById(R.id.searchBar);
-        searchBar.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(getActivity(), "等待进一步开发...", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        ImageView selectLogo = getActivity().findViewById(R.id.selectLogo);
-        selectLogo.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(getActivity(), "请从屏幕左边缘向右滑动", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        TextView select = getActivity().findViewById(R.id.select);
-        select.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(getActivity(), "请从屏幕左边缘向右滑动", Toast.LENGTH_SHORT).show();
-            }
-        });
-
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    private void bindMenuItems() {
         searchId = getActivity().findViewById(R.id.searchId);
 
         Button searchByUserId = getActivity().findViewById(R.id.searchByUserId);
@@ -150,9 +118,8 @@ public class HomeFragment extends Fragment {
                 }
             }
         });
-
         Spinner typeSpinner = getActivity().findViewById(R.id.type);
-        ArrayAdapter<CharSequence> typeAdapter = ArrayAdapter.createFromResource(getActivity(), R.array.itemType, android.R.layout.simple_spinner_item);
+        ArrayAdapter<CharSequence> typeAdapter = ArrayAdapter.createFromResource(getActivity(), R.array.searchItemType, android.R.layout.simple_spinner_item);
         typeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         typeSpinner.setAdapter(typeAdapter);
         typeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -233,7 +200,7 @@ public class HomeFragment extends Fragment {
 
         minPrice = getActivity().findViewById(R.id.minPrice);
         maxPrice = getActivity().findViewById(R.id.maxPrice);
-        description = getActivity().findViewById(R.id.description);
+        description = getActivity().findViewById(R.id.tv_description);
         tude = getActivity().findViewById(R.id.tudeSearch);
 
         Button submitSearch = getActivity().findViewById(R.id.submitSearch);
@@ -273,6 +240,52 @@ public class HomeFragment extends Fragment {
                 }
             }
         });
+    }
+
+    private void bindMainItems() {
+        FloatingActionButton carBtn = getActivity().findViewById(R.id.carBtn);
+        carBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getActivity(), "等待进一步开发...", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        FloatingActionButton orderBtn = getActivity().findViewById(R.id.orderBtn);
+        orderBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getActivity(), "等待进一步开发...", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        EditText searchBar = getActivity().findViewById(R.id.searchBar);
+        searchBar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getActivity(), "等待进一步开发...", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        ImageView selectLogo = getActivity().findViewById(R.id.selectLogo);
+        selectLogo.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getActivity(), "请从屏幕左边缘向右滑动", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        TextView select = getActivity().findViewById(R.id.select);
+        select.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getActivity(), "请从屏幕左边缘向右滑动", Toast.LENGTH_SHORT).show();
+            }
+        });
+
+        RecyclerView rvContentList = getActivity().findViewById(R.id.rv_content_list);
+        LinearLayoutManager homeContentLayoutManager = new LinearLayoutManager(getActivity(), RecyclerView.VERTICAL, false);
+        rvContentList.setLayoutManager(homeContentLayoutManager);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)

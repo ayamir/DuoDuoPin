@@ -1,7 +1,6 @@
 package com.example.duoduopin.activity;
 
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Build;
@@ -18,17 +17,12 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.duoduopin.R;
-import com.example.duoduopin.tool.MyDBHelper;
 
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
 import java.util.Objects;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
@@ -37,25 +31,19 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
-import okhttp3.WebSocket;
-import okhttp3.WebSocketListener;
 
-import static com.example.duoduopin.tool.Constants.getSysMsgUrl;
+import static com.example.duoduopin.activity.MainActivity.prefs;
+import static com.example.duoduopin.activity.MainActivity.idContent;
+import static com.example.duoduopin.activity.MainActivity.tokenContent;
+import static com.example.duoduopin.activity.MainActivity.nicknameContent;
+import static com.example.duoduopin.activity.MainActivity.usernameContent;
 import static com.example.duoduopin.tool.Constants.loginUrl;
 
 public class LoginActivity extends AppCompatActivity {
 
     public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
-    private SharedPreferences pref;
-    public static String idContent;
-    public static String tokenContent;
-    public static String usernameContent;
-    public static String nicknameContent;
-
     private String username;
-
-    private final MyDBHelper myDBHelper = new MyDBHelper(this, "DuoDuoPin.db", null, 1);
 
     private final OkHttpClient client = new OkHttpClient().newBuilder()
             .readTimeout(60, TimeUnit.SECONDS)
@@ -72,22 +60,6 @@ public class LoginActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
-
-
-        String prefName = "tokenData";
-        pref = getSharedPreferences(prefName, Context.MODE_PRIVATE);
-
-        Intent intent = getIntent();
-        if (intent != null) {
-            String isLogoutIntent;
-            isLogoutIntent = intent.getStringExtra("logout");
-            if (isLogoutIntent != null) {
-                if (isLogoutIntent.equals("true")) {
-                    pref.edit().clear();
-                    pref.edit().apply();
-                }
-            }
-        }
 
         usernameInput = findViewById(R.id.phoneNumberInput);
         passwordInput = findViewById(R.id.passwordInput);
@@ -122,62 +94,14 @@ public class LoginActivity extends AppCompatActivity {
                         StrictMode.setThreadPolicy(policy);
                         final int res = postRequest(jwt.toString());
                         if (res == 1) {
-                            Intent intent = new Intent(v.getContext(), MainActivity.class);
-                            startActivity(intent);
-                            myDBHelper.getWritableDatabase();
-                            Toast.makeText(v.getContext(), "登录成功！", Toast.LENGTH_SHORT).show();
-                            Log.e("Login Succeed", "idContent = " + idContent + ", TokenContent = " + tokenContent);
-                            Request request = new Request.Builder()
-                                    .url(getSysMsgUrl(idContent))
-                                    .header("token", idContent + "_" + tokenContent)
-                                    .build();
-                            final String TAG = "SysMsg WebSocket";
-                            WebSocket mWebSocket = client.newWebSocket(request, new WebSocketListener() {
-                                final ExecutorService writeExecutor = Executors.newSingleThreadExecutor();
-                                WebSocket webSocket = null;
-                                @Override
-                                public void onOpen(@NotNull final WebSocket webSocket, @NotNull Response response) {
-                                    super.onOpen(webSocket, response);
-                                    Log.e(TAG, "onOpen: SysMsg WebSocket opened!");
-                                    this.webSocket = webSocket;
-                                    writeExecutor.execute(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            webSocket.send("这里是客户端");
-                                        }
-                                    });
-                                }
-
-                                @Override
-                                public void onClosed(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
-                                    super.onClosed(webSocket, code, reason);
-                                    Log.e(TAG, "onOpen: SysMsg WebSocket closed, because of " + code + "/" + reason);
-                                    writeExecutor.shutdown();
-                                }
-
-                                @Override
-                                public void onClosing(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
-                                    super.onClosing(webSocket, code, reason);
-                                    Log.e(TAG, "onOpen: SysMsg WebSocket is closing, because of " + code + "/" + reason);
-                                }
-
-                                @Override
-                                public void onFailure(@NotNull WebSocket webSocket, @NotNull Throwable t, @Nullable Response response) {
-                                    super.onFailure(webSocket, t, response);
-                                }
-
-                                @Override
-                                public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
-                                    super.onMessage(webSocket, text);
-                                    Log.e(TAG, "onMessage: new message is " + text);
-                                }
-                            });
+                            setResult(RESULT_OK, null);
+                            finish();
                         } else if (res == 2) {
                             Toast.makeText(v.getContext(), "用户名或密码错误！", Toast.LENGTH_SHORT).show();
                         } else if (res == 3) {
                             Toast.makeText(v.getContext(), "请先注册！", Toast.LENGTH_SHORT).show();
 
-                            Intent intent = new Intent(v.getContext(),RegisterActivity.class);
+                            Intent intent = new Intent(v.getContext(), RegisterActivity.class);
                             startActivity(intent);
                         } else {
                             Toast.makeText(v.getContext(), "未知错误", Toast.LENGTH_SHORT).show();
@@ -219,10 +143,13 @@ public class LoginActivity extends AppCompatActivity {
             tokenContent = contentJson.optString(tokenFromServer);
             nicknameContent = contentJson.optString(nicknameFromServer);
             usernameContent = username;
-            SharedPreferences.Editor editor = pref.edit();
+            SharedPreferences.Editor editor = prefs.edit();
             editor.putString("id", idContent);
             editor.putString("token", tokenContent);
-            editor.putString("name", usernameContent);
+            editor.putString("username", usernameContent);
+            editor.putString("nickname", nicknameContent);
+            editor.putLong("lastOnlineTime", System.currentTimeMillis() / 1000L);
+            editor.apply();
             ret = 1;
         } else {
             Log.d(TAG, "responseJSON = " + responseJSON.toString());

@@ -36,11 +36,15 @@ import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 import okio.ByteString;
 
-import static com.example.duoduopin.activity.LoginActivity.idContent;
-import static com.example.duoduopin.activity.LoginActivity.tokenContent;
+import static com.example.duoduopin.activity.MainActivity.idContent;
+import static com.example.duoduopin.activity.MainActivity.tokenContent;
 import static com.example.duoduopin.activity.MainActivity.client;
+import static com.example.duoduopin.handler.GeneralMsgHandler.ERROR;
+import static com.example.duoduopin.handler.GeneralMsgHandler.SUCCESS;
 import static com.example.duoduopin.tool.Constants.getChatUrl;
 import static com.example.duoduopin.tool.Constants.getQueryUrlByUserId;
+import static com.example.duoduopin.tool.Constants.group_id_loaded_signal;
+import static com.example.duoduopin.tool.Constants.group_new_msg_signal;
 
 public class RecMsgService extends Service {
     private ArrayList<OrderContent> orderContent;
@@ -85,74 +89,87 @@ public class RecMsgService extends Service {
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     public void loadGrpTips() {
         final String TAG = "loadGrpTips";
-        try {
-            int state = postQueryOrdersByUserId();
-            if (state == 1) {
-                for (OrderContent content : orderContent) {
-                    String grpId = content.getBillId();
-                    if (!grpIdList.contains(grpId)) {
-                        grpIdList.add(grpId);
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    int state = postQueryOrdersByUserId();
+                    if (state == SUCCESS) {
+                        for (OrderContent content : orderContent) {
+                            String grpId = content.getBillId();
+                            if (!grpIdList.contains(grpId)) {
+                                grpIdList.add(grpId);
+                            }
+                        }
+                        // Establish websockets for all groups
+                        for (final String grpId : grpIdList) {
+                            Request request = new Request.Builder()
+                                    .url(getChatUrl(grpId))
+                                    .header("token", idContent + "_" + tokenContent)
+                                    .build();
+                            WebSocket webSocket = socketClient.newWebSocket(request, new WebSocketListener() {
+                                @Override
+                                public void onClosed(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
+                                    super.onClosed(webSocket, code, reason);
+                                    Log.e(TAG, grpId + "'s websocket is closed due to " + code + "/" + reason);
+                                }
+
+                                @Override
+                                public void onClosing(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
+                                    super.onClosing(webSocket, code, reason);
+                                    Log.e(TAG, grpId + "'s websocket is closing due to " + code + "/" + reason);
+                                }
+
+                                @Override
+                                public void onFailure(@NotNull WebSocket webSocket, @NotNull Throwable t, @org.jetbrains.annotations.Nullable Response response) {
+                                    super.onFailure(webSocket, t, response);
+                                    Log.e(TAG, "onFailure: failure!");
+                                }
+
+                                @RequiresApi(api = Build.VERSION_CODES.O)
+                                @Override
+                                public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
+                                    Log.d(TAG, "onMessage: new message is " + text);
+                                    GrpMsgContent newMsg = new Gson().fromJson(text, GrpMsgContent.class);
+                                    long oldTime = Long.parseLong(newMsg.getTime());
+                                    newMsg.setTime(Instant.ofEpochMilli(oldTime).atZone(ZoneOffset.ofHours(8)).toLocalDateTime().toString().replace('T', ' '));
+                                    Log.d(TAG, "onMessage: newMsg is " + newMsg.toString());
+
+                                    // Broadcast brief message to display on UI thread
+                                    Intent intent = new Intent();
+                                    intent.putExtra("newMsg", newMsg);
+                                    intent.setAction(group_new_msg_signal);
+                                    sendBroadcast(intent);
+                                }
+
+                                @Override
+                                public void onMessage(@NotNull WebSocket webSocket, @NotNull ByteString bytes) {
+                                    super.onMessage(webSocket, bytes);
+                                }
+
+                                @Override
+                                public void onOpen(@NotNull WebSocket webSocket, @NotNull Response response) {
+                                    super.onOpen(webSocket, response);
+                                    Log.e(TAG, "websocket for " + grpId + " opened!");
+                                }
+                            });
+                            webSocketMap.put(grpId, webSocket);
+                        }
+                        // Broadcast group id list had been loaded
+                        Intent intent = new Intent();
+                        intent.putExtra("grpIdList", SUCCESS);
+                        intent.setAction(group_id_loaded_signal);
+                        sendBroadcast(intent);
+                        Log.e(TAG, "groupIdList loaded");
                     }
+                } catch (IOException | JSONException e) {
+                    e.printStackTrace();
                 }
             }
-        } catch (IOException | JSONException e) {
-            e.printStackTrace();
-        }
+        }).start();
 
-        // Establish websockets for all groups
-        for (final String grpId : grpIdList) {
-            Request request = new Request.Builder()
-                    .url(getChatUrl(grpId))
-                    .header("token", idContent + "_" + tokenContent)
-                    .build();
-            WebSocket webSocket = socketClient.newWebSocket(request, new WebSocketListener() {
-                @Override
-                public void onClosed(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
-                    super.onClosed(webSocket, code, reason);
-                    Log.e(TAG, grpId + "'s websocket is closed due to " + code + "/" + reason);
-                }
 
-                @Override
-                public void onClosing(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
-                    super.onClosing(webSocket, code, reason);
-                    Log.e(TAG, grpId + "'s websocket is closing due to " + code + "/" + reason);
-                }
 
-                @Override
-                public void onFailure(@NotNull WebSocket webSocket, @NotNull Throwable t, @org.jetbrains.annotations.Nullable Response response) {
-                    super.onFailure(webSocket, t, response);
-                    Log.e(TAG, "onFailure: failure!");
-                }
-
-                @RequiresApi(api = Build.VERSION_CODES.O)
-                @Override
-                public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
-                    Log.d(TAG, "onMessage: new message is " + text);
-                    GrpMsgContent newMsg = new Gson().fromJson(text, GrpMsgContent.class);
-                    long oldTime = Long.parseLong(newMsg.getTime());
-                    newMsg.setTime(Instant.ofEpochMilli(oldTime).atZone(ZoneOffset.ofHours(8)).toLocalDateTime().toString().replace('T', ' '));
-                    Log.d(TAG, "onMessage: newMsg is " + newMsg.toString());
-
-                    // Broadcast brief message to display on UI thread
-                    Intent intent = new Intent();
-                    intent.putExtra("newMsg", newMsg);
-                    intent.setAction("com.example.duoduopin.grpmsg.new");
-                    sendBroadcast(intent);
-                }
-
-                @Override
-                public void onMessage(@NotNull WebSocket webSocket, @NotNull ByteString bytes) {
-                    super.onMessage(webSocket, bytes);
-                }
-
-                @Override
-                public void onOpen(@NotNull WebSocket webSocket, @NotNull Response response) {
-                    super.onOpen(webSocket, response);
-                    Log.e(TAG, "websocket for " + grpId + " opened!");
-                }
-            });
-            webSocketMap.put(grpId, webSocket);
-        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
@@ -173,10 +190,10 @@ public class RecMsgService extends Service {
             orderContent = new Gson().fromJson(responseJSON.getString("content"), new TypeToken<List<OrderContent>>() {
             }.getType());
             if (orderContent != null) {
-                ret = 1;
+                ret = SUCCESS;
             }
         } else {
-            ret = -1;
+            ret = ERROR;
         }
         return ret;
     }

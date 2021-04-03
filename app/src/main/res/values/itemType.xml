@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string-array name="itemType">
+    <string-array name="searchItemType">
         <item>不限制</item>
-        <item>拼单</item>
         <item>拼车</item>
+        <item>拼单</item>
     </string-array>
 </resources>

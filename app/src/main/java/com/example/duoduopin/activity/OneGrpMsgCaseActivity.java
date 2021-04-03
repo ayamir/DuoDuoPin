@@ -24,9 +24,9 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.duoduopin.R;
+import com.example.duoduopin.adapter.GrpMsgAdapter;
 import com.example.duoduopin.bean.GrpMsgContent;
 import com.example.duoduopin.bean.GrpMsgDisplay;
-import com.example.duoduopin.tool.GrpMsgAdapter;
 import com.example.duoduopin.tool.MyDBHelper;
 import com.google.gson.Gson;
 
@@ -36,18 +36,16 @@ import java.util.ArrayList;
 
 import okhttp3.WebSocket;
 
-import static com.example.duoduopin.activity.LoginActivity.idContent;
-import static com.example.duoduopin.activity.LoginActivity.nicknameContent;
+import static com.example.duoduopin.activity.MainActivity.idContent;
+import static com.example.duoduopin.activity.MainActivity.nicknameContent;
 import static com.example.duoduopin.fragment.MessageFragment.recMsgService;
+import static com.example.duoduopin.tool.Constants.group_new_msg_signal;
 
 public class OneGrpMsgCaseActivity extends AppCompatActivity {
     private String grpId;
     private String grpTitle;
 
     private EditText msgInput;
-    private Button msgSendButton;
-    private TextView grpTitleView;
-    private RecyclerView grpMsgRecyclerview;
     private LinearLayoutManager grpMsgLayoutManager;
     private SwipeRefreshLayout grpMsgSwipeRefresh;
 
@@ -65,14 +63,13 @@ public class OneGrpMsgCaseActivity extends AppCompatActivity {
 
             // Just handle UI
             displayNewMsg(newMsg, newMsg.getUserId().equals(idContent));
-            grpMsgLayoutManager.scrollToPosition(grpMsgAdapter.getItemCount()-1);
+            grpMsgLayoutManager.scrollToPosition(grpMsgAdapter.getItemCount() - 1);
         }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        final String TAG = "onCreate";
         super.onCreate(savedInstanceState);
 
         getInfoFromIntent();
@@ -85,7 +82,7 @@ public class OneGrpMsgCaseActivity extends AppCompatActivity {
 
     private void doRegisterReceiver(Context context) {
         GrpMsgReceiverDisplay grpMsgReceiverDisplay = new GrpMsgReceiverDisplay();
-        IntentFilter intentFilter = new IntentFilter("com.example.duoduopin.grpmsg.new");
+        IntentFilter intentFilter = new IntentFilter(group_new_msg_signal);
         context.registerReceiver(grpMsgReceiverDisplay, intentFilter);
     }
 
@@ -104,7 +101,7 @@ public class OneGrpMsgCaseActivity extends AppCompatActivity {
             grpMsgWebSocket = recMsgService.getWebSocketMap().get(grpId);
         }
 
-        grpTitleView = findViewById(R.id.one_grp_title);
+        TextView grpTitleView = findViewById(R.id.one_grp_title);
         if (grpTitle != null) {
             grpTitleView.setText(grpTitle);
         }
@@ -119,7 +116,7 @@ public class OneGrpMsgCaseActivity extends AppCompatActivity {
         });
 
         grpMsgLayoutManager = new LinearLayoutManager(this, RecyclerView.VERTICAL, false);
-        grpMsgRecyclerview = findViewById(R.id.grp_msg_recyclerview);
+        RecyclerView grpMsgRecyclerview = findViewById(R.id.grp_msg_recyclerview);
         grpMsgRecyclerview.setLayoutManager(grpMsgLayoutManager);
         grpMsgRecyclerview.setAdapter(grpMsgAdapter);
 
@@ -133,7 +130,7 @@ public class OneGrpMsgCaseActivity extends AppCompatActivity {
         });
 
         msgInput = findViewById(R.id.msg_input);
-        msgSendButton = findViewById(R.id.msg_send_button);
+        Button msgSendButton = findViewById(R.id.msg_send_button);
         msgSendButton.setOnClickListener(new View.OnClickListener() {
             @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
@@ -145,7 +142,9 @@ public class OneGrpMsgCaseActivity extends AppCompatActivity {
                     String nowTime = dtf.format(now);
                     String nowTimeToServer = nowTime.replace(' ', 'T');
                     final GrpMsgContent msgContent = new GrpMsgContent(idContent, grpId, grpTitle, nicknameContent, "CHAT", nowTimeToServer, msgInputString);
-                    grpMsgWebSocket.send(new Gson().toJson(msgContent));
+                    if (grpMsgWebSocket != null) {
+                        grpMsgWebSocket.send(new Gson().toJson(msgContent));
+                    }
                     msgInput.setText("");
                 }
             }

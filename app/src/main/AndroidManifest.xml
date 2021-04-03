@@ -30,24 +30,19 @@
         <service
             android:name=".service.RecMsgService"
             android:enabled="true"
-            android:exported="true"></service>
-        <service
-            android:name=".service.QueryUserOrderService"
-            android:exported="false" />
-        <service android:name="com.amap.api.location.APSService" />
+            android:exported="false"/>
 
         <activity android:name=".activity.RegisterActivity" />
         <activity android:name=".activity.AssistantLocationActivity" />
         <activity android:name=".activity.OneOrderCaseActivity" />
         <activity android:name=".activity.OrderCaseActivity" />
-        <activity android:name=".activity.MainActivity" />
+        <activity android:name=".activity.LoginActivity" />
         <activity android:name=".activity.SysMsgCaseActivity" />
         <activity android:name=".activity.OneSysMsgCaseActivity" />
         <activity android:name=".activity.OneGrpMsgCaseActivity" />
-        <activity android:name=".activity.LoginActivity">
+        <activity android:name=".activity.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>

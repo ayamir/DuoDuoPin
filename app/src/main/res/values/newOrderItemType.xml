@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="newOrderItemType">
+        <item>拼车</item>
+        <item>拼单</item>
+    </string-array>
+</resources>

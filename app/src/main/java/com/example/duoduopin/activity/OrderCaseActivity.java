@@ -1,14 +1,18 @@
 package com.example.duoduopin.activity;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
@@ -36,9 +40,11 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 import static com.example.duoduopin.activity.LoginActivity.JSON;
-import static com.example.duoduopin.activity.LoginActivity.idContent;
-import static com.example.duoduopin.activity.LoginActivity.tokenContent;
 import static com.example.duoduopin.activity.MainActivity.client;
+import static com.example.duoduopin.activity.MainActivity.idContent;
+import static com.example.duoduopin.activity.MainActivity.tokenContent;
+import static com.example.duoduopin.handler.GeneralMsgHandler.ERROR;
+import static com.example.duoduopin.handler.GeneralMsgHandler.SUCCESS;
 import static com.example.duoduopin.tool.Constants.getQueryUrlByOrderId;
 import static com.example.duoduopin.tool.Constants.getQueryUrlByUserId;
 import static com.example.duoduopin.tool.Constants.queryByInfoUrl;
@@ -55,6 +61,16 @@ public class OrderCaseActivity extends AppCompatActivity {
     private SwipeRefreshLayout orderCaseSwipeRefresh;
 
     private String timeStart, timeEnd, minPrice, maxPrice, description, orderType, distance, longitude, latitude;
+
+    @SuppressLint("HandlerLeak")
+    private final Handler handler = new Handler(){
+        @Override
+        public void handleMessage(@NonNull Message msg) {
+            if (msg.what == SUCCESS) {
+                showItems();
+            }
+        }
+    };
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -87,32 +103,51 @@ public class OrderCaseActivity extends AppCompatActivity {
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void switchShow() {
+        final String TAG = "switchShow";
         switch (from) {
             case "userId":
-                String userId = fromIntent.getStringExtra("userId");
-                try {
-                    int state = postQueryOrder(getQueryUrlByUserId(userId), false);
-                    if (state == 1) {
-                        showItems();
+                final String userId = fromIntent.getStringExtra("userId");
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Message message = new Message();
+                            int state = postQueryOrder(getQueryUrlByUserId(userId), false);
+                            if (state == SUCCESS) {
+                                message.what = SUCCESS;
+                            } else {
+                                message.what = ERROR;
+                            }
+                            handler.sendMessage(message);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+                }).start();
                 break;
             case "orderId":
-                String orderId = fromIntent.getStringExtra("orderId");
-                try {
-                    int state = postQueryOrder(getQueryUrlByOrderId(orderId), false);
-                    if (state == 1) {
-                        showItems();
+                final String orderId = fromIntent.getStringExtra("orderId");
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Message message = new Message();
+                            int state = postQueryOrder(getQueryUrlByOrderId(orderId), false);
+                            if (state == 1) {
+                                message.what = SUCCESS;
+                            } else {
+                                message.what = ERROR;
+                            }
+                            handler.sendMessage(message);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
                     }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
+                }).start();
                 break;
             case "info":
                 timeStart = fromIntent.getStringExtra("timeStart");
@@ -135,14 +170,23 @@ public class OrderCaseActivity extends AppCompatActivity {
                 longitude = fromIntent.getStringExtra("longitude");
                 latitude = fromIntent.getStringExtra("latitude");
                 Log.e("Search By Info", "orderType = " + orderType + ", distance = " + distance + ", longitude = " + longitude + ", latitude = " + latitude);
-                try {
-                    int state = postQueryOrder(queryByInfoUrl, true);
-                    if (state == 1) {
-                        showItems();
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Message message = new Message();
+                            int state = postQueryOrder(queryByInfoUrl, true);
+                            if (state == 1) {
+                                message.what = SUCCESS;
+                            } else {
+                                message.what = ERROR;
+                            }
+                            handler.sendMessage(message);
+                        } catch (IOException | JSONException e) {
+                            e.printStackTrace();
+                        }
                     }
-                } catch (IOException | JSONException e) {
-                    e.printStackTrace();
-                }
+                }).start();
                 break;
         }
     }
@@ -186,7 +230,7 @@ public class OrderCaseActivity extends AppCompatActivity {
 
         SimpleAdapter adapter = new SimpleAdapter(this, cases, R.layout.order_info_tip,
                 new String[]{"title", "description", "curNumContent"},
-                new int[]{R.id.title, R.id.description, R.id.curNumContent});
+                new int[]{R.id.tv_title, R.id.tv_description, R.id.curNumContent});
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override

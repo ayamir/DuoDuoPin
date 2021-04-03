@@ -8,6 +8,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -17,6 +19,7 @@ import android.widget.SimpleAdapter;
 import android.widget.Switch;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
@@ -44,9 +47,11 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-import static com.example.duoduopin.activity.LoginActivity.idContent;
-import static com.example.duoduopin.activity.LoginActivity.tokenContent;
+import static com.example.duoduopin.activity.MainActivity.idContent;
+import static com.example.duoduopin.activity.MainActivity.tokenContent;
 import static com.example.duoduopin.activity.MainActivity.client;
+import static com.example.duoduopin.handler.GeneralMsgHandler.ERROR;
+import static com.example.duoduopin.handler.GeneralMsgHandler.SUCCESS;
 import static com.example.duoduopin.tool.Constants.checkSysMsgUrl;
 
 public class SysMsgCaseActivity extends AppCompatActivity {
@@ -82,11 +87,9 @@ public class SysMsgCaseActivity extends AppCompatActivity {
                 if (buttonView.isChecked()) {
                     isFromServer = false;
                     readFromDB();
-                    showItems(sysMsgCasesFromDB, sysMsgDetailedCasesFromDB);
                 } else {
                     isFromServer = true;
                     readFromServer();
-                    showItems(sysMsgCasesFromServer, sysMsgDetailedCasesFromServer);
                 }
             }
         });
@@ -98,29 +101,13 @@ public class SysMsgCaseActivity extends AppCompatActivity {
                 if (isFromServer) {
                     Log.e(TAG, "onRefresh: isFromServer = " + isFromServer);
                     readFromServer();
-                    showItems(sysMsgCasesFromServer, sysMsgDetailedCasesFromServer);
                 } else {
                     Log.e(TAG, "onRefresh: isFromServer = " + isFromServer);
                     readFromDB();
-                    showItems(sysMsgCasesFromDB, sysMsgDetailedCasesFromDB);
                 }
                 swipeRefreshLayout.setRefreshing(false);
             }
         });
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.O)
-    private void checkSysMsgFromServer() {
-        try {
-            int state = postCheckSysMessage();
-            if (state == 1) {
-                Toast.makeText(mContext, "从云端加载消息成功！", Toast.LENGTH_SHORT).show();
-            } else {
-                Toast.makeText(mContext, "遇到未知错误，请稍后再试！", Toast.LENGTH_SHORT).show();
-            }
-        } catch (IOException | JSONException e) {
-            e.printStackTrace();
-        }
     }
 
     private void showItems(ArrayList<HashMap<String, String>> cases, final ArrayList<HashMap<String, String>> dCases) {
@@ -188,6 +175,8 @@ public class SysMsgCaseActivity extends AppCompatActivity {
             } while (cursor.moveToNext());
         }
         cursor.close();
+
+        showItems(sysMsgCasesFromDB, sysMsgDetailedCasesFromDB);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -198,26 +187,52 @@ public class SysMsgCaseActivity extends AppCompatActivity {
         if (sysMsgContentList != null) {
             sysMsgContentList.clear();
         }
-        checkSysMsgFromServer();
 
-        for (SysMsgContent content : sysMsgContentList) {
-            HashMap<String, String> map = new HashMap<>();
-            map.put("title", "系统消息");
-            String contentString = content.getContent();
-            map.put("content", contentString);
-            map.put("time", content.getTime());
-            sysMsgCasesFromServer.add(map);
+        @SuppressLint("HandlerLeak")
+        final Handler checkSysMsgHandler = new Handler(){
+            @Override
+            public void handleMessage(@NonNull Message msg) {
+                if (msg.what == SUCCESS) {
+                    Toast.makeText(mContext, "从云端加载消息成功！", Toast.LENGTH_SHORT).show();
+                    for (SysMsgContent content : sysMsgContentList) {
+                        HashMap<String, String> map = new HashMap<>();
+                        map.put("title", "系统消息");
+                        String contentString = content.getContent();
+                        map.put("content", contentString);
+                        map.put("time", content.getTime());
+                        sysMsgCasesFromServer.add(map);
 
-            HashMap<String, String> dmap = new HashMap<>();
-            dmap.put("messageId", content.getMessageId());
-            dmap.put("senderId", content.getSenderId());
-            dmap.put("receiverId", content.getReceiverId());
-            dmap.put("billId", content.getBillId());
-            dmap.put("type", content.getType());
-            dmap.put("time", content.getTime());
-            dmap.put("content", contentString);
-            sysMsgDetailedCasesFromServer.add(dmap);
-        }
+                        HashMap<String, String> dmap = new HashMap<>();
+                        dmap.put("messageId", content.getMessageId());
+                        dmap.put("senderId", content.getSenderId());
+                        dmap.put("receiverId", content.getReceiverId());
+                        dmap.put("billId", content.getBillId());
+                        dmap.put("type", content.getType());
+                        dmap.put("time", content.getTime());
+                        dmap.put("content", contentString);
+                        sysMsgDetailedCasesFromServer.add(dmap);
+                    }
+                    showItems(sysMsgCasesFromServer, sysMsgDetailedCasesFromServer);
+                } else {
+                    Toast.makeText(mContext, "遇到未知错误，请稍后再试！", Toast.LENGTH_SHORT).show();
+                }
+            }
+        };
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                Message message = new Message();
+                try {
+                    message.what = postCheckSysMessage();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                checkSysMsgHandler.sendMessage(message);
+            }
+        }).start();
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -245,18 +260,16 @@ public class SysMsgCaseActivity extends AppCompatActivity {
                 sysMsgContentList = new Gson().fromJson(jsonObject.getString("content"), new TypeToken<List<SysMsgContent>>() {
                 }.getType());
                 if (sysMsgContentList != null) {
-                    ret = 1;
+                    ret = SUCCESS;
                     for (SysMsgContent content : sysMsgContentList) {
                         long oldTime = Long.parseLong(content.getTime());
                         String newTime = Instant.ofEpochMilli(oldTime).atZone(ZoneOffset.ofHours(8)).toLocalDateTime().toString().replace('T', ' ');
                         content.setTime(newTime);
                     }
                 }
-            } else {
-                ret = 2;
             }
         } else {
-            ret = -1;
+            ret = ERROR;
         }
         return ret;
     }

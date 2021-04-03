@@ -1,8 +1,12 @@
 package com.example.duoduopin.activity;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -11,6 +15,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
@@ -29,9 +34,11 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-import static com.example.duoduopin.activity.LoginActivity.idContent;
-import static com.example.duoduopin.activity.LoginActivity.tokenContent;
 import static com.example.duoduopin.activity.MainActivity.client;
+import static com.example.duoduopin.activity.MainActivity.idContent;
+import static com.example.duoduopin.activity.MainActivity.tokenContent;
+import static com.example.duoduopin.handler.GeneralMsgHandler.ERROR;
+import static com.example.duoduopin.handler.GeneralMsgHandler.SUCCESS;
 import static com.example.duoduopin.tool.Constants.getAllowUrl;
 import static com.example.duoduopin.tool.Constants.getQueryUrlByOrderId;
 import static com.example.duoduopin.tool.Constants.getQueryUserUrl;
@@ -55,6 +62,8 @@ public class OneSysMsgCaseActivity extends AppCompatActivity {
     private LinearLayout checkDetailsLayout;
     private Button agree;
     private Button reject;
+
+    private final Context mContext = this;
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
@@ -105,83 +114,137 @@ public class OneSysMsgCaseActivity extends AppCompatActivity {
             }
         });
 
-        try {
-            int state = postSearchUser(getQueryUserUrl(senderIdString));
-            if (state == 1) {
-                senderNickname.setText(nickname);
-            } else {
-                Toast.makeText(this, "获取用户昵称出现异常！", Toast.LENGTH_SHORT).show();
+        @SuppressLint("HandlerLeak") final Handler searchUserHandlers = new Handler() {
+            @Override
+            public void handleMessage(@NonNull Message msg) {
+                if (msg.what == SUCCESS) {
+                    senderNickname.setText(nickname);
+                } else {
+                    Toast.makeText(mContext, "获取用户昵称出现异常！", Toast.LENGTH_SHORT).show();
+                }
             }
-        } catch (IOException | JSONException e) {
-            e.printStackTrace();
-        }
+        };
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Message message = new Message();
+                    message.what = postSearchUser(getQueryUserUrl(senderIdString));
+                    searchUserHandlers.sendMessage(message);
+                } catch (IOException | JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }).start();
+
         contentView.setText(contentString);
         timeView.setText(timeString);
         checkDetailsLayout.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                try {
-                    int state = postSearchOrder(getQueryUrlByOrderId(billIdString));
-                    if (state == 1) {
-                        Intent toIntent = new Intent(v.getContext(), OneOrderCaseActivity.class);
-                        toIntent.putExtra("orderId", orderContentJSON.getString("billId"));
-                        toIntent.putExtra("userId", orderContentJSON.getString("userId"));
-                        toIntent.putExtra("nickname", orderContentJSON.getString("nickname"));
-                        toIntent.putExtra("type", orderContentJSON.getString("type"));
-                        toIntent.putExtra("price", orderContentJSON.getString("price"));
-                        toIntent.putExtra("address", orderContentJSON.getString("address"));
-                        toIntent.putExtra("curPeople", orderContentJSON.getString("curPeople"));
-                        toIntent.putExtra("maxPeople", orderContentJSON.getString("maxPeople"));
-                        toIntent.putExtra("time", orderContentJSON.getString("time"));
-                        toIntent.putExtra("description", orderContentJSON.getString("description"));
-                        toIntent.putExtra("title", orderContentJSON.getString("title"));
-                        startActivity(toIntent);
-                    } else {
-                        Toast.makeText(v.getContext(), "获取拼单详情失败，请稍候再试！", Toast.LENGTH_SHORT).show();
+            public void onClick(final View v) {
+                @SuppressLint("HandlerLeak") final Handler checkDetailsHandler = new Handler() {
+                    @Override
+                    public void handleMessage(@NonNull Message msg) {
+                        if (msg.what == SUCCESS) {
+                            Intent toIntent = new Intent(v.getContext(), OneOrderCaseActivity.class);
+                            try {
+                                toIntent.putExtra("orderId", orderContentJSON.getString("billId"));
+                                toIntent.putExtra("userId", orderContentJSON.getString("userId"));
+                                toIntent.putExtra("nickname", orderContentJSON.getString("nickname"));
+                                toIntent.putExtra("type", orderContentJSON.getString("type"));
+                                toIntent.putExtra("price", orderContentJSON.getString("price"));
+                                toIntent.putExtra("address", orderContentJSON.getString("address"));
+                                toIntent.putExtra("curPeople", orderContentJSON.getString("curPeople"));
+                                toIntent.putExtra("maxPeople", orderContentJSON.getString("maxPeople"));
+                                toIntent.putExtra("time", orderContentJSON.getString("time"));
+                                toIntent.putExtra("description", orderContentJSON.getString("description"));
+                                toIntent.putExtra("title", orderContentJSON.getString("title"));
+                                startActivity(toIntent);
+                            } catch (JSONException e) {
+                                e.printStackTrace();
+                            }
+                        } else {
+                            Toast.makeText(v.getContext(), "获取拼单详情失败，请稍候再试！", Toast.LENGTH_SHORT).show();
+                        }
                     }
-                } catch (IOException | JSONException e) {
-                    e.printStackTrace();
-                }
+                };
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Message message = new Message();
+                            message.what = postSearchOrder(getQueryUrlByOrderId(billIdString));
+                            checkDetailsHandler.sendMessage(message);
+                        } catch (IOException | JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
             }
         });
         agree.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                try {
-                    String allowUrl = getAllowUrl(messageIdString);
-                    int state = postAllowOrReject(allowUrl);
-                    if (state == 1) {
-                        Toast.makeText(v.getContext(), "请求已通过！", Toast.LENGTH_SHORT).show();
-                        agree.setVisibility(View.INVISIBLE);
-                        reject.setVisibility(View.INVISIBLE);
-                    } else if (state == -1) {
-                        Toast.makeText(v.getContext(), "请检查网络状况稍后再试！", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(v.getContext(), "遇到未知错误，请稍后再试！", Toast.LENGTH_SHORT).show();
+            public void onClick(final View v) {
+                @SuppressLint("HandlerLeak")
+                final Handler allowHandler = new Handler() {
+                    @Override
+                    public void handleMessage(@NonNull Message msg) {
+                        if (msg.what == SUCCESS) {
+                            Toast.makeText(v.getContext(), "请求已通过！", Toast.LENGTH_SHORT).show();
+                            agree.setVisibility(View.INVISIBLE);
+                            reject.setVisibility(View.INVISIBLE);
+                        } else {
+                            Toast.makeText(v.getContext(), "请检查网络状况稍后再试！", Toast.LENGTH_SHORT).show();
+                        }
                     }
-                } catch (IOException | JSONException e) {
-                    e.printStackTrace();
-                }
+                };
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            String allowUrl = getAllowUrl(messageIdString);
+                            Message message = new Message();
+                            message.what = postAllowOrReject(allowUrl);
+                            allowHandler.sendMessage(message);
+                        } catch (IOException | JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
             }
         });
         reject.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                try {
-                    String rejectUrl = getRejectUrl(messageIdString);
-                    int state = postAllowOrReject(rejectUrl);
-                    if (state == 1) {
-                        Toast.makeText(v.getContext(), "请求已拒绝！", Toast.LENGTH_SHORT).show();
-                        agree.setVisibility(View.INVISIBLE);
-                        reject.setVisibility(View.INVISIBLE);
-                    } else if (state == -1) {
-                        Toast.makeText(v.getContext(), "请检查网络状况稍后再试！", Toast.LENGTH_SHORT).show();
-                    } else {
-                        Toast.makeText(v.getContext(), "遇到未知错误，请稍候再试！", Toast.LENGTH_SHORT).show();
+            public void onClick(final View v) {
+                @SuppressLint("HandlerLeak") final Handler rejectHandler = new Handler() {
+                    @Override
+                    public void handleMessage(@NonNull Message msg) {
+                        if (msg.what == SUCCESS) {
+                            Toast.makeText(v.getContext(), "请求已拒绝！", Toast.LENGTH_SHORT).show();
+                            agree.setVisibility(View.INVISIBLE);
+                            reject.setVisibility(View.INVISIBLE);
+                        } else {
+                            Toast.makeText(v.getContext(), "请检查网络状况稍后再试！", Toast.LENGTH_SHORT).show();
+                        }
                     }
-                } catch (IOException | JSONException e) {
-                    e.printStackTrace();
-                }
+                };
+
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            String rejectUrl = getRejectUrl(messageIdString);
+                            Message message = new Message();
+                            message.what = postAllowOrReject(rejectUrl);
+                            rejectHandler.sendMessage(message);
+                        } catch (IOException | JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
+
             }
         });
     }
@@ -237,12 +300,10 @@ public class OneSysMsgCaseActivity extends AppCompatActivity {
                 JSONObject contentJSON = new JSONObject(responseJSON.getString("content"));
                 Log.d(TAG, "postSearchUser: contentJSON = " + contentJSON.toString());
                 nickname = contentJSON.getString("nickname");
-                ret = 1;
-            } else {
-                ret = 2;
+                ret = SUCCESS;
             }
         } else {
-            ret = -1;
+            ret = ERROR;
         }
 
         return ret;
@@ -250,7 +311,6 @@ public class OneSysMsgCaseActivity extends AppCompatActivity {
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private int postAllowOrReject(String url) throws IOException, JSONException {
-        final String TAG = "postAllowJoin";
         int ret = 0;
 
         final Request request = new Request.Builder()
@@ -267,13 +327,10 @@ public class OneSysMsgCaseActivity extends AppCompatActivity {
             String codeString = responseJSON.getString("code");
             int code = Integer.parseInt(codeString);
             if (code == 100) {
-                ret = 1;
-            } else {
-                ret = 2;
-                Log.d(TAG, "postAllowOrReject: responseJSON = " + responseJSON.toString());
+                ret = SUCCESS;
             }
         } else {
-            ret = -1;
+            ret = ERROR;
         }
 
         return ret;

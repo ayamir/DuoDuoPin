@@ -1,6 +1,10 @@
 package com.example.duoduopin.tool;
 
 public class Constants {
+    public static final String group_quit_signal = "com.example.duoduopin.group.quit";
+    public static final String group_new_msg_signal = "com.example.duoduopin.group.msg.new";
+    public static final String group_id_loaded_signal = "com.example.duoduopin.group.id.loaded";
+
     private static final String baseUrl = "http://123.57.12.189:8080/";
     private static final String wsUrl = "ws://123.57.12.189:8080/";
     public static final String registerUrl = baseUrl + "User/register/";

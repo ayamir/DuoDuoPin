@@ -7,6 +7,8 @@ import android.content.Intent;
 import android.icu.text.SimpleDateFormat;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Message;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -40,19 +42,19 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.util.Date;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
-import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
 import static com.example.duoduopin.activity.LoginActivity.JSON;
-import static com.example.duoduopin.activity.LoginActivity.idContent;
-import static com.example.duoduopin.activity.LoginActivity.nicknameContent;
-import static com.example.duoduopin.activity.LoginActivity.tokenContent;
+import static com.example.duoduopin.activity.MainActivity.idContent;
+import static com.example.duoduopin.activity.MainActivity.nicknameContent;
+import static com.example.duoduopin.activity.MainActivity.tokenContent;
 import static com.example.duoduopin.activity.MainActivity.client;
+import static com.example.duoduopin.handler.GeneralMsgHandler.ERROR;
+import static com.example.duoduopin.handler.GeneralMsgHandler.SUCCESS;
 import static com.example.duoduopin.tool.Constants.createOrderUrl;
 
 public class OrderFragment extends Fragment {
@@ -102,7 +104,7 @@ public class OrderFragment extends Fragment {
         initTimePicker();
 
         Spinner spinner = getActivity().findViewById(R.id.typeInput);
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getActivity(), R.array.itemType, android.R.layout.simple_spinner_item);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getActivity(), R.array.newOrderItemType, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -135,16 +137,16 @@ public class OrderFragment extends Fragment {
         submitOrder.setOnClickListener(new View.OnClickListener() {
             @RequiresApi(api = Build.VERSION_CODES.KITKAT)
             @Override
-            public void onClick(View v) {
+            public void onClick(final View v) {
                 boolean canPost = true;
 
-                String titleString = title.getText().toString();
-                String descString = description.getText().toString();
-                String addrString = address.getText().toString();
-                String timeString = time.getText().toString();
-                String curPeopleString = curPeople.getText().toString();
-                String maxPeopleString = maxPeople.getText().toString();
-                String priceString = price.getText().toString();
+                final String titleString = title.getText().toString();
+                final String descString = description.getText().toString();
+                final String addrString = address.getText().toString();
+                final String timeString = time.getText().toString();
+                final String curPeopleString = curPeople.getText().toString();
+                final String maxPeopleString = maxPeople.getText().toString();
+                final String priceString = price.getText().toString();
                 String latitudeString = "", longitudeString = "";
                 if (!tude.getText().toString().isEmpty()) {
                     String[] tudeString = tude.getText().toString().split(",");
@@ -175,7 +177,7 @@ public class OrderFragment extends Fragment {
                     canPost = false;
                 }
                 if (canPost) {
-                    JSONObject jsonObject = new JSONObject();
+                    final JSONObject jsonObject = new JSONObject();
                     try {
                         jsonObject.put("title", titleString);
                         jsonObject.put("type", typeString);
@@ -191,26 +193,42 @@ public class OrderFragment extends Fragment {
                         e.printStackTrace();
                     }
                     Log.d("JSONBuild", jsonObject.toString());
-                    try {
-                        int state = putRequest(jsonObject.toString());
-                        if (state == 1) {
-                            Intent intent = new Intent(v.getContext(), OneOrderCaseActivity.class);
-                            intent.putExtra("orderId", orderId);
-                            intent.putExtra("userId", idContent);
-                            intent.putExtra("nickname", nicknameContent);
-                            intent.putExtra("type", typeString);
-                            intent.putExtra("price", priceString);
-                            intent.putExtra("address", addrString);
-                            intent.putExtra("curPeople", curPeopleString);
-                            intent.putExtra("maxPeople", maxPeopleString);
-                            intent.putExtra("time", timeString);
-                            intent.putExtra("description", descString);
-                            intent.putExtra("title", titleString);
-                            startActivity(intent);
+                    @SuppressLint("HandlerLeak")
+                    final Handler newOrderHandler = new Handler(){
+                        @Override
+                        public void handleMessage(@NonNull Message msg) {
+                            if (msg.what == SUCCESS) {
+                                Toast.makeText(getActivity(), "创建成功", Toast.LENGTH_SHORT).show();
+                                Intent intent = new Intent(getActivity(), OneOrderCaseActivity.class);
+                                intent.putExtra("orderId", orderId);
+                                intent.putExtra("userId", idContent);
+                                intent.putExtra("nickname", nicknameContent);
+                                intent.putExtra("type", typeString);
+                                intent.putExtra("price", priceString);
+                                intent.putExtra("address", addrString);
+                                intent.putExtra("curPeople", curPeopleString);
+                                intent.putExtra("maxPeople", maxPeopleString);
+                                intent.putExtra("time", timeString);
+                                intent.putExtra("description", descString);
+                                intent.putExtra("title", titleString);
+                                startActivity(intent);
+                            } else {
+                                Toast.makeText(getActivity(), "创建失败，请稍后再试！", Toast.LENGTH_SHORT).show();
+                            }
                         }
-                    } catch (IOException | JSONException e) {
-                        e.printStackTrace();
-                    }
+                    };
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            try {
+                                Message message = new Message();
+                                message.what = putRequest(jsonObject.toString());
+                                newOrderHandler.sendMessage(message);
+                            } catch (IOException | JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }).start();
                 }
             }
         });
@@ -221,7 +239,8 @@ public class OrderFragment extends Fragment {
         final String TAG = "createOrder";
         final String contentFromServer = "content";
         final String orderIdFromServer = "id";
-        int ret = 0;
+
+        int ret;
 
         RequestBody body = RequestBody.create(jsonBody, JSON);
 
@@ -235,14 +254,14 @@ public class OrderFragment extends Fragment {
         Response response = call.execute();
 
         if (response.code() == 200) {
-            Toast.makeText(getActivity(), "创建成功", Toast.LENGTH_SHORT).show();
             JSONObject responseJson = new JSONObject(Objects.requireNonNull(response.body()).string());
             JSONObject contentJson = new JSONObject(responseJson.getString(contentFromServer));
             orderId = contentJson.optString(orderIdFromServer);
-            ret = 1;
+            ret = SUCCESS;
         } else {
             Log.d(TAG, Objects.requireNonNull(response.body()).string());
             Log.d(TAG, response.toString());
+            ret = ERROR;
         }
         return ret;
     }

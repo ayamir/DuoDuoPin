@@ -4,9 +4,11 @@ import android.annotation.SuppressLint;
 import android.app.Fragment;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Message;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -23,6 +25,7 @@ import androidx.appcompat.app.AlertDialog;
 
 import com.example.duoduopin.R;
 import com.example.duoduopin.activity.OrderCaseActivity;
+import com.example.duoduopin.handler.GeneralMsgHandler;
 import com.example.duoduopin.tool.MyDBHelper;
 
 import java.io.IOException;
@@ -32,13 +35,18 @@ import okhttp3.Call;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import static com.example.duoduopin.activity.LoginActivity.idContent;
-import static com.example.duoduopin.activity.LoginActivity.nicknameContent;
-import static com.example.duoduopin.activity.LoginActivity.tokenContent;
 import static com.example.duoduopin.activity.MainActivity.client;
+import static com.example.duoduopin.activity.MainActivity.idContent;
+import static com.example.duoduopin.activity.MainActivity.nicknameContent;
+import static com.example.duoduopin.activity.MainActivity.prefs;
+import static com.example.duoduopin.activity.MainActivity.tokenContent;
+import static com.example.duoduopin.handler.GeneralMsgHandler.ERROR;
+import static com.example.duoduopin.handler.GeneralMsgHandler.LOGOUT;
+import static com.example.duoduopin.handler.GeneralMsgHandler.SUCCESS;
 import static com.example.duoduopin.tool.Constants.logoutUrl;
 
 public class ProfileFragment extends Fragment {
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -58,6 +66,8 @@ public class ProfileFragment extends Fragment {
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        final GeneralMsgHandler myMsgHandler = new GeneralMsgHandler(getActivity());
+
         super.onActivityCreated(savedInstanceState);
 
         Button logout = Objects.requireNonNull(getActivity()).findViewById(R.id.logout);
@@ -66,12 +76,26 @@ public class ProfileFragment extends Fragment {
             @RequiresApi(api = Build.VERSION_CODES.R)
             @Override
             public void onClick(View v) {
-                try {
-                    delRequest();
-                    getActivity().finish();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Message message = new Message();
+                            message.arg1 = LOGOUT;
+                            int state = delRequest();
+                            if (state == SUCCESS) {
+                                message.what = SUCCESS;
+                            } else {
+                                message.what = ERROR;
+                            }
+                            myMsgHandler.sendMessage(message);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
+                cleanPrefs();
+                getActivity().finish();
             }
         });
 
@@ -109,6 +133,7 @@ public class ProfileFragment extends Fragment {
                     case DialogInterface.BUTTON_POSITIVE:
                         final MyDBHelper clearStorage = new MyDBHelper(getActivity(), "DuoDuoPin.db", null, 1);
                         SQLiteDatabase db = clearStorage.getWritableDatabase();
+                        clearStorage.dropTables(db);
                         Toast.makeText(getActivity(), "清除成功！", Toast.LENGTH_SHORT).show();
                         clearStorage.onCreate(db);
                         break;
@@ -135,8 +160,19 @@ public class ProfileFragment extends Fragment {
 
     }
 
+    private void cleanPrefs() {
+        @SuppressLint("CommitPrefEdits")
+        SharedPreferences.Editor editor = prefs.edit();
+        editor.remove("id");
+        editor.remove("token");
+        editor.remove("lastOnlineTime");
+        editor.apply();
+        Log.e("logout", "cleanPrefs() executed!");
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.R)
-    private void delRequest() throws IOException {
+    private int delRequest() throws IOException {
+        int ret;
         final String TAG = "logout";
 
         final Request request = new Request.Builder()
@@ -149,10 +185,12 @@ public class ProfileFragment extends Fragment {
         Response response = call.execute();
 
         if (response.code() == 200) {
-            Toast.makeText(getActivity(), "登出成功", Toast.LENGTH_SHORT).show();
+            ret = SUCCESS;
         } else {
             Log.d(TAG, Objects.requireNonNull(response.body()).string());
             Log.d(TAG, response.toString());
+            ret = ERROR;
         }
+        return ret;
     }
 }
