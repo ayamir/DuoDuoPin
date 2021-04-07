@@ -38,7 +38,7 @@ import okhttp3.WebSocket;
 
 import static com.example.duoduopin.activity.MainActivity.idContent;
 import static com.example.duoduopin.activity.MainActivity.nicknameContent;
-import static com.example.duoduopin.fragment.MessageFragment.recMsgService;
+import static com.example.duoduopin.fragment.MessageFragment.recGrpMsgService;
 import static com.example.duoduopin.tool.Constants.group_new_msg_signal;
 
 public class OneGrpMsgCaseActivity extends AppCompatActivity {
@@ -97,8 +97,8 @@ public class OneGrpMsgCaseActivity extends AppCompatActivity {
     private void bindItemsAndOps() {
         setContentView(R.layout.activity_one_grpmsg_case);
 
-        if (grpId != null && recMsgService != null) {
-            grpMsgWebSocket = recMsgService.getWebSocketMap().get(grpId);
+        if (grpId != null && recGrpMsgService != null) {
+            grpMsgWebSocket = recGrpMsgService.getWebSocketMap().get(grpId);
         }
 
         TextView grpTitleView = findViewById(R.id.one_grp_title);

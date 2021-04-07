@@ -27,6 +27,8 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.Objects;
 
 import okhttp3.Call;
@@ -51,7 +53,7 @@ public class OneSysMsgCaseActivity extends AppCompatActivity {
     private String messageTypeString;
     private String timeString;
     private String contentString;
-    private String isFromServerString;
+    private String isRead;
     private JSONObject orderContentJSON;
 
     private String nickname;
@@ -85,7 +87,7 @@ public class OneSysMsgCaseActivity extends AppCompatActivity {
             messageTypeString = fromIntent.getStringExtra("messageType");
             timeString = fromIntent.getStringExtra("time");
             contentString = fromIntent.getStringExtra("content");
-            isFromServerString = fromIntent.getStringExtra("isFromServer");
+            isRead = fromIntent.getStringExtra("isRead");
         }
     }
 
@@ -98,7 +100,7 @@ public class OneSysMsgCaseActivity extends AppCompatActivity {
         agree = findViewById(R.id.agree_button);
         reject = findViewById(R.id.reject_button);
 
-        if (!messageTypeString.equals("APPLY") || isFromServerString.equals("false")) {
+        if (!messageTypeString.equals("APPLY") || isRead.equals("true")) {
             Log.d("bindViews", "bindViews: messageTypeString = " + messageTypeString);
             agree.setVisibility(View.INVISIBLE);
             reject.setVisibility(View.INVISIBLE);
@@ -143,6 +145,7 @@ public class OneSysMsgCaseActivity extends AppCompatActivity {
             @Override
             public void onClick(final View v) {
                 @SuppressLint("HandlerLeak") final Handler checkDetailsHandler = new Handler() {
+                    @RequiresApi(api = Build.VERSION_CODES.O)
                     @Override
                     public void handleMessage(@NonNull Message msg) {
                         if (msg.what == SUCCESS) {
@@ -156,7 +159,9 @@ public class OneSysMsgCaseActivity extends AppCompatActivity {
                                 toIntent.putExtra("address", orderContentJSON.getString("address"));
                                 toIntent.putExtra("curPeople", orderContentJSON.getString("curPeople"));
                                 toIntent.putExtra("maxPeople", orderContentJSON.getString("maxPeople"));
-                                toIntent.putExtra("time", orderContentJSON.getString("time"));
+                                long oldTime = Long.parseLong(orderContentJSON.getString("time"));
+                                String newTime = Instant.ofEpochMilli(oldTime).atZone(ZoneOffset.ofHours(8)).toLocalDateTime().toString().replace('T', ' ');
+                                toIntent.putExtra("time", newTime);
                                 toIntent.putExtra("description", orderContentJSON.getString("description"));
                                 toIntent.putExtra("title", orderContentJSON.getString("title"));
                                 startActivity(toIntent);
@@ -186,8 +191,7 @@ public class OneSysMsgCaseActivity extends AppCompatActivity {
         agree.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(final View v) {
-                @SuppressLint("HandlerLeak")
-                final Handler allowHandler = new Handler() {
+                @SuppressLint("HandlerLeak") final Handler allowHandler = new Handler() {
                     @Override
                     public void handleMessage(@NonNull Message msg) {
                         if (msg.what == SUCCESS) {
@@ -269,6 +273,7 @@ public class OneSysMsgCaseActivity extends AppCompatActivity {
             if (code == 100) {
                 JSONArray orderContentArray = new JSONArray(responseJSON.getString("content"));
                 orderContentJSON = orderContentArray.getJSONObject(0);
+
                 ret = 1;
             }
         } else {

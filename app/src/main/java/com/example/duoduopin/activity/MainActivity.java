@@ -4,11 +4,14 @@ import android.annotation.SuppressLint;
 import android.app.Fragment;
 import android.app.FragmentManager;
 import android.app.FragmentTransaction;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
@@ -22,28 +25,18 @@ import com.example.duoduopin.fragment.HomeFragment;
 import com.example.duoduopin.fragment.MessageFragment;
 import com.example.duoduopin.fragment.OrderFragment;
 import com.example.duoduopin.fragment.ProfileFragment;
+import com.example.duoduopin.service.RecSysMsgService;
 import com.example.duoduopin.tool.MyDBHelper;
-
-import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import okhttp3.WebSocket;
-import okhttp3.WebSocketListener;
-
-import static com.example.duoduopin.tool.Constants.getSysMsgUrl;
 
 public class MainActivity extends FragmentActivity implements View.OnClickListener {
     ImageView home, message, order, profile;
 
     public static SharedPreferences prefs;
     public static final String prefName = "tokenData";
-
-    private final MyDBHelper myDBHelper = new MyDBHelper(this, "DuoDuoPin.db", null, 1);
 
     public static final OkHttpClient client = new OkHttpClient().newBuilder()
             .readTimeout(60, TimeUnit.SECONDS)
@@ -57,6 +50,20 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     public static String tokenContent;
     public static String usernameContent;
     public static String nicknameContent;
+
+    private final ServiceConnection connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder iBinder) {
+            Log.e("MainActivity", "onServiceConnected");
+            RecSysMsgService.RecSysMsgBinder binder = (RecSysMsgService.RecSysMsgBinder) iBinder;
+            RecSysMsgService recSysMsgService = binder.getService();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            Log.e("MainActivity", "onServiceDisconnected");
+        }
+    };
 
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
@@ -91,8 +98,8 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
             tokenContent = token;
             usernameContent = username;
             nicknameContent = nickname;
-            myDBHelper.getWritableDatabase();
-            initWebSocket();
+            Intent bindIntent = new Intent(this, RecSysMsgService.class);
+            bindService(bindIntent, connection, Context.BIND_AUTO_CREATE);
         }
     }
 
@@ -101,47 +108,9 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
             Toast.makeText(this, "登录成功！", Toast.LENGTH_SHORT).show();
-            myDBHelper.getWritableDatabase();
-            initWebSocket();
+            Intent bindIntent = new Intent(this, RecSysMsgService.class);
+            bindService(bindIntent, connection, Context.BIND_AUTO_CREATE);
         }
-    }
-
-    private void initWebSocket() {
-        Request request = new Request.Builder()
-                .url(getSysMsgUrl(idContent))
-                .header("token", idContent + "_" + tokenContent)
-                .build();
-        final String TAG = "SysMsg WebSocket";
-        client.newWebSocket(request, new WebSocketListener() {
-            @Override
-            public void onOpen(@NotNull final WebSocket webSocket, @NotNull Response response) {
-                super.onOpen(webSocket, response);
-                Log.e(TAG, "onOpen: SysMsg WebSocket opened!");
-            }
-
-            @Override
-            public void onClosed(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
-                super.onClosed(webSocket, code, reason);
-                Log.e(TAG, "onOpen: SysMsg WebSocket closed, because of " + code + "/" + reason);
-            }
-
-            @Override
-            public void onClosing(@NotNull WebSocket webSocket, int code, @NotNull String reason) {
-                super.onClosing(webSocket, code, reason);
-                Log.e(TAG, "onOpen: SysMsg WebSocket is closing, because of " + code + "/" + reason);
-            }
-
-            @Override
-            public void onFailure(@NotNull WebSocket webSocket, @NotNull Throwable t, @Nullable Response response) {
-                super.onFailure(webSocket, t, response);
-            }
-
-            @Override
-            public void onMessage(@NotNull WebSocket webSocket, @NotNull String text) {
-                super.onMessage(webSocket, text);
-                Log.e(TAG, "onMessage: new message is " + text);
-            }
-        });
     }
 
     private void initView() {

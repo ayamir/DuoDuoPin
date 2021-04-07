@@ -46,29 +46,29 @@ import static com.example.duoduopin.tool.Constants.getQueryUrlByUserId;
 import static com.example.duoduopin.tool.Constants.group_id_loaded_signal;
 import static com.example.duoduopin.tool.Constants.group_new_msg_signal;
 
-public class RecMsgService extends Service {
+public class RecGrpMsgService extends Service {
     private ArrayList<OrderContent> orderContent;
     private final ArrayList<String> grpIdList = new ArrayList<>();
     private final HashMap<String, WebSocket> webSocketMap = new HashMap<>();
 
-    private final OkHttpClient socketClient = new OkHttpClient().newBuilder()
+    public static final OkHttpClient socketClient = new OkHttpClient().newBuilder()
             .readTimeout(0, TimeUnit.SECONDS)
             .writeTimeout(0, TimeUnit.SECONDS)
             .connectTimeout(0, TimeUnit.SECONDS)
             .pingInterval(10, TimeUnit.SECONDS)
             .build();
 
-    private final RecGrpMsgBinder mBinder = new RecGrpMsgBinder();
+    private final RecGrpMsgBinder grpMsgBinder = new RecGrpMsgBinder();
 
     public class RecGrpMsgBinder extends Binder {
-        public RecMsgService getService() {
-            return RecMsgService.this;
+        public RecGrpMsgService getService() {
+            return RecGrpMsgService.this;
         }
     }
 
     @Override
     public IBinder onBind(Intent intent) {
-        return mBinder;
+        return grpMsgBinder;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
@@ -167,9 +167,6 @@ public class RecMsgService extends Service {
                 }
             }
         }).start();
-
-
-
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)

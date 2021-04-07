@@ -29,6 +29,7 @@ import com.example.duoduopin.R;
 import com.example.duoduopin.bean.SysMsgContent;
 import com.example.duoduopin.tool.MyDBHelper;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 
 import org.json.JSONException;
@@ -47,9 +48,9 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+import static com.example.duoduopin.activity.MainActivity.client;
 import static com.example.duoduopin.activity.MainActivity.idContent;
 import static com.example.duoduopin.activity.MainActivity.tokenContent;
-import static com.example.duoduopin.activity.MainActivity.client;
 import static com.example.duoduopin.handler.GeneralMsgHandler.ERROR;
 import static com.example.duoduopin.handler.GeneralMsgHandler.SUCCESS;
 import static com.example.duoduopin.tool.Constants.checkSysMsgUrl;
@@ -86,10 +87,10 @@ public class SysMsgCaseActivity extends AppCompatActivity {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if (buttonView.isChecked()) {
                     isFromServer = false;
-                    readFromDB();
+                    checkRead();
                 } else {
                     isFromServer = true;
-                    readFromServer();
+                    checkUnRead();
                 }
             }
         });
@@ -100,21 +101,34 @@ public class SysMsgCaseActivity extends AppCompatActivity {
                 final String TAG = "pull-to-refresh";
                 if (isFromServer) {
                     Log.e(TAG, "onRefresh: isFromServer = " + isFromServer);
-                    readFromServer();
+                    checkUnRead();
                 } else {
                     Log.e(TAG, "onRefresh: isFromServer = " + isFromServer);
-                    readFromDB();
+                    checkRead();
                 }
                 swipeRefreshLayout.setRefreshing(false);
             }
         });
     }
 
+    private void checkRead() {
+        readFromDB(true, sysMsgCasesFromDB, sysMsgDetailedCasesFromDB);
+        showItems(sysMsgCasesFromDB, sysMsgDetailedCasesFromDB);
+    }
+
     private void showItems(ArrayList<HashMap<String, String>> cases, final ArrayList<HashMap<String, String>> dCases) {
+        if (cases.isEmpty()) {
+            Log.e("", "showItems: cases is empty");
+        }
+
+        if (dCases.isEmpty()) {
+            Log.e("", "showItems: cases is empty");
+        }
 
         SimpleAdapter adapter = new SimpleAdapter(this, cases, R.layout.system_message_tip,
                 new String[]{"title", "content", "time"},
                 new int[]{R.id.sys_msg_title, R.id.sys_msg_content, R.id.sys_msg_time});
+
         listView.setAdapter(adapter);
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -128,7 +142,8 @@ public class SysMsgCaseActivity extends AppCompatActivity {
                 values.put("type", dCases.get((int) id).get("type"));
                 values.put("time", dCases.get((int) id).get("time"));
                 values.put("content", dCases.get((int) id).get("content"));
-                db.insert("SysMsg", null, values);
+                values.put("isRead", String.valueOf(true));
+                db.replace("SysMsg", null, values);
 
                 Intent toIntent = new Intent(view.getContext(), OneSysMsgCaseActivity.class);
                 toIntent.putExtra("messageId", dCases.get((int) id).get("messageId"));
@@ -137,50 +152,44 @@ public class SysMsgCaseActivity extends AppCompatActivity {
                 toIntent.putExtra("messageType", dCases.get((int) id).get("type"));
                 toIntent.putExtra("time", dCases.get((int) id).get("time"));
                 toIntent.putExtra("content", dCases.get((int) id).get("content"));
-                String isFromServerString;
-                if (isFromServer) {
-                    isFromServerString = "true";
-                } else {
-                    isFromServerString = "false";
-                }
-                toIntent.putExtra("isFromServer", isFromServerString);
+                toIntent.putExtra("isRead", dCases.get((int) id).get("isRead"));
                 startActivity(toIntent);
             }
         });
     }
 
-    private void readFromDB() {
-        sysMsgCasesFromDB.clear();
-        sysMsgDetailedCasesFromDB.clear();
+    private void readFromDB(boolean isRead, ArrayList<HashMap<String, String>> cases, ArrayList<HashMap<String, String>> detailedCases) {
+        cases.clear();
+        detailedCases.clear();
 
         SQLiteDatabase db = myDBHelper.getWritableDatabase();
-        String[] args = new String[]{idContent};
-        Cursor cursor = db.query("SysMsg", null, "receiverId=?", args, null, null, "time", null);
+        String[] args = new String[]{idContent, String.valueOf(isRead)};
+        Cursor cursor = db.query("SysMsg", null, "receiverId=? and isRead=?", args, null, null, "time", null);
         if (cursor.moveToFirst()) {
             do {
                 HashMap<String, String> mapFromDB = new HashMap<>();
                 mapFromDB.put("title", "系统消息");
                 mapFromDB.put("content", cursor.getString(cursor.getColumnIndex("content")));
                 mapFromDB.put("time", cursor.getString(cursor.getColumnIndex("time")));
-                sysMsgCasesFromDB.add(mapFromDB);
+                cases.add(mapFromDB);
 
                 HashMap<String, String> dmapFromDB = new HashMap<>();
                 dmapFromDB.put("messageId", cursor.getString(cursor.getColumnIndex("messageId")));
                 dmapFromDB.put("senderId", cursor.getString(cursor.getColumnIndex("senderId")));
+                dmapFromDB.put("receiverId", cursor.getString(cursor.getColumnIndex("receiverId")));
                 dmapFromDB.put("billId", cursor.getString(cursor.getColumnIndex("billId")));
                 dmapFromDB.put("type", cursor.getString(cursor.getColumnIndex("type")));
                 dmapFromDB.put("time", cursor.getString(cursor.getColumnIndex("time")));
                 dmapFromDB.put("content", cursor.getString(cursor.getColumnIndex("content")));
-                sysMsgDetailedCasesFromDB.add(dmapFromDB);
+                dmapFromDB.put("isRead", cursor.getString(cursor.getColumnIndex("isRead")));
+                detailedCases.add(dmapFromDB);
             } while (cursor.moveToNext());
         }
         cursor.close();
-
-        showItems(sysMsgCasesFromDB, sysMsgDetailedCasesFromDB);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    private void readFromServer() {
+    private void checkUnRead() {
         sysMsgDetailedCasesFromServer.clear();
         sysMsgCasesFromServer.clear();
 
@@ -188,8 +197,9 @@ public class SysMsgCaseActivity extends AppCompatActivity {
             sysMsgContentList.clear();
         }
 
-        @SuppressLint("HandlerLeak")
-        final Handler checkSysMsgHandler = new Handler(){
+        readFromDB(false, sysMsgCasesFromServer, sysMsgDetailedCasesFromServer);
+
+        @SuppressLint("HandlerLeak") final Handler checkSysMsgHandler = new Handler() {
             @Override
             public void handleMessage(@NonNull Message msg) {
                 if (msg.what == SUCCESS) {
@@ -210,6 +220,7 @@ public class SysMsgCaseActivity extends AppCompatActivity {
                         dmap.put("type", content.getType());
                         dmap.put("time", content.getTime());
                         dmap.put("content", contentString);
+                        dmap.put("isRead", String.valueOf(content.isRead()));
                         sysMsgDetailedCasesFromServer.add(dmap);
                     }
                     showItems(sysMsgCasesFromServer, sysMsgDetailedCasesFromServer);
@@ -235,6 +246,21 @@ public class SysMsgCaseActivity extends AppCompatActivity {
         }).start();
     }
 
+    private void insertToDB(SysMsgContent content) {
+        SQLiteDatabase db = myDBHelper.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("messageId", content.getMessageId());
+        values.put("senderId", content.getSenderId());
+        values.put("receiverId", content.getReceiverId());
+        values.put("billId", content.getBillId());
+        values.put("type", content.getType());
+        values.put("time", content.getTime());
+        values.put("content", content.getContent());
+        values.put("isRead", content.isRead());
+        db.insert("SysMsg", null, values);
+        Log.e("", "insertToDB: insert success, content = " + content.toString());
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.O)
     private int postCheckSysMessage() throws IOException, JSONException {
         final String TAG = "checkSysMessage";
@@ -257,7 +283,8 @@ public class SysMsgCaseActivity extends AppCompatActivity {
 
         if (response.code() == 200) {
             if (code == 100) {
-                sysMsgContentList = new Gson().fromJson(jsonObject.getString("content"), new TypeToken<List<SysMsgContent>>() {
+                Gson gson = new GsonBuilder().excludeFieldsWithoutExposeAnnotation().create();
+                sysMsgContentList = gson.fromJson(jsonObject.getString("content"), new TypeToken<List<SysMsgContent>>() {
                 }.getType());
                 if (sysMsgContentList != null) {
                     ret = SUCCESS;
@@ -265,6 +292,9 @@ public class SysMsgCaseActivity extends AppCompatActivity {
                         long oldTime = Long.parseLong(content.getTime());
                         String newTime = Instant.ofEpochMilli(oldTime).atZone(ZoneOffset.ofHours(8)).toLocalDateTime().toString().replace('T', ' ');
                         content.setTime(newTime);
+                        content.setRead(false);
+                        Log.e(TAG, "postCheckSysMessage: content is " + content.toString());
+                        insertToDB(content);
                     }
                 }
             }

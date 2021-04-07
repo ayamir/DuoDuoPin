@@ -36,7 +36,7 @@ import com.example.duoduopin.activity.OneGrpMsgCaseActivity;
 import com.example.duoduopin.activity.SysMsgCaseActivity;
 import com.example.duoduopin.bean.BriefGrpMsg;
 import com.example.duoduopin.bean.GrpMsgContent;
-import com.example.duoduopin.service.RecMsgService;
+import com.example.duoduopin.service.RecGrpMsgService;
 import com.example.duoduopin.tool.MyDBHelper;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -79,7 +79,7 @@ public class MessageFragment extends Fragment {
     private final HashMap<String, BriefGrpMsg> briefGrpMsgMap = new HashMap<>();
 
     private MyDBHelper myDBHelper;
-    public static RecMsgService recMsgService;
+    public static RecGrpMsgService recGrpMsgService;
 
     private GrpMsgReceiverBrief grpMsgReceiverBrief;
     private GrpQuitReceiver grpQuitReceiver;
@@ -112,8 +112,8 @@ public class MessageFragment extends Fragment {
         @Override
         public void onServiceConnected(ComponentName name, IBinder iBinder) {
             // Bind service
-            RecMsgService.RecGrpMsgBinder binder = (RecMsgService.RecGrpMsgBinder) iBinder;
-            recMsgService = binder.getService();
+            RecGrpMsgService.RecGrpMsgBinder binder = (RecGrpMsgService.RecGrpMsgBinder) iBinder;
+            recGrpMsgService = binder.getService();
         }
 
         @Override
@@ -142,8 +142,8 @@ public class MessageFragment extends Fragment {
         public void onReceive(Context context, Intent intent) {
             String quitGrpId = intent.getStringExtra("quitGrpId");
 
-            Objects.requireNonNull(recMsgService.getWebSocketMap().get(quitGrpId)).close(1000, "You have quited " + quitGrpId + " group!");
-            recMsgService.getWebSocketMap().remove(quitGrpId);
+            Objects.requireNonNull(recGrpMsgService.getWebSocketMap().get(quitGrpId)).close(1000, "You have quited " + quitGrpId + " group!");
+            recGrpMsgService.getWebSocketMap().remove(quitGrpId);
             briefGrpMsgMap.remove(quitGrpId);
             if (context == getActivity())
                 showItems();
@@ -157,7 +157,7 @@ public class MessageFragment extends Fragment {
             int signal = intent.getIntExtra("grpIdList", ERROR);
             if (signal == SUCCESS) {
                 final String TAG = "grpIdList";
-                grpIdList = recMsgService.getGrpIdList();
+                grpIdList = recGrpMsgService.getGrpIdList();
 
                 if (grpIdList != null) {
                     for (String id : grpIdList) {
@@ -219,7 +219,7 @@ public class MessageFragment extends Fragment {
         bindItemsAndOps();
 
         doRegisterReceiver();
-        Intent bindIntent = new Intent(this.getActivity(), RecMsgService.class);
+        Intent bindIntent = new Intent(this.getActivity(), RecGrpMsgService.class);
         getActivity().bindService(bindIntent, connection, Context.BIND_AUTO_CREATE);
     }
 

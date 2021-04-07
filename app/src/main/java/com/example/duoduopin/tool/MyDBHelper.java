@@ -22,6 +22,7 @@ public class MyDBHelper extends SQLiteOpenHelper {
             + "billId integer not null, "
             + "type text not null, "
             + "time text not null, "
+            + "isRead text not null, "
             + "content text not null)";
 
     // ownerId for multiple users' support
