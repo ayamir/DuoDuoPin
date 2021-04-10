@@ -3,7 +3,10 @@ package com.example.duoduopin.fragment;
 import android.annotation.SuppressLint;
 import android.app.Dialog;
 import android.app.Fragment;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.icu.text.SimpleDateFormat;
 import android.os.Build;
 import android.os.Bundle;
@@ -28,6 +31,7 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.bigkoo.pickerview.builder.TimePickerBuilder;
 import com.bigkoo.pickerview.listener.OnTimeSelectChangeListener;
@@ -36,10 +40,14 @@ import com.bigkoo.pickerview.view.TimePickerView;
 import com.example.duoduopin.R;
 import com.example.duoduopin.activity.AssistantLocationActivity;
 import com.example.duoduopin.activity.OrderCaseActivity;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.example.duoduopin.adapter.BriefOrderContentAdapter;
 
 import java.util.Date;
 import java.util.Objects;
+
+import static com.example.duoduopin.activity.MainActivity.recBriefOrderContentList;
+import static com.example.duoduopin.activity.MainActivity.recOrderContentList;
+import static com.example.duoduopin.tool.Constants.brief_order_content_load_signal;
 
 public class HomeFragment extends Fragment {
 
@@ -56,6 +64,23 @@ public class HomeFragment extends Fragment {
     private TimePickerView pvTimeEnd;
 
     private String typeString, distanceString;
+
+    private SwipeRefreshLayout srlHomeContent;
+    private RecyclerView rvContentList;
+    private BriefOrderContentAdapter briefOrderContentAdapter;
+    private BriefOrderContentReceiver briefOrderContentReceiver;
+
+    private boolean isLoaded = false;
+
+    private class BriefOrderContentReceiver extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            briefOrderContentAdapter = new BriefOrderContentAdapter(recOrderContentList, recBriefOrderContentList);
+            rvContentList.setAdapter(briefOrderContentAdapter);
+            isLoaded = true;
+            srlHomeContent.setRefreshing(false);
+        }
+    }
 
     @Nullable
     @Override
@@ -78,8 +103,18 @@ public class HomeFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
+        briefOrderContentReceiver = new BriefOrderContentReceiver();
+        IntentFilter intentFilter = new IntentFilter(brief_order_content_load_signal);
+        getActivity().registerReceiver(briefOrderContentReceiver, intentFilter);
+
         bindMainItems();
         bindMenuItems();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        getActivity().unregisterReceiver(briefOrderContentReceiver);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
@@ -243,22 +278,6 @@ public class HomeFragment extends Fragment {
     }
 
     private void bindMainItems() {
-        FloatingActionButton carBtn = getActivity().findViewById(R.id.carBtn);
-        carBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(getActivity(), "等待进一步开发...", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        FloatingActionButton orderBtn = getActivity().findViewById(R.id.orderBtn);
-        orderBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast.makeText(getActivity(), "等待进一步开发...", Toast.LENGTH_SHORT).show();
-            }
-        });
-
         EditText searchBar = getActivity().findViewById(R.id.searchBar);
         searchBar.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -283,9 +302,17 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        RecyclerView rvContentList = getActivity().findViewById(R.id.rv_content_list);
+        srlHomeContent = getActivity().findViewById(R.id.srl_home_content);
+        if (!isLoaded && recBriefOrderContentList.size() == 0) {
+            srlHomeContent.setRefreshing(true);
+        }
+
+        rvContentList = getActivity().findViewById(R.id.rv_content_list);
         LinearLayoutManager homeContentLayoutManager = new LinearLayoutManager(getActivity(), RecyclerView.VERTICAL, false);
         rvContentList.setLayoutManager(homeContentLayoutManager);
+
+        briefOrderContentAdapter = new BriefOrderContentAdapter(recOrderContentList, recBriefOrderContentList);
+        rvContentList.setAdapter(briefOrderContentAdapter);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)

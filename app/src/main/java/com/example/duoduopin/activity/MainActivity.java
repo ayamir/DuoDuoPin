@@ -1,5 +1,6 @@
 package com.example.duoduopin.activity;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Fragment;
 import android.app.FragmentManager;
@@ -9,31 +10,91 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
+import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 
+import com.amap.api.location.AMapLocation;
+import com.amap.api.location.AMapLocationClient;
+import com.amap.api.location.AMapLocationClientOption;
+import com.amap.api.location.AMapLocationListener;
 import com.example.duoduopin.R;
+import com.example.duoduopin.bean.BriefOrderContent;
+import com.example.duoduopin.bean.OrderContent;
 import com.example.duoduopin.fragment.HomeFragment;
 import com.example.duoduopin.fragment.MessageFragment;
 import com.example.duoduopin.fragment.OrderFragment;
 import com.example.duoduopin.fragment.ProfileFragment;
 import com.example.duoduopin.service.RecSysMsgService;
-import com.example.duoduopin.tool.MyDBHelper;
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
+import okhttp3.Call;
 import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
+import static android.content.pm.PackageManager.PERMISSION_GRANTED;
+import static com.example.duoduopin.activity.LoginActivity.JSON;
+import static com.example.duoduopin.handler.GeneralMsgHandler.SUCCESS;
+import static com.example.duoduopin.tool.Constants.API_KEY;
+import static com.example.duoduopin.tool.Constants.brief_order_content_load_signal;
 
 public class MainActivity extends FragmentActivity implements View.OnClickListener {
-    ImageView home, message, order, profile;
+    private ImageView home, message, order, profile;
+    private String latitude, longitude;
+
+    private final int LOCATION_REQUEST_CODE = 1;
+    private AMapLocationClient locationClient;
+
+    private boolean isConnected = false;
+
+    @SuppressLint("HandlerLeak")
+    private final Handler locateSuccessHandler = new Handler() {
+        @RequiresApi(api = Build.VERSION_CODES.O)
+        @Override
+        public void handleMessage(@NonNull Message msg) {
+            if (msg.what == SUCCESS) {
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            postQueryRecOrderList();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }).start();
+            }
+        }
+    };
+
 
     public static SharedPreferences prefs;
     public static final String prefName = "tokenData";
@@ -51,6 +112,9 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     public static String usernameContent;
     public static String nicknameContent;
 
+    public static ArrayList<OrderContent> recOrderContentList;
+    public static ArrayList<BriefOrderContent> recBriefOrderContentList = new ArrayList<>();
+
     private final ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder iBinder) {
@@ -66,7 +130,7 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     };
 
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -76,6 +140,15 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         initView();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (isConnected) {
+            unbindService(connection);
+        }
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
     private void checkLogin() {
         prefs = getSharedPreferences(prefName, Context.MODE_PRIVATE);
         String id = prefs.getString("id", "");
@@ -98,18 +171,176 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
             tokenContent = token;
             usernameContent = username;
             nicknameContent = nickname;
+
+            if (checkPermission()) {
+                getLocatePermission();
+            } else {
+                startLocationRequest();
+            }
+
             Intent bindIntent = new Intent(this, RecSysMsgService.class);
             bindService(bindIntent, connection, Context.BIND_AUTO_CREATE);
+            isConnected = true;
         }
     }
 
+    private boolean checkPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            boolean isCoarseLocationAllowed = checkSelfPermission(Manifest.permission.ACCESS_COARSE_LOCATION) == PERMISSION_GRANTED;
+            boolean isFineLocationAllowed = checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PERMISSION_GRANTED;
+            boolean isNetworkLocationAllowed = checkSelfPermission(Manifest.permission.ACCESS_NETWORK_STATE) == PERMISSION_GRANTED;
+            boolean isWifiLocationAllowed = checkSelfPermission(Manifest.permission.ACCESS_WIFI_STATE) == PERMISSION_GRANTED;
+            boolean isChangeWifiLocationAllowed = checkSelfPermission(Manifest.permission.CHANGE_WIFI_STATE) == PERMISSION_GRANTED;
+            boolean isInternetAllowed = checkSelfPermission(Manifest.permission.INTERNET) == PERMISSION_GRANTED;
+            boolean isReadPhoneStateAllowed = checkSelfPermission(Manifest.permission.READ_PHONE_STATE) == PERMISSION_GRANTED;
+            boolean isWriteSDAllowed = checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PERMISSION_GRANTED;
+            return !isReadPhoneStateAllowed || !isFineLocationAllowed || !isCoarseLocationAllowed || !isNetworkLocationAllowed ||
+                    !isWifiLocationAllowed || !isChangeWifiLocationAllowed || !isInternetAllowed || !isWriteSDAllowed;
+        }
+        return true;
+    }
+
+    void getLocatePermission() {
+        ActivityCompat.requestPermissions(this, new String[]{
+                Manifest.permission.ACCESS_COARSE_LOCATION,
+                Manifest.permission.ACCESS_FINE_LOCATION,
+                Manifest.permission.ACCESS_NETWORK_STATE,
+                Manifest.permission.ACCESS_WIFI_STATE,
+                Manifest.permission.CHANGE_WIFI_STATE,
+                Manifest.permission.INTERNET,
+                Manifest.permission.READ_PHONE_STATE,
+                Manifest.permission.WRITE_EXTERNAL_STORAGE,
+        }, LOCATION_REQUEST_CODE);
+    }
+
     @Override
-    protected void onActivityResult(int requestCode, int resultCode, @androidx.annotation.Nullable Intent data) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == LOCATION_REQUEST_CODE) {
+            if (locationClient == null) {
+                Toast.makeText(this, "定位服务客户端不存在！", Toast.LENGTH_SHORT).show();
+            }
+            boolean isGranted = true;
+            int i = 0;
+            for (int grantResult : grantResults) {
+                if (grantResult == PackageManager.PERMISSION_DENIED) {
+                    isGranted = false;
+                    Toast.makeText(this, "Permission Denied: " + permissions[i], Toast.LENGTH_SHORT).show();
+                    break;
+                }
+                i++;
+            }
+            if (isGranted) {
+                startLocationRequest();
+            } else {
+                Toast.makeText(this, "请同意上述权限来获得更好的应用体验！", Toast.LENGTH_SHORT).show();
+            }
+        }
+    }
+
+    private void startLocationRequest() {
+        AMapLocationClient.setApiKey(API_KEY);
+        locationClient = new AMapLocationClient(this);
+
+        AMapLocationClientOption locationClientOption = new AMapLocationClientOption();
+        locationClientOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy);
+        locationClientOption.setOnceLocation(true);
+        locationClientOption.setOnceLocationLatest(true);
+        locationClient.setLocationOption(locationClientOption);
+
+        AMapLocationListener locationListener = new AMapLocationListener() {
+            @Override
+            public void onLocationChanged(AMapLocation aMapLocation) {
+                final String TAG = "AMapError";
+                if (aMapLocation != null) {
+                    Log.e(TAG, "aMapLocation has response");
+                    if (aMapLocation.getErrorCode() == 0) {
+                        latitude = String.valueOf(aMapLocation.getLatitude());
+                        longitude = String.valueOf(aMapLocation.getLongitude());
+                        Log.e(TAG, "latitude = " + latitude + ", longitude = " + longitude);
+                        new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                Message message = new Message();
+                                message.what = SUCCESS;
+                                locateSuccessHandler.sendMessage(message);
+                            }
+                        }).start();
+                    } else {
+                        Log.e(TAG, "location error, error code: " + aMapLocation.getErrorCode() + "\nerror info: " + aMapLocation.getErrorInfo());
+                    }
+                } else {
+                    Log.e(TAG, "location error");
+                }
+            }
+        };
+        locationClient.setLocationListener(locationListener);
+        locationClient.startLocation();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void postQueryRecOrderList() throws IOException, JSONException {
+        final String TAG = "getRecOrderList";
+
+        if (latitude != null && longitude != null) {
+            JSONObject bodyJSON = new JSONObject();
+            bodyJSON.put("latitude", latitude);
+            bodyJSON.put("longitude", longitude);
+
+            RequestBody body = RequestBody.create(bodyJSON.toString(), JSON);
+
+            Request request = new Request.Builder()
+                    .url(com.example.duoduopin.tool.Constants.queryByInfoUrl)
+                    .header("token", idContent + "_" + tokenContent)
+                    .post(body)
+                    .build();
+
+            Call call = client.newCall(request);
+            Response response = call.execute();
+
+            if (response.code() == 200) {
+                JSONObject responseJSON = new JSONObject(response.body().string());
+                recOrderContentList = new Gson().fromJson(responseJSON.getString("content"), new TypeToken<List<OrderContent>>() {
+                }.getType());
+                if (recOrderContentList != null) {
+                    for (OrderContent orderContent : recOrderContentList) {
+                        long oldTime = Long.parseLong(orderContent.getTime());
+                        String newTime = Instant.ofEpochMilli(oldTime).atZone(ZoneOffset.ofHours(8)).toLocalDateTime().toString().replace('T', ' ');
+                        orderContent.setTime(newTime);
+
+                        recBriefOrderContentList.add(new BriefOrderContent(orderContent.getNickname(), orderContent.getTitle(), orderContent.getDescription(), orderContent.getCurPeople()));
+                    }
+                }
+                Intent intent = new Intent();
+                intent.putExtra("BriefOrderContentLoaded", SUCCESS);
+                intent.setAction(brief_order_content_load_signal);
+                sendBroadcast(intent);
+            } else {
+                Log.d(TAG, Objects.requireNonNull(response.body()).string());
+                Log.d(TAG, response.toString());
+            }
+        } else {
+            Log.e(TAG, "latitude and longitude is null");
+        }
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode,
+                                    @androidx.annotation.Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
             Toast.makeText(this, "登录成功！", Toast.LENGTH_SHORT).show();
+            if (checkPermission()) {
+                getLocatePermission();
+            } else {
+                startLocationRequest();
+            }
+
             Intent bindIntent = new Intent(this, RecSysMsgService.class);
             bindService(bindIntent, connection, Context.BIND_AUTO_CREATE);
+            isConnected = true;
         }
     }
 

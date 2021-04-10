@@ -1,6 +1,8 @@
 package com.example.duoduopin.tool;
 
 public class Constants {
+    public static final String API_KEY = "18ad3729e308bc702fd5d630df7bddd7";
+    public static final String brief_order_content_load_signal = "com.example.duoduopin.home.loaded";
     public static final String group_quit_signal = "com.example.duoduopin.group.quit";
     public static final String group_new_msg_signal = "com.example.duoduopin.group.msg.new";
     public static final String group_id_loaded_signal = "com.example.duoduopin.group.id.loaded";

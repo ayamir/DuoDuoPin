@@ -146,7 +146,6 @@ public class OneOrderCaseActivity extends AppCompatActivity {
             @Override
             public void onClick(final View v) {
                 new Thread(new Runnable() {
-
                     @SuppressLint("HandlerLeak")
                     final Handler joinHandler = new Handler(){
                         @Override

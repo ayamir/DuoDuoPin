@@ -14,10 +14,6 @@
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         tools:ignore="ScopedStorage" /> <!-- 用于申请调用A-GPS模块 -->
-    <uses-permission android:name="android.permission.ACCESS_LOCATION_EXTRA_COMMANDS" /> <!-- 解锁屏幕 -->
-    <uses-permission android:name="android.permission.DISABLE_KEYGUARD" /> <!-- 申请电源锁 -->
-    <uses-permission android:name="android.permission.WAKE_LOCK" /> <!-- 震动 -->
-    <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
         android:icon="@mipmap/ic_launcher"
