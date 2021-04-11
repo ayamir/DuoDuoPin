@@ -306,6 +306,12 @@ public class HomeFragment extends Fragment {
         if (!isLoaded && recBriefOrderContentList.size() == 0) {
             srlHomeContent.setRefreshing(true);
         }
+        srlHomeContent.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @Override
+            public void onRefresh() {
+                srlHomeContent.setRefreshing(false);
+            }
+        });
 
         rvContentList = getActivity().findViewById(R.id.rv_content_list);
         LinearLayoutManager homeContentLayoutManager = new LinearLayoutManager(getActivity(), RecyclerView.VERTICAL, false);

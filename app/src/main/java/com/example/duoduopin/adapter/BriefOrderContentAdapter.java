@@ -54,7 +54,7 @@ public class BriefOrderContentAdapter extends RecyclerView.Adapter<BriefOrderCon
     public void onBindViewHolder(@NonNull HomeContentViewHolder holder, int position) {
         BriefOrderContent briefOrderContent = briefOrderContentList.get(position);
         holder.tvTitle.setText(briefOrderContent.getTitle());
-        holder.tvNickname.setText(briefOrderContent.getTitle());
+        holder.tvNickname.setText(briefOrderContent.getNickname());
         holder.tvDescription.setText(briefOrderContent.getDescription());
         holder.tvCurrentNumber.setText(briefOrderContent.getCurrentNumber());
 
