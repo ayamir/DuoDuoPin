@@ -295,7 +295,6 @@ public class HomeFragment extends Fragment {
             recCarContentList.clear();
             recBriefCarContentList.clear();
             for (int i = 0; i < recOrderContentList.size(); i++) {
-                Log.e("displayBillOrCar", recOrderContentList.get(i).getType());
                 if (recOrderContentList.get(i).getType().equals("BILL")) {
                     recBillContentList.add(recOrderContentList.get(i));
                     recBriefBillContentList.add(recBriefOrderContentList.get(i));
@@ -304,8 +303,6 @@ public class HomeFragment extends Fragment {
                     recBriefCarContentList.add(recBriefOrderContentList.get(i));
                 }
             }
-            Log.e("displayBillOrCar", "recBillContentList.size() = " + recBillContentList.size());
-            Log.e("displayBillOrCar", "recCarContentList.size() = " + recCarContentList.size());
             if (isBill) {
                 BriefOrderContentAdapter briefBillContentAdapter = new BriefOrderContentAdapter(recBillContentList, recBriefBillContentList);
                 rvContentList.setAdapter(briefBillContentAdapter);
