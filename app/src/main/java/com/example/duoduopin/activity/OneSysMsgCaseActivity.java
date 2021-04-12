@@ -1,8 +1,10 @@
 package com.example.duoduopin.activity;
 
 import android.annotation.SuppressLint;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -21,6 +23,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.duoduopin.R;
+import com.example.duoduopin.tool.MyDBHelper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -66,6 +69,8 @@ public class OneSysMsgCaseActivity extends AppCompatActivity {
     private Button reject;
 
     private final Context mContext = this;
+
+    private final MyDBHelper myDBHelper = new MyDBHelper(this, "DuoDuoPin.db", null, 1);
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
@@ -196,6 +201,10 @@ public class OneSysMsgCaseActivity extends AppCompatActivity {
                     public void handleMessage(@NonNull Message msg) {
                         if (msg.what == SUCCESS) {
                             Toast.makeText(v.getContext(), "请求已通过！", Toast.LENGTH_SHORT).show();
+                            SQLiteDatabase db = myDBHelper.getWritableDatabase();
+                            ContentValues contentValues = new ContentValues();
+                            contentValues.put("isRead", true);
+                            db.update("SysMsg", contentValues, "messageId=?", new String[]{messageIdString});
                             agree.setVisibility(View.INVISIBLE);
                             reject.setVisibility(View.INVISIBLE);
                         } else {
@@ -227,6 +236,10 @@ public class OneSysMsgCaseActivity extends AppCompatActivity {
                     public void handleMessage(@NonNull Message msg) {
                         if (msg.what == SUCCESS) {
                             Toast.makeText(v.getContext(), "请求已拒绝！", Toast.LENGTH_SHORT).show();
+                            SQLiteDatabase db = myDBHelper.getWritableDatabase();
+                            ContentValues contentValues = new ContentValues();
+                            contentValues.put("isRead", true);
+                            db.update("SysMsg", contentValues, "messageId=?", new String[]{messageIdString});
                             agree.setVisibility(View.INVISIBLE);
                             reject.setVisibility(View.INVISIBLE);
                         } else {

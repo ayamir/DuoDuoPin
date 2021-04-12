@@ -142,7 +142,7 @@ public class SysMsgCaseActivity extends AppCompatActivity {
                 values.put("type", dCases.get((int) id).get("type"));
                 values.put("time", dCases.get((int) id).get("time"));
                 values.put("content", dCases.get((int) id).get("content"));
-                values.put("isRead", String.valueOf(true));
+                values.put("isRead", String.valueOf(false));
                 db.replace("SysMsg", null, values);
 
                 Intent toIntent = new Intent(view.getContext(), OneSysMsgCaseActivity.class);
