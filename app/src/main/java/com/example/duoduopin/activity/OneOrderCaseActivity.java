@@ -84,7 +84,8 @@ public class OneOrderCaseActivity extends AppCompatActivity {
                 super.handleMessage(msg);
                 if (msg.what == SUCCESS) {
                     if (isInMembers()) {
-                        leave.setVisibility(View.VISIBLE);
+                        if (userIdString.equals(idContent))
+                            leave.setVisibility(View.INVISIBLE);
                         join.setVisibility(View.INVISIBLE);
                     } else {
                         leave.setVisibility(View.INVISIBLE);
@@ -121,7 +122,7 @@ public class OneOrderCaseActivity extends AppCompatActivity {
             if (orderIdString != null) {
                 userIdString = fromIntent.getStringExtra("userId");
                 nicknameString = fromIntent.getStringExtra("nickname");
-                typeString = fromIntent.getStringExtra("type");
+                typeString = fromIntent.getStringExtra("type").equals("BILL") ? "拼单" : "拼车";
                 priceString = fromIntent.getStringExtra("price");
                 addressString = fromIntent.getStringExtra("address");
                 curPeopleString = fromIntent.getStringExtra("curPeople");

@@ -141,6 +141,8 @@ android:layout_height="match_parent">
                     android:id="@+id/content_view"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:paddingLeft="10dp"
+                    android:paddingRight="10dp"
                     android:text="内容内容内容，加我加我加我内容内容内容，加我加我加我内容内容内容，加我加我加我内容内容内容，加我加我加我内容内容内容，加我加我加我"
                     android:textSize="18sp" />
 
@@ -166,6 +168,7 @@ android:layout_height="match_parent">
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_gravity="center_vertical"
+                        android:paddingRight="10dp"
                         android:text="点击查看拼单详情>>"
                         android:textColor="#3C3C3C"
                         android:textSize="18sp" />

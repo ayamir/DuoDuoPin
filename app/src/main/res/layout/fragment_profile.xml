@@ -7,6 +7,7 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
@@ -17,13 +18,14 @@
 
         <ImageView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="120dp"
             android:src="@drawable/testperson" />
 
         <TextView
             android:id="@+id/nicknameProfile"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
             android:gravity="center"
             android:text="昵称昵称昵称昵称"
             android:textSize="18sp" />
@@ -86,7 +88,7 @@
                 <ImageView
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
-                    android:src="@drawable/wait" />
+                    android:src="@drawable/trash" />
 
                 <TextView
                     android:layout_width="match_parent"

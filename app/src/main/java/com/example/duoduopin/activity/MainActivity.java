@@ -106,6 +106,7 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
             .build();
 
     public static boolean isMessageClicked = false;
+    public static boolean isLoaded = false;
 
     public static String idContent;
     public static String tokenContent;

@@ -49,6 +49,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Objects;
 
+import static com.example.duoduopin.activity.MainActivity.isLoaded;
 import static com.example.duoduopin.activity.MainActivity.recBriefOrderContentList;
 import static com.example.duoduopin.activity.MainActivity.recOrderContentList;
 import static com.example.duoduopin.tool.Constants.brief_order_content_load_signal;
@@ -79,8 +80,6 @@ public class HomeFragment extends Fragment {
     private final ArrayList<BriefOrderContent> recBriefBillContentList = new ArrayList<>();
     private final ArrayList<OrderContent> recCarContentList = new ArrayList<>();
     private final ArrayList<BriefOrderContent> recBriefCarContentList = new ArrayList<>();
-
-    private boolean isLoaded = false;
 
     private class BriefOrderContentReceiver extends BroadcastReceiver {
         @Override
