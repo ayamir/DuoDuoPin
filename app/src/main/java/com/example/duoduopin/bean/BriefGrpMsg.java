@@ -8,7 +8,7 @@ public class BriefGrpMsg {
 
     public BriefGrpMsg(String grpTitle, String grpMsgOwnNickname, String grpMsgContent, String grpMsgTime) {
         this.grpTitle = grpTitle;
-        this.grpMsgOwnNickname = grpMsgOwnNickname;
+        this.grpMsgOwnNickname = grpMsgOwnNickname + ":";
         this.grpMsgContent = grpMsgContent;
         this.grpMsgTime = grpMsgTime;
     }

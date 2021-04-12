@@ -41,7 +41,11 @@ import com.example.duoduopin.R;
 import com.example.duoduopin.activity.AssistantLocationActivity;
 import com.example.duoduopin.activity.OrderCaseActivity;
 import com.example.duoduopin.adapter.BriefOrderContentAdapter;
+import com.example.duoduopin.bean.BriefOrderContent;
+import com.example.duoduopin.bean.OrderContent;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Objects;
 
@@ -67,8 +71,14 @@ public class HomeFragment extends Fragment {
 
     private SwipeRefreshLayout srlHomeContent;
     private RecyclerView rvContentList;
-    private BriefOrderContentAdapter briefOrderContentAdapter;
     private BriefOrderContentReceiver briefOrderContentReceiver;
+
+    private BriefOrderContentAdapter briefOrderContentAdapter;
+
+    private final ArrayList<OrderContent> recBillContentList = new ArrayList<>();
+    private final ArrayList<BriefOrderContent> recBriefBillContentList = new ArrayList<>();
+    private final ArrayList<OrderContent> recCarContentList = new ArrayList<>();
+    private final ArrayList<BriefOrderContent> recBriefCarContentList = new ArrayList<>();
 
     private boolean isLoaded = false;
 
@@ -79,6 +89,7 @@ public class HomeFragment extends Fragment {
             rvContentList.setAdapter(briefOrderContentAdapter);
             isLoaded = true;
             srlHomeContent.setRefreshing(false);
+            Toast.makeText(context, "加载推荐成功！", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -277,7 +288,51 @@ public class HomeFragment extends Fragment {
         });
     }
 
+    private void displayBillOrCar(boolean isBill) {
+        if (isLoaded) {
+            recBillContentList.clear();
+            recBriefBillContentList.clear();
+            recCarContentList.clear();
+            recBriefCarContentList.clear();
+            for (int i = 0; i < recOrderContentList.size(); i++) {
+                Log.e("displayBillOrCar", recOrderContentList.get(i).getType());
+                if (recOrderContentList.get(i).getType().equals("BILL")) {
+                    recBillContentList.add(recOrderContentList.get(i));
+                    recBriefBillContentList.add(recBriefOrderContentList.get(i));
+                } else {
+                    recCarContentList.add(recOrderContentList.get(i));
+                    recBriefCarContentList.add(recBriefOrderContentList.get(i));
+                }
+            }
+            Log.e("displayBillOrCar", "recBillContentList.size() = " + recBillContentList.size());
+            Log.e("displayBillOrCar", "recCarContentList.size() = " + recCarContentList.size());
+            if (isBill) {
+                BriefOrderContentAdapter briefBillContentAdapter = new BriefOrderContentAdapter(recBillContentList, recBriefBillContentList);
+                rvContentList.setAdapter(briefBillContentAdapter);
+            } else {
+                BriefOrderContentAdapter briefCarContentAdapter = new BriefOrderContentAdapter(recCarContentList, recBriefCarContentList);
+                rvContentList.setAdapter(briefCarContentAdapter);
+            }
+        }
+    }
+
     private void bindMainItems() {
+        FloatingActionButton fabOrder = getActivity().findViewById(R.id.fab_order);
+        fabOrder.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                displayBillOrCar(true);
+            }
+        });
+
+        FloatingActionButton fabCar = getActivity().findViewById(R.id.fab_car);
+        fabCar.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                displayBillOrCar(false);
+            }
+        });
+
         EditText searchBar = getActivity().findViewById(R.id.searchBar);
         searchBar.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -309,7 +364,11 @@ public class HomeFragment extends Fragment {
         srlHomeContent.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                srlHomeContent.setRefreshing(false);
+                if (isLoaded) {
+                    briefOrderContentAdapter = new BriefOrderContentAdapter(recOrderContentList, recBriefOrderContentList);
+                    rvContentList.setAdapter(briefOrderContentAdapter);
+                    srlHomeContent.setRefreshing(false);
+                }
             }
         });
 

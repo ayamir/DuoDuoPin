@@ -115,6 +115,7 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     public static ArrayList<OrderContent> recOrderContentList;
     public static ArrayList<BriefOrderContent> recBriefOrderContentList = new ArrayList<>();
 
+
     private final ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder iBinder) {
