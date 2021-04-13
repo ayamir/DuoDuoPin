@@ -45,6 +45,9 @@ import com.example.duoduopin.bean.BriefOrderContent;
 import com.example.duoduopin.bean.OrderContent;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
+import org.json.JSONException;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Objects;
@@ -113,12 +116,12 @@ public class HomeFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
+        bindMainItems();
+        bindMenuItems();
+
         briefOrderContentReceiver = new BriefOrderContentReceiver();
         IntentFilter intentFilter = new IntentFilter(brief_order_content_load_signal);
         getActivity().registerReceiver(briefOrderContentReceiver, intentFilter);
-
-        bindMainItems();
-        bindMenuItems();
     }
 
     @Override
@@ -358,6 +361,7 @@ public class HomeFragment extends Fragment {
             srlHomeContent.setRefreshing(true);
         }
         srlHomeContent.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
+            @RequiresApi(api = Build.VERSION_CODES.O)
             @Override
             public void onRefresh() {
                 if (isLoaded) {

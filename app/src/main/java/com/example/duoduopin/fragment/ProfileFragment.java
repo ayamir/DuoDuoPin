@@ -39,6 +39,8 @@ import static com.example.duoduopin.activity.MainActivity.client;
 import static com.example.duoduopin.activity.MainActivity.idContent;
 import static com.example.duoduopin.activity.MainActivity.nicknameContent;
 import static com.example.duoduopin.activity.MainActivity.prefs;
+import static com.example.duoduopin.activity.MainActivity.recBriefOrderContentList;
+import static com.example.duoduopin.activity.MainActivity.recOrderContentList;
 import static com.example.duoduopin.activity.MainActivity.tokenContent;
 import static com.example.duoduopin.handler.GeneralMsgHandler.ERROR;
 import static com.example.duoduopin.handler.GeneralMsgHandler.LOGOUT;
@@ -95,7 +97,7 @@ public class ProfileFragment extends Fragment {
                     }
                 }).start();
                 cleanPrefs();
-                getActivity().finish();
+                getActivity().finishAndRemoveTask();
             }
         });
 
@@ -167,6 +169,9 @@ public class ProfileFragment extends Fragment {
         editor.remove("token");
         editor.remove("lastOnlineTime");
         editor.apply();
+
+        recBriefOrderContentList.clear();
+        recOrderContentList.clear();
         Log.e("logout", "cleanPrefs() executed!");
     }
 

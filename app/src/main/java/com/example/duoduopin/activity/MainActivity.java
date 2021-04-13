@@ -66,7 +66,7 @@ import static com.example.duoduopin.tool.Constants.brief_order_content_load_sign
 
 public class MainActivity extends FragmentActivity implements View.OnClickListener {
     private ImageView home, message, order, profile;
-    private String latitude, longitude;
+    public static String latitude, longitude;
 
     private final int LOCATION_REQUEST_CODE = 1;
     private AMapLocationClient locationClient;
@@ -249,6 +249,7 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         locationClientOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy);
         locationClientOption.setOnceLocation(true);
         locationClientOption.setOnceLocationLatest(true);
+        locationClientOption.setLocationCacheEnable(false);
         locationClient.setLocationOption(locationClientOption);
 
         AMapLocationListener locationListener = new AMapLocationListener() {
@@ -334,6 +335,7 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
             Toast.makeText(this, "登录成功！", Toast.LENGTH_SHORT).show();
+
             if (checkPermission()) {
                 getLocatePermission();
             } else {
