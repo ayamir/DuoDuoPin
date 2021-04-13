@@ -139,10 +139,15 @@ public class SysMsgCaseActivity extends AppCompatActivity {
                 values.put("senderId", dCases.get((int) id).get("senderId"));
                 values.put("receiverId", dCases.get((int) id).get("receiverId"));
                 values.put("billId", dCases.get((int) id).get("billId"));
-                values.put("type", dCases.get((int) id).get("type"));
+                String type = dCases.get((int) id).get("type");
+                values.put("type", type);
                 values.put("time", dCases.get((int) id).get("time"));
                 values.put("content", dCases.get((int) id).get("content"));
-                values.put("isRead", String.valueOf(false));
+                if (type.equals("APPLY")) {
+                    values.put("isRead", String.valueOf(false));
+                } else {
+                    values.put("isRead", String.valueOf(true));
+                }
                 db.replace("SysMsg", null, values);
 
                 Intent toIntent = new Intent(view.getContext(), OneSysMsgCaseActivity.class);
@@ -164,7 +169,7 @@ public class SysMsgCaseActivity extends AppCompatActivity {
 
         SQLiteDatabase db = myDBHelper.getWritableDatabase();
         String[] args = new String[]{idContent, String.valueOf(isRead)};
-        Cursor cursor = db.query("SysMsg", null, "receiverId=? and isRead=?", args, null, null, "time", null);
+        Cursor cursor = db.query("SysMsg", null, "receiverId=? and isRead=?", args, null, null, "time desc", null);
         if (cursor.moveToFirst()) {
             do {
                 HashMap<String, String> mapFromDB = new HashMap<>();
@@ -256,7 +261,7 @@ public class SysMsgCaseActivity extends AppCompatActivity {
         values.put("type", content.getType());
         values.put("time", content.getTime());
         values.put("content", content.getContent());
-        values.put("isRead", content.isRead());
+        values.put("isRead", String.valueOf(content.isRead()));
         db.insert("SysMsg", null, values);
         Log.e("", "insertToDB: insert success, content = " + content.toString());
     }

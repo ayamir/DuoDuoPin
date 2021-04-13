@@ -46,8 +46,8 @@
             android:layout_marginTop="10dp"
             android:showText="true"
             android:switchTextAppearance="@style/SwitchTheme"
-            android:textOff="未读"
-            android:textOn="已读"
+            android:textOff="未处理"
+            android:textOn="已处理"
             android:thumb="@drawable/switch_custom_thumb_selector"
             android:track="@drawable/switch_custom_track_selector"
             tools:ignore="UseSwitchCompatOrMaterialXml" />

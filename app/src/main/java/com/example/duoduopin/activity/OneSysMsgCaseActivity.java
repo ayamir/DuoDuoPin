@@ -202,9 +202,7 @@ public class OneSysMsgCaseActivity extends AppCompatActivity {
                         if (msg.what == SUCCESS) {
                             Toast.makeText(v.getContext(), "请求已通过！", Toast.LENGTH_SHORT).show();
                             SQLiteDatabase db = myDBHelper.getWritableDatabase();
-                            ContentValues contentValues = new ContentValues();
-                            contentValues.put("isRead", true);
-                            db.update("SysMsg", contentValues, "messageId=?", new String[]{messageIdString});
+                            db.execSQL("update SysMsg set isRead=" + "'" + String.valueOf(true) + "'" + " where messageId=" + "'" + messageIdString + "'");
                             agree.setVisibility(View.INVISIBLE);
                             reject.setVisibility(View.INVISIBLE);
                         } else {
@@ -237,9 +235,7 @@ public class OneSysMsgCaseActivity extends AppCompatActivity {
                         if (msg.what == SUCCESS) {
                             Toast.makeText(v.getContext(), "请求已拒绝！", Toast.LENGTH_SHORT).show();
                             SQLiteDatabase db = myDBHelper.getWritableDatabase();
-                            ContentValues contentValues = new ContentValues();
-                            contentValues.put("isRead", true);
-                            db.update("SysMsg", contentValues, "messageId=?", new String[]{messageIdString});
+                            db.execSQL("update SysMsg set isRead=" + "'" + String.valueOf(true) + "'" + " where messageId=" + "'" + messageIdString + "'");
                             agree.setVisibility(View.INVISIBLE);
                             reject.setVisibility(View.INVISIBLE);
                         } else {
