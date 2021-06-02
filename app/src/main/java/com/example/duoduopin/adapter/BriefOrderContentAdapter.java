@@ -60,6 +60,7 @@ public class BriefOrderContentAdapter extends RecyclerView.Adapter<BriefOrderCon
 
         final OrderContent orderContent = orderContentList.get(position);
         holder.rlOneRecOrder.setOnClickListener(v -> {
+            // TODO: 通知重新统计未读消息的小组
             Intent intent = new Intent(v.getContext(), OneOrderCaseActivity.class);
             intent.putExtra("orderId", orderContent.getBillId());
             intent.putExtra("userId", orderContent.getUserId());

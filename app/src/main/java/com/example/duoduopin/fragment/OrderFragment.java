@@ -1,9 +1,13 @@
 package com.example.duoduopin.fragment;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.Dialog;
 import android.app.Fragment;
+import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.icu.text.SimpleDateFormat;
 import android.os.Build;
 import android.os.Bundle;
@@ -20,6 +24,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,15 +38,23 @@ import com.bigkoo.pickerview.view.TimePickerView;
 import com.example.duoduopin.R;
 import com.example.duoduopin.activity.AssistantLocationActivity;
 import com.example.duoduopin.activity.OneOrderCaseActivity;
+import com.example.duoduopin.tool.GlideEngine;
+import com.huantansheng.easyphotos.EasyPhotos;
+import com.huantansheng.easyphotos.callback.SelectCallback;
+import com.huantansheng.easyphotos.models.album.entity.Photo;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Objects;
 
 import okhttp3.Call;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
@@ -54,13 +67,20 @@ import static com.example.duoduopin.activity.MainActivity.tokenContent;
 import static com.example.duoduopin.handler.GeneralMsgHandler.ERROR;
 import static com.example.duoduopin.handler.GeneralMsgHandler.SUCCESS;
 import static com.example.duoduopin.tool.Constants.createOrderUrl;
+import static com.example.duoduopin.tool.Constants.imageUploadUrl;
 
 public class OrderFragment extends Fragment {
     private String typeString;
     private EditText title, description, address, curPeople, maxPeople, price, tude;
     private TextView time;
+    private ImageView ivUploadPic;
+    private TextView tvUploadPic;
     private TimePickerView pvTime;
     private String orderId;
+    private String imageType;
+    private String imageName;
+    private String imagePath;
+    private String imageUrl;
 
     @Nullable
     @Override
@@ -78,11 +98,74 @@ public class OrderFragment extends Fragment {
         }
     }
 
+    private String uploadToBed(String imageName, String imageType, String imagePath) throws IOException, JSONException {
+        final String TAG = "uploadPic";
+        String picLink = "";
+
+        File imageFile = new File(imagePath);
+        RequestBody imageBody = RequestBody.create(MediaType.parse(imageType), imageFile);
+        RequestBody requestBody = new MultipartBody.Builder()
+                .setType(MultipartBody.FORM)
+                .addFormDataPart(imageName, imagePath, imageBody)
+                .build();
+        final Request request = new Request.Builder()
+                .url(imageUploadUrl)
+                .post(requestBody)
+                .build();
+
+        Call call = client.newCall(request);
+        Response response = call.execute();
+
+        if (response.code() == 200) {
+            JSONObject responseJSON = new JSONObject(Objects.requireNonNull(response.body()).string());
+            JSONObject dataJSON = new JSONObject(responseJSON.getString("data"));
+            picLink = dataJSON.getString("url");
+        } else {
+            Log.e(TAG, Objects.requireNonNull(response.body()).string());
+        }
+
+        return picLink;
+    }
+
+    private void selectImage(Context context) {
+        final String TAG = "SelectUploadImage";
+        EasyPhotos.createAlbum((Activity) context, false, false, GlideEngine.getInstance())
+                .start(new SelectCallback() {
+                    @Override
+                    public void onResult(ArrayList<Photo> photos, boolean isOriginal) {
+                        if (photos.size() == 1) {
+                            Photo photo = photos.get(0);
+                            imageName = photo.name;
+                            imageType = photo.type;
+                            imagePath = photo.path;
+                            Log.e(TAG, "imagePath = " + imagePath);
+                            Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
+                            ivUploadPic.setImageBitmap(bitmap);
+                        }
+                    }
+
+                    @Override
+                    public void onCancel() {
+                        imageName = "";
+                        imageType = "";
+                        imagePath = "";
+                    }
+                });
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
+        ivUploadPic = getActivity().findViewById(R.id.iv_upload_pic);
+        ivUploadPic.setOnClickListener(v -> {
+            selectImage(v.getContext());
+        });
+        tvUploadPic = getActivity().findViewById(R.id.tv_upload_pic);
+        tvUploadPic.setOnClickListener(v -> {
+            selectImage(v.getContext());
+        });
         title = getActivity().findViewById(R.id.titleInput);
         description = getActivity().findViewById(R.id.descriptionInput);
         address = getActivity().findViewById(R.id.addressInput);
@@ -106,8 +189,12 @@ public class OrderFragment extends Fragment {
                 String selected = parent.getItemAtPosition(position).toString();
                 if (selected.equals("拼车")) {
                     typeString = "CAR";
+                    ivUploadPic.setVisibility(View.INVISIBLE);
+                    tvUploadPic.setVisibility(View.INVISIBLE);
                 } else if (selected.equals("拼单")) {
                     typeString = "BILL";
+                    ivUploadPic.setVisibility(View.VISIBLE);
+                    tvUploadPic.setVisibility(View.VISIBLE);
                 }
             }
 
@@ -162,10 +249,24 @@ public class OrderFragment extends Fragment {
             } else if (latitudeString.isEmpty()) {
                 Toast.makeText(v.getContext(), "请输入纬度", Toast.LENGTH_SHORT).show();
                 canPost = false;
+            } else if (imagePath.isEmpty() && typeString.equals("BILL")) {
+                Toast.makeText(v.getContext(), "请上传图片", Toast.LENGTH_SHORT).show();
+                canPost = false;
             }
             if (canPost) {
+                boolean isBill = typeString.equals("BILL");
+                if (isBill) {
+                    try {
+                        imageUrl = uploadToBed(imageName, imageType, imagePath);
+                    } catch (IOException | JSONException e) {
+                        e.printStackTrace();
+                    }
+                } else {
+                    imageUrl = "";
+                }
                 final JSONObject jsonObject = new JSONObject();
                 try {
+                    jsonObject.put("imageUrl", imageUrl);
                     jsonObject.put("title", titleString);
                     jsonObject.put("type", typeString);
                     jsonObject.put("description", descString);
@@ -197,6 +298,9 @@ public class OrderFragment extends Fragment {
                             intent.putExtra("time", timeString);
                             intent.putExtra("description", descString);
                             intent.putExtra("title", titleString);
+                            if (isBill) {
+                                intent.putExtra("imageUrl", imageUrl);
+                            }
                             startActivity(intent);
                         } else {
                             Toast.makeText(getActivity(), "创建失败，请稍后再试！", Toast.LENGTH_SHORT).show();

@@ -9,6 +9,7 @@ public class Constants {
 
     private static final String baseUrl = "http://123.57.12.189:8080/";
     private static final String wsUrl = "ws://123.57.12.189:8080/";
+    public static final String imageUploadUrl = "https://sm.ms/api/v2/upload";
     public static final String registerUrl = baseUrl + "User/register/";
     public static final String loginUrl = baseUrl + "User/login/";
     public static final String logoutUrl = baseUrl + "User/logout/";

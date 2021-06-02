@@ -4,6 +4,8 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -28,6 +30,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -51,11 +54,23 @@ import static com.example.duoduopin.tool.Constants.group_quit_signal;
 
 public class OneOrderCaseActivity extends AppCompatActivity {
 
-    private String userIdString, nicknameString, orderIdString, typeString, priceString, addressString, curPeopleString, maxPeopleString, timeString, descriptionString, titleString;
     private final ArrayList<String> members = new ArrayList<>();
-
+    private String userIdString;
+    private String nicknameString;
+    private String orderIdString;
+    private String typeString;
+    private String priceString;
+    private String addressString;
+    private String curPeopleString;
+    private String maxPeopleString;
+    private String timeString;
+    private String descriptionString;
+    private String titleString;
+    private String imageUrl = "";
     private Button delete, join, leave;
     private ImageView back;
+    private ImageView ivItemPic;
+    private TextView tvItemComment;
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
@@ -64,7 +79,11 @@ public class OneOrderCaseActivity extends AppCompatActivity {
         setContentView(R.layout.activity_one_order_case);
         getInfoFromIntent();
         initValue();
-        bindBtn();
+        try {
+            bindItems();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         bindOperation();
         setVisibility();
     }
@@ -77,6 +96,10 @@ public class OneOrderCaseActivity extends AppCompatActivity {
             join.setVisibility(View.INVISIBLE);
         } else {
             delete.setVisibility(View.INVISIBLE);
+        }
+        if (imageUrl.isEmpty()) {
+            ivItemPic.setVisibility(View.INVISIBLE);
+            tvItemComment.setVisibility(View.INVISIBLE);
         }
 
         @SuppressLint("HandlerLeak") final Handler isInHandler = new Handler() {
@@ -127,11 +150,20 @@ public class OneOrderCaseActivity extends AppCompatActivity {
                 timeString = fromIntent.getStringExtra("time").replace('T', ' ');
                 descriptionString = fromIntent.getStringExtra("description");
                 titleString = fromIntent.getStringExtra("title");
+                if (!typeString.equals("拼车")) {
+                    imageUrl = fromIntent.getStringExtra("imageUrl");
+                }
             }
         }
     }
 
-    private void bindBtn() {
+    private void bindItems() throws IOException {
+        ivItemPic = findViewById(R.id.iv_item_pic);
+        tvItemComment = findViewById(R.id.tv_item_comment);
+        if (!imageUrl.isEmpty()) {
+            Bitmap bitmap = BitmapFactory.decodeStream(new URL(imageUrl).openStream());
+            ivItemPic.setImageBitmap(bitmap);
+        }
         join = findViewById(R.id.joinButton);
         leave = findViewById(R.id.leaveButton);
         delete = findViewById(R.id.deleteButton);
@@ -241,7 +273,7 @@ public class OneOrderCaseActivity extends AppCompatActivity {
                     case DialogInterface.BUTTON_POSITIVE:
                         new Thread(new Runnable() {
                             @SuppressLint("HandlerLeak")
-                            final Handler deleteHandler = new Handler(){
+                            final Handler deleteHandler = new Handler() {
                                 @SuppressLint("HandlerLeak")
                                 @Override
                                 public void handleMessage(@NonNull Message msg) {
@@ -259,6 +291,7 @@ public class OneOrderCaseActivity extends AppCompatActivity {
                                     }
                                 }
                             };
+
                             @Override
                             public void run() {
                                 try {

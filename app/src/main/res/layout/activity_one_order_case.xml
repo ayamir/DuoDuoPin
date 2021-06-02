@@ -151,11 +151,13 @@
                 android:orientation="vertical">
 
                 <ImageView
+                    android:id="@+id/iv_item_pic"
                     android:layout_width="match_parent"
                     android:layout_height="158dp"
                     app:srcCompat="@drawable/camera" />
 
                 <TextView
+                    android:id="@+id/tv_item_comment"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center_horizontal|center_vertical"

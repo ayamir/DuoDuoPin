@@ -83,6 +83,7 @@ public class MessageFragment extends Fragment {
     private GrpMsgReceiverBrief grpMsgReceiverBrief;
     private GrpQuitReceiver grpQuitReceiver;
     private GrpIdLoadedReceiver grpIdLoadedReceiver;
+    private int unread = 0;
 
     @SuppressLint("HandlerLeak") final Handler handler = new Handler() {
         @Override
@@ -121,6 +122,28 @@ public class MessageFragment extends Fragment {
         }
     };
 
+    public void newUnread() {
+        unread++;
+        setAllUnreadFlag();
+    }
+
+    public void read() {
+        unread--;
+        setAllUnreadFlag();
+    }
+
+    private void setAllUnreadFlag() {
+        if (unread != 0) {
+
+        } else {
+
+        }
+    }
+
+    private void setOneUnreadFlag(int grpId) {
+
+    }
+
     private class GrpMsgReceiverBrief extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -132,6 +155,8 @@ public class MessageFragment extends Fragment {
             if (context == getActivity()) {
                 showItems();
             }
+            // TODO: 为MessageFragment和对应的群组显示消息提示的小红点
+            read();
         }
     }
 
