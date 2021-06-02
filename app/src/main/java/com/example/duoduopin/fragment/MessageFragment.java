@@ -20,7 +20,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.Toast;
@@ -151,34 +150,58 @@ public class MessageFragment extends Fragment {
         }
     }
 
-    private class GrpIdLoadedReceiver extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            int signal = intent.getIntExtra("grpIdList", ERROR);
-            if (signal == SUCCESS) {
-                final String TAG = "grpIdList";
-                grpIdList = recGrpMsgService.getGrpIdList();
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    private void bindItemsAndOps() {
+        listView = getActivity().findViewById(R.id.grp_msg_list);
 
-                if (grpIdList != null) {
-                    for (String id : grpIdList) {
-                        Log.e(TAG, "id = " + id);
-                    }
-                    // Get full message records from server
-                    new Thread(new Runnable() {
-                        @RequiresApi(api = Build.VERSION_CODES.O)
-                        @Override
-                        public void run() {
-                            Message message = new Message();
-                            message.what = checkOfflineMsg(false);
-                            handler.sendMessage(message);
+        ConstraintLayout sysMsgClick = getActivity().findViewById(R.id.sys_msg_click);
+        sysMsgClick.setOnClickListener(v -> {
+            Intent toIntent = new Intent(v.getContext(), SysMsgCaseActivity.class);
+            startActivity(toIntent);
+        });
+
+        swipeRefreshLayout = getActivity().findViewById(R.id.grp_msg_layout);
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            @SuppressLint("HandlerLeak") final Handler refreshHandler = new Handler() {
+                @Override
+                public void handleMessage(@NonNull Message msg) {
+                    if (msg.what == SUCCESS) {
+                        for (Map.Entry<String, ArrayList<GrpMsgContent>> entry : allGrpsMsgListMap.entrySet()) {
+                            ArrayList<GrpMsgContent> msgList = entry.getValue();
+                            for (GrpMsgContent msgContent : msgList) {
+                                insertToDB(msgContent);
+                            }
                         }
-                    }).start();
-                    Log.e("MessageFragment", "onServiceConnected");
-                } else {
-                    Log.e(TAG, "grpIdList == null");
+                        for (String grpId : grpIdList) {
+                            queryFromDB(grpId);
+                        }
+                    } else {
+                        Toast.makeText(getActivity(), "第" + msg.arg1 + "号拼单已被创建者删除！", Toast.LENGTH_LONG).show();
+                        briefGrpMsgMap.remove(String.valueOf(msg.arg1));
+                    }
+
+                    // Show new result
+                    showItems();
+                    swipeRefreshLayout.setRefreshing(false);
                 }
-            }
-        }
+            };
+
+            new Thread(() -> {
+                // Get new from db and server
+                Message message = new Message();
+                for (final String grpId : grpIdList) {
+                    try {
+                        message.what = postQueryMsgs(grpId, true);
+                        message.arg1 = Integer.parseInt(grpId);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                refreshHandler.sendMessage(message);
+            }).start();
+        });
     }
 
     private void doRegisterReceiver() {
@@ -233,67 +256,30 @@ public class MessageFragment extends Fragment {
         getActivity().unbindService(connection);
     }
 
-    private void bindItemsAndOps() {
-        listView = getActivity().findViewById(R.id.grp_msg_list);
+    private void showItems() {
+        final String TAG = "showItems";
+        final ArrayList<HashMap<String, String>> cases = new ArrayList<>();
+        for (Map.Entry<String, BriefGrpMsg> entry : briefGrpMsgMap.entrySet()) {
+            BriefGrpMsg briefGrpMsg = entry.getValue();
+            HashMap<String, String> map = new HashMap<>();
+            map.put("grpId", entry.getKey());
+            map.put("grpTitle", briefGrpMsg.getGrpTitle());
+            map.put("msgOwnerNickname", briefGrpMsg.getGrpMsgOwnNickname());
+            map.put("grpMsgTime", briefGrpMsg.getGrpMsgTime());
+            map.put("grpMsgContent", briefGrpMsg.getGrpMsgContent());
+            cases.add(map);
+        }
 
-        ConstraintLayout sysMsgClick = getActivity().findViewById(R.id.sys_msg_click);
-        sysMsgClick.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent toIntent = new Intent(v.getContext(), SysMsgCaseActivity.class);
-                startActivity(toIntent);
-            }
-        });
+        SimpleAdapter adapter = new SimpleAdapter(getActivity(), cases, R.layout.group_message_tip,
+                new String[]{"grpMsgTime", "msgOwnerNickname", "grpMsgContent", "grpTitle"},
+                new int[]{R.id.grp_msg_time, R.id.grp_msg_nickname, R.id.grp_msg_content, R.id.grp_title});
+        listView.setAdapter(adapter);
 
-        swipeRefreshLayout = getActivity().findViewById(R.id.grp_msg_layout);
-        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @RequiresApi(api = Build.VERSION_CODES.O)
-            @Override
-            public void onRefresh() {
-                @SuppressLint("HandlerLeak")
-                final Handler refreshHandler = new Handler() {
-                    @Override
-                    public void handleMessage(@NonNull Message msg) {
-                        if (msg.what == SUCCESS) {
-                            for (Map.Entry<String, ArrayList<GrpMsgContent>> entry : allGrpsMsgListMap.entrySet()) {
-                                ArrayList<GrpMsgContent> msgList = entry.getValue();
-                                for (GrpMsgContent msgContent : msgList) {
-                                    insertToDB(msgContent);
-                                }
-                            }
-                            for (String grpId : grpIdList) {
-                                queryFromDB(grpId);
-                            }
-                        } else {
-                            Toast.makeText(getActivity(), "第" + msg.arg1 + "号拼单已被创建者删除！", Toast.LENGTH_LONG).show();
-                            briefGrpMsgMap.remove(String.valueOf(msg.arg1));
-                        }
-
-                        // Show new result
-                        showItems();
-                        swipeRefreshLayout.setRefreshing(false);
-                    }
-                };
-
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        // Get new from db and server
-                        Message message = new Message();
-                        for (final String grpId : grpIdList) {
-                            try {
-                                message.what = postQueryMsgs(grpId, true);
-                                message.arg1 = Integer.parseInt(grpId);
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                        refreshHandler.sendMessage(message);
-                    }
-                }).start();
-            }
+        listView.setOnItemClickListener((parent, view, position, id) -> {
+            Intent toIntent = new Intent(getActivity(), OneGrpMsgCaseActivity.class);
+            toIntent.putExtra("grpId", cases.get((int) id).get("grpId"));
+            toIntent.putExtra("grpTitle", cases.get((int) id).get("grpTitle"));
+            startActivityForResult(toIntent, 1);
         });
     }
 
@@ -359,34 +345,31 @@ public class MessageFragment extends Fragment {
         return ret;
     }
 
-    private void showItems() {
-        final String TAG = "showItems";
-        final ArrayList<HashMap<String, String>> cases = new ArrayList<>();
-        for (Map.Entry<String, BriefGrpMsg> entry : briefGrpMsgMap.entrySet()) {
-            BriefGrpMsg briefGrpMsg = entry.getValue();
-            HashMap<String, String> map = new HashMap<>();
-            map.put("grpId", entry.getKey());
-            map.put("grpTitle", briefGrpMsg.getGrpTitle());
-            map.put("msgOwnerNickname", briefGrpMsg.getGrpMsgOwnNickname());
-            map.put("grpMsgTime", briefGrpMsg.getGrpMsgTime());
-            map.put("grpMsgContent", briefGrpMsg.getGrpMsgContent());
-            cases.add(map);
-        }
+    private class GrpIdLoadedReceiver extends BroadcastReceiver {
+        @RequiresApi(api = Build.VERSION_CODES.O)
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            int signal = intent.getIntExtra("grpIdList", ERROR);
+            if (signal == SUCCESS) {
+                final String TAG = "grpIdList";
+                grpIdList = recGrpMsgService.getGrpIdList();
 
-        SimpleAdapter adapter = new SimpleAdapter(getActivity(), cases, R.layout.group_message_tip,
-                new String[]{"grpMsgTime", "msgOwnerNickname", "grpMsgContent", "grpTitle"},
-                new int[]{R.id.grp_msg_time, R.id.grp_msg_nickname, R.id.grp_msg_content, R.id.grp_title});
-        listView.setAdapter(adapter);
-
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent toIntent = new Intent(getActivity(), OneGrpMsgCaseActivity.class);
-                toIntent.putExtra("grpId", cases.get((int) id).get("grpId"));
-                toIntent.putExtra("grpTitle", cases.get((int) id).get("grpTitle"));
-                startActivityForResult(toIntent, 1);
+                if (grpIdList != null) {
+                    for (String id : grpIdList) {
+                        Log.e(TAG, "id = " + id);
+                    }
+                    // Get full message records from server
+                    new Thread(() -> {
+                        Message message = new Message();
+                        message.what = checkOfflineMsg(false);
+                        handler.sendMessage(message);
+                    }).start();
+                    Log.e("MessageFragment", "onServiceConnected");
+                } else {
+                    Log.e(TAG, "grpIdList == null");
+                }
             }
-        });
+        }
     }
 
     @Override

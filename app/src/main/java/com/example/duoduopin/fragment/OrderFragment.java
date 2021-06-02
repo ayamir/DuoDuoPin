@@ -29,8 +29,6 @@ import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 
 import com.bigkoo.pickerview.builder.TimePickerBuilder;
-import com.bigkoo.pickerview.listener.OnTimeSelectChangeListener;
-import com.bigkoo.pickerview.listener.OnTimeSelectListener;
 import com.bigkoo.pickerview.view.TimePickerView;
 import com.example.duoduopin.R;
 import com.example.duoduopin.activity.AssistantLocationActivity;
@@ -49,10 +47,10 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 
 import static com.example.duoduopin.activity.LoginActivity.JSON;
+import static com.example.duoduopin.activity.MainActivity.client;
 import static com.example.duoduopin.activity.MainActivity.idContent;
 import static com.example.duoduopin.activity.MainActivity.nicknameContent;
 import static com.example.duoduopin.activity.MainActivity.tokenContent;
-import static com.example.duoduopin.activity.MainActivity.client;
 import static com.example.duoduopin.handler.GeneralMsgHandler.ERROR;
 import static com.example.duoduopin.handler.GeneralMsgHandler.SUCCESS;
 import static com.example.duoduopin.tool.Constants.createOrderUrl;
@@ -80,7 +78,7 @@ public class OrderFragment extends Fragment {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
@@ -95,12 +93,7 @@ public class OrderFragment extends Fragment {
         tude = getActivity().findViewById(R.id.tudeInput);
 
         time = getActivity().findViewById(R.id.timeInput);
-        time.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                pvTime.show(v);
-            }
-        });
+        time.setOnClickListener(v -> pvTime.show(v));
         initTimePicker();
 
         Spinner spinner = getActivity().findViewById(R.id.typeInput);
@@ -125,111 +118,100 @@ public class OrderFragment extends Fragment {
         });
 
         Button location = getActivity().findViewById(R.id.locationButton);
-        location.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(v.getContext(), AssistantLocationActivity.class);
-                startActivity(intent);
-            }
+        location.setOnClickListener(v -> {
+            Intent intent = new Intent(v.getContext(), AssistantLocationActivity.class);
+            startActivity(intent);
         });
 
         Button submitOrder = getActivity().findViewById(R.id.submitOrderButton);
-        submitOrder.setOnClickListener(new View.OnClickListener() {
-            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-            @Override
-            public void onClick(final View v) {
-                boolean canPost = true;
+        submitOrder.setOnClickListener(v -> {
+            boolean canPost = true;
 
-                final String titleString = title.getText().toString();
-                final String descString = description.getText().toString();
-                final String addrString = address.getText().toString();
-                final String timeString = time.getText().toString();
-                final String curPeopleString = curPeople.getText().toString();
-                final String maxPeopleString = maxPeople.getText().toString();
-                final String priceString = price.getText().toString();
-                String latitudeString = "", longitudeString = "";
-                if (!tude.getText().toString().isEmpty()) {
-                    String[] tudeString = tude.getText().toString().split(",");
-                    longitudeString = tudeString[0];
-                    latitudeString = tudeString[1];
-                }
+            final String titleString = title.getText().toString();
+            final String descString = description.getText().toString();
+            final String addrString = address.getText().toString();
+            final String timeString = time.getText().toString();
+            final String curPeopleString = curPeople.getText().toString();
+            final String maxPeopleString = maxPeople.getText().toString();
+            final String priceString = price.getText().toString();
+            String latitudeString = "", longitudeString = "";
+            if (!tude.getText().toString().isEmpty()) {
+                String[] tudeString = tude.getText().toString().split(",");
+                longitudeString = tudeString[0];
+                latitudeString = tudeString[1];
+            }
 
-                if (titleString.isEmpty()) {
-                    Toast.makeText(v.getContext(), "请输入标题", Toast.LENGTH_SHORT).show();
-                    canPost = false;
-                } else if (descString.isEmpty()) {
-                    Toast.makeText(v.getContext(), "请输入描述", Toast.LENGTH_SHORT).show();
-                    canPost = false;
-                } else if (addrString.isEmpty()) {
-                    Toast.makeText(v.getContext(), "请输入地址", Toast.LENGTH_SHORT).show();
-                    canPost = false;
-                } else if (timeString.isEmpty()) {
-                    Toast.makeText(v.getContext(), "请输入时间", Toast.LENGTH_SHORT).show();
-                    canPost = false;
-                } else if (maxPeopleString.isEmpty()) {
-                    Toast.makeText(v.getContext(), "请输入最大人数", Toast.LENGTH_SHORT).show();
-                    canPost = false;
-                } else if (longitudeString.isEmpty()) {
-                    Toast.makeText(v.getContext(), "请输入经度", Toast.LENGTH_SHORT).show();
-                    canPost = false;
-                } else if (latitudeString.isEmpty()) {
-                    Toast.makeText(v.getContext(), "请输入纬度", Toast.LENGTH_SHORT).show();
-                    canPost = false;
+            if (titleString.isEmpty()) {
+                Toast.makeText(v.getContext(), "请输入标题", Toast.LENGTH_SHORT).show();
+                canPost = false;
+            } else if (descString.isEmpty()) {
+                Toast.makeText(v.getContext(), "请输入描述", Toast.LENGTH_SHORT).show();
+                canPost = false;
+            } else if (addrString.isEmpty()) {
+                Toast.makeText(v.getContext(), "请输入地址", Toast.LENGTH_SHORT).show();
+                canPost = false;
+            } else if (timeString.isEmpty()) {
+                Toast.makeText(v.getContext(), "请输入时间", Toast.LENGTH_SHORT).show();
+                canPost = false;
+            } else if (maxPeopleString.isEmpty()) {
+                Toast.makeText(v.getContext(), "请输入最大人数", Toast.LENGTH_SHORT).show();
+                canPost = false;
+            } else if (longitudeString.isEmpty()) {
+                Toast.makeText(v.getContext(), "请输入经度", Toast.LENGTH_SHORT).show();
+                canPost = false;
+            } else if (latitudeString.isEmpty()) {
+                Toast.makeText(v.getContext(), "请输入纬度", Toast.LENGTH_SHORT).show();
+                canPost = false;
+            }
+            if (canPost) {
+                final JSONObject jsonObject = new JSONObject();
+                try {
+                    jsonObject.put("title", titleString);
+                    jsonObject.put("type", typeString);
+                    jsonObject.put("description", descString);
+                    jsonObject.put("address", addrString);
+                    jsonObject.put("time", timeString.replace(' ', 'T') + ".0");
+                    jsonObject.put("curPeople", curPeopleString);
+                    jsonObject.put("maxPeople", maxPeopleString);
+                    jsonObject.put("price", priceString);
+                    jsonObject.put("longitude", longitudeString);
+                    jsonObject.put("latitude", latitudeString);
+                } catch (JSONException e) {
+                    e.printStackTrace();
                 }
-                if (canPost) {
-                    final JSONObject jsonObject = new JSONObject();
+                Log.d("JSONBuild", jsonObject.toString());
+                @SuppressLint("HandlerLeak") final Handler newOrderHandler = new Handler() {
+                    @Override
+                    public void handleMessage(@NonNull Message msg) {
+                        if (msg.what == SUCCESS) {
+                            Toast.makeText(getActivity(), "创建成功", Toast.LENGTH_SHORT).show();
+                            Intent intent = new Intent(getActivity(), OneOrderCaseActivity.class);
+                            intent.putExtra("orderId", orderId);
+                            intent.putExtra("userId", idContent);
+                            intent.putExtra("nickname", nicknameContent);
+                            intent.putExtra("type", typeString);
+                            intent.putExtra("price", priceString);
+                            intent.putExtra("address", addrString);
+                            intent.putExtra("curPeople", curPeopleString);
+                            intent.putExtra("maxPeople", maxPeopleString);
+                            intent.putExtra("time", timeString);
+                            intent.putExtra("description", descString);
+                            intent.putExtra("title", titleString);
+                            startActivity(intent);
+                        } else {
+                            Toast.makeText(getActivity(), "创建失败，请稍后再试！", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                };
+                new Thread(() -> {
                     try {
-                        jsonObject.put("title", titleString);
-                        jsonObject.put("type", typeString);
-                        jsonObject.put("description", descString);
-                        jsonObject.put("address", addrString);
-                        jsonObject.put("time", timeString.replace(' ', 'T') + ".0");
-                        jsonObject.put("curPeople", curPeopleString);
-                        jsonObject.put("maxPeople", maxPeopleString);
-                        jsonObject.put("price", priceString);
-                        jsonObject.put("longitude", longitudeString);
-                        jsonObject.put("latitude", latitudeString);
-                    } catch (JSONException e) {
+                        Message message = new Message();
+                        message.what = putRequest(jsonObject.toString());
+                        newOrderHandler.sendMessage(message);
+                    } catch (IOException | JSONException e) {
                         e.printStackTrace();
                     }
-                    Log.d("JSONBuild", jsonObject.toString());
-                    @SuppressLint("HandlerLeak")
-                    final Handler newOrderHandler = new Handler(){
-                        @Override
-                        public void handleMessage(@NonNull Message msg) {
-                            if (msg.what == SUCCESS) {
-                                Toast.makeText(getActivity(), "创建成功", Toast.LENGTH_SHORT).show();
-                                Intent intent = new Intent(getActivity(), OneOrderCaseActivity.class);
-                                intent.putExtra("orderId", orderId);
-                                intent.putExtra("userId", idContent);
-                                intent.putExtra("nickname", nicknameContent);
-                                intent.putExtra("type", typeString);
-                                intent.putExtra("price", priceString);
-                                intent.putExtra("address", addrString);
-                                intent.putExtra("curPeople", curPeopleString);
-                                intent.putExtra("maxPeople", maxPeopleString);
-                                intent.putExtra("time", timeString);
-                                intent.putExtra("description", descString);
-                                intent.putExtra("title", titleString);
-                                startActivity(intent);
-                            } else {
-                                Toast.makeText(getActivity(), "创建失败，请稍后再试！", Toast.LENGTH_SHORT).show();
-                            }
-                        }
-                    };
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            try {
-                                Message message = new Message();
-                                message.what = putRequest(jsonObject.toString());
-                                newOrderHandler.sendMessage(message);
-                            } catch (IOException | JSONException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }).start();
-                }
+                }).start();
             }
         });
     }
@@ -273,22 +255,14 @@ public class OrderFragment extends Fragment {
         return format.format(date);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     private void initTimePicker() {//Dialog 模式下，在底部弹出
-        pvTime = new TimePickerBuilder(getActivity(), new OnTimeSelectListener() {
-            @RequiresApi(api = Build.VERSION_CODES.N)
-            @Override
-            public void onTimeSelect(Date date, View v) {
-                Toast.makeText(v.getContext(), getTime(date), Toast.LENGTH_SHORT).show();
-                Log.i("pvTime", "onTimeSelect");
-                time.setText(getTime(date));
-            }
+        pvTime = new TimePickerBuilder(getActivity(), (date, v) -> {
+            Toast.makeText(v.getContext(), getTime(date), Toast.LENGTH_SHORT).show();
+            Log.i("pvTime", "onTimeSelect");
+            time.setText(getTime(date));
         })
-                .setTimeSelectChangeListener(new OnTimeSelectChangeListener() {
-                    @Override
-                    public void onTimeSelectChanged(Date date) {
-                        Log.i("pvTime", "onTimeSelectChanged");
-                    }
-                })
+                .setTimeSelectChangeListener(date -> Log.i("pvTime", "onTimeSelectChanged"))
                 .setType(new boolean[]{true, true, true, true, true, true})
                 .isDialog(true) //默认设置false ，内部实现将DecorView 作为它的父控件。
                 .setLineSpacingMultiplier(2.0f)

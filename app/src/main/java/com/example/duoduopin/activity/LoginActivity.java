@@ -32,10 +32,10 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
-import static com.example.duoduopin.activity.MainActivity.prefs;
 import static com.example.duoduopin.activity.MainActivity.idContent;
-import static com.example.duoduopin.activity.MainActivity.tokenContent;
 import static com.example.duoduopin.activity.MainActivity.nicknameContent;
+import static com.example.duoduopin.activity.MainActivity.prefs;
+import static com.example.duoduopin.activity.MainActivity.tokenContent;
 import static com.example.duoduopin.activity.MainActivity.usernameContent;
 import static com.example.duoduopin.tool.Constants.loginUrl;
 
@@ -55,6 +55,7 @@ public class LoginActivity extends AppCompatActivity {
     private EditText usernameInput;
     private EditText passwordInput;
 
+    @RequiresApi(api = Build.VERSION_CODES.R)
     @SuppressLint("CommitPrefEdits")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -73,43 +74,39 @@ public class LoginActivity extends AppCompatActivity {
             }
         });
 
-        loginButton.setOnClickListener(new View.OnClickListener() {
-            @RequiresApi(api = Build.VERSION_CODES.R)
-            @Override
-            public void onClick(View v) {
-                username = usernameInput.getText().toString();
-                String password = passwordInput.getText().toString();
+        loginButton.setOnClickListener(v -> {
+            username = usernameInput.getText().toString();
+            String password = passwordInput.getText().toString();
 
-                JSONObject jwt = new JSONObject();
-                try {
-                    jwt.put("username", username);
-                    jwt.put("password", password);
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                try {
-                    int SDK_INT = Build.VERSION.SDK_INT;
-                    if (SDK_INT > 8) {
-                        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-                        StrictMode.setThreadPolicy(policy);
-                        final int res = postRequest(jwt.toString());
-                        if (res == 1) {
-                            setResult(RESULT_OK, null);
-                            finish();
-                        } else if (res == 2) {
-                            Toast.makeText(v.getContext(), "用户名或密码错误！", Toast.LENGTH_SHORT).show();
-                        } else if (res == 3) {
-                            Toast.makeText(v.getContext(), "请先注册！", Toast.LENGTH_SHORT).show();
+            JSONObject jwt = new JSONObject();
+            try {
+                jwt.put("username", username);
+                jwt.put("password", password);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+            try {
+                int SDK_INT = Build.VERSION.SDK_INT;
+                if (SDK_INT > 8) {
+                    StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+                    StrictMode.setThreadPolicy(policy);
+                    final int res = postRequest(jwt.toString());
+                    if (res == 1) {
+                        setResult(RESULT_OK, null);
+                        finish();
+                    } else if (res == 2) {
+                        Toast.makeText(v.getContext(), "用户名或密码错误！", Toast.LENGTH_SHORT).show();
+                    } else if (res == 3) {
+                        Toast.makeText(v.getContext(), "请先注册！", Toast.LENGTH_SHORT).show();
 
-                            Intent intent = new Intent(v.getContext(), RegisterActivity.class);
-                            startActivity(intent);
-                        } else {
-                            Toast.makeText(v.getContext(), "未知错误", Toast.LENGTH_SHORT).show();
-                        }
+                        Intent intent = new Intent(v.getContext(), RegisterActivity.class);
+                        startActivity(intent);
+                    } else {
+                        Toast.makeText(v.getContext(), "未知错误", Toast.LENGTH_SHORT).show();
                     }
-                } catch (IOException | JSONException e) {
-                    e.printStackTrace();
                 }
+            } catch (IOException | JSONException e) {
+                e.printStackTrace();
             }
         });
     }

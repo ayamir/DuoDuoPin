@@ -11,9 +11,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.CompoundButton;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.Switch;
@@ -56,21 +53,18 @@ import static com.example.duoduopin.handler.GeneralMsgHandler.SUCCESS;
 import static com.example.duoduopin.tool.Constants.checkSysMsgUrl;
 
 public class SysMsgCaseActivity extends AppCompatActivity {
+    private final ArrayList<HashMap<String, String>> sysMsgCasesFromServer = new ArrayList<>();
+    private final ArrayList<HashMap<String, String>> sysMsgDetailedCasesFromServer = new ArrayList<>();
+    private final ArrayList<HashMap<String, String>> sysMsgCasesFromDB = new ArrayList<>();
+    private final ArrayList<HashMap<String, String>> sysMsgDetailedCasesFromDB = new ArrayList<>();
+    private final MyDBHelper myDBHelper = new MyDBHelper(this, "DuoDuoPin.db", null, 1);
+    private final Context mContext = this;
     private SwipeRefreshLayout swipeRefreshLayout;
     private ListView listView;
     @SuppressLint("UseSwitchCompatOrMaterialCode")
     private Switch switchMsg;
     private boolean isFromServer = true;
-
     private ArrayList<SysMsgContent> sysMsgContentList;
-    private final ArrayList<HashMap<String, String>> sysMsgCasesFromServer = new ArrayList<>();
-    private final ArrayList<HashMap<String, String>> sysMsgDetailedCasesFromServer = new ArrayList<>();
-
-    private final ArrayList<HashMap<String, String>> sysMsgCasesFromDB = new ArrayList<>();
-    private final ArrayList<HashMap<String, String>> sysMsgDetailedCasesFromDB = new ArrayList<>();
-
-    private final MyDBHelper myDBHelper = new MyDBHelper(this, "DuoDuoPin.db", null, 1);
-    private final Context mContext = this;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -82,32 +76,26 @@ public class SysMsgCaseActivity extends AppCompatActivity {
         swipeRefreshLayout = findViewById(R.id.sys_msg_swipe_refresh);
 
         switchMsg = findViewById(R.id.switch_msg);
-        switchMsg.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (buttonView.isChecked()) {
-                    isFromServer = false;
-                    checkRead();
-                } else {
-                    isFromServer = true;
-                    checkUnRead();
-                }
+        switchMsg.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (buttonView.isChecked()) {
+                isFromServer = false;
+                checkRead();
+            } else {
+                isFromServer = true;
+                checkUnRead();
             }
         });
 
-        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                final String TAG = "pull-to-refresh";
-                if (isFromServer) {
-                    Log.e(TAG, "onRefresh: isFromServer = " + isFromServer);
-                    checkUnRead();
-                } else {
-                    Log.e(TAG, "onRefresh: isFromServer = " + isFromServer);
-                    checkRead();
-                }
-                swipeRefreshLayout.setRefreshing(false);
+        swipeRefreshLayout.setOnRefreshListener(() -> {
+            final String TAG = "pull-to-refresh";
+            if (isFromServer) {
+                Log.e(TAG, "onRefresh: isFromServer = " + isFromServer);
+                checkUnRead();
+            } else {
+                Log.e(TAG, "onRefresh: isFromServer = " + isFromServer);
+                checkRead();
             }
+            swipeRefreshLayout.setRefreshing(false);
         });
     }
 
@@ -130,36 +118,35 @@ public class SysMsgCaseActivity extends AppCompatActivity {
                 new int[]{R.id.sys_msg_title, R.id.sys_msg_content, R.id.sys_msg_time});
 
         listView.setAdapter(adapter);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                SQLiteDatabase db = myDBHelper.getWritableDatabase();
-                ContentValues values = new ContentValues();
-                values.put("messageId", dCases.get((int) id).get("messageId"));
-                values.put("senderId", dCases.get((int) id).get("senderId"));
-                values.put("receiverId", dCases.get((int) id).get("receiverId"));
-                values.put("billId", dCases.get((int) id).get("billId"));
-                String type = dCases.get((int) id).get("type");
-                values.put("type", type);
-                values.put("time", dCases.get((int) id).get("time"));
-                values.put("content", dCases.get((int) id).get("content"));
+        listView.setOnItemClickListener((parent, view, position, id) -> {
+            SQLiteDatabase db = myDBHelper.getWritableDatabase();
+            ContentValues values = new ContentValues();
+            values.put("messageId", dCases.get((int) id).get("messageId"));
+            values.put("senderId", dCases.get((int) id).get("senderId"));
+            values.put("receiverId", dCases.get((int) id).get("receiverId"));
+            values.put("billId", dCases.get((int) id).get("billId"));
+            String type = dCases.get((int) id).get("type");
+            values.put("type", type);
+            values.put("time", dCases.get((int) id).get("time"));
+            values.put("content", dCases.get((int) id).get("content"));
+            if (type != null) {
                 if (type.equals("APPLY")) {
                     values.put("isRead", String.valueOf(false));
                 } else {
                     values.put("isRead", String.valueOf(true));
                 }
-                db.replace("SysMsg", null, values);
-
-                Intent toIntent = new Intent(view.getContext(), OneSysMsgCaseActivity.class);
-                toIntent.putExtra("messageId", dCases.get((int) id).get("messageId"));
-                toIntent.putExtra("senderId", dCases.get((int) id).get("senderId"));
-                toIntent.putExtra("billId", dCases.get((int) id).get("billId"));
-                toIntent.putExtra("messageType", dCases.get((int) id).get("type"));
-                toIntent.putExtra("time", dCases.get((int) id).get("time"));
-                toIntent.putExtra("content", dCases.get((int) id).get("content"));
-                toIntent.putExtra("isRead", dCases.get((int) id).get("isRead"));
-                startActivity(toIntent);
             }
+            db.replace("SysMsg", null, values);
+
+            Intent toIntent = new Intent(view.getContext(), OneSysMsgCaseActivity.class);
+            toIntent.putExtra("messageId", dCases.get((int) id).get("messageId"));
+            toIntent.putExtra("senderId", dCases.get((int) id).get("senderId"));
+            toIntent.putExtra("billId", dCases.get((int) id).get("billId"));
+            toIntent.putExtra("messageType", dCases.get((int) id).get("type"));
+            toIntent.putExtra("time", dCases.get((int) id).get("time"));
+            toIntent.putExtra("content", dCases.get((int) id).get("content"));
+            toIntent.putExtra("isRead", dCases.get((int) id).get("isRead"));
+            startActivity(toIntent);
         });
     }
 
@@ -235,19 +222,16 @@ public class SysMsgCaseActivity extends AppCompatActivity {
             }
         };
 
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Message message = new Message();
-                try {
-                    message.what = postCheckSysMessage();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                checkSysMsgHandler.sendMessage(message);
+        new Thread(() -> {
+            Message message = new Message();
+            try {
+                message.what = postCheckSysMessage();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
+            checkSysMsgHandler.sendMessage(message);
         }).start();
     }
 

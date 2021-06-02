@@ -57,6 +57,7 @@ public class OneOrderCaseActivity extends AppCompatActivity {
     private Button delete, join, leave;
     private ImageView back;
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -68,6 +69,7 @@ public class OneOrderCaseActivity extends AppCompatActivity {
         setVisibility();
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void setVisibility() {
         if (userIdString.equals(idContent)) {
             delete.setVisibility(View.VISIBLE);
@@ -77,8 +79,7 @@ public class OneOrderCaseActivity extends AppCompatActivity {
             delete.setVisibility(View.INVISIBLE);
         }
 
-        @SuppressLint("HandlerLeak")
-        final Handler isInHandler = new Handler() {
+        @SuppressLint("HandlerLeak") final Handler isInHandler = new Handler() {
             @Override
             public void handleMessage(@NonNull Message msg) {
                 super.handleMessage(msg);
@@ -95,17 +96,13 @@ public class OneOrderCaseActivity extends AppCompatActivity {
             }
         };
 
-        new Thread(new Runnable() {
-            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-            @Override
-            public void run() {
-                Message message = new Message();
-                try {
-                    message.what = postQueryGrpMem(getQueryMemberUrl(orderIdString));
-                    isInHandler.sendMessage(message);
-                } catch (IOException | JSONException e) {
-                    e.printStackTrace();
-                }
+        new Thread(() -> {
+            Message message = new Message();
+            try {
+                message.what = postQueryGrpMem(getQueryMemberUrl(orderIdString));
+                isInHandler.sendMessage(message);
+            } catch (IOException | JSONException e) {
+                e.printStackTrace();
             }
         }).start();
 
@@ -142,46 +139,42 @@ public class OneOrderCaseActivity extends AppCompatActivity {
     }
 
     private void bindOperation() {
-        join.setOnClickListener(new View.OnClickListener() {
+        join.setOnClickListener(v -> new Thread(new Runnable() {
+            @SuppressLint("HandlerLeak")
+            final Handler joinHandler = new Handler() {
+                @Override
+                public void handleMessage(@NonNull Message msg) {
+                    switch (msg.what) {
+                        case SUCCESS:
+                            Toast.makeText(v.getContext(), "请求发送成功！", Toast.LENGTH_SHORT).show();
+                            break;
+                        case ERROR:
+                            Toast.makeText(v.getContext(), "请检查网络状况稍后再试", Toast.LENGTH_SHORT).show();
+                            break;
+                        case JOIN_REPEAT:
+                            Toast.makeText(v.getContext(), "您已发送过请求，无需重复发送！", Toast.LENGTH_SHORT).show();
+                            break;
+                        case GROUP_FULL:
+                            Toast.makeText(v.getContext(), "当前小组人数已满！", Toast.LENGTH_SHORT).show();
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            };
+
             @RequiresApi(api = Build.VERSION_CODES.KITKAT)
             @Override
-            public void onClick(final View v) {
-                new Thread(new Runnable() {
-                    @SuppressLint("HandlerLeak")
-                    final Handler joinHandler = new Handler(){
-                        @Override
-                        public void handleMessage(@NonNull Message msg) {
-                            switch (msg.what) {
-                                case SUCCESS:
-                                    Toast.makeText(v.getContext(), "请求发送成功！", Toast.LENGTH_SHORT).show();
-                                    break;
-                                case ERROR:
-                                    Toast.makeText(v.getContext(), "请检查网络状况稍后再试", Toast.LENGTH_SHORT).show();
-                                    break;
-                                case JOIN_REPEAT:
-                                    Toast.makeText(v.getContext(), "您已发送过请求，无需重复发送！", Toast.LENGTH_SHORT).show();
-                                    break;
-                                case GROUP_FULL:
-                                    Toast.makeText(v.getContext(), "当前小组人数已满！", Toast.LENGTH_SHORT).show();
-                                    break;
-                                default:
-                                    break;
-                            }
-                        }
-                    };
-                    @Override
-                    public void run() {
-                        try {
-                            Message message = new Message();
-                            message.what = putJoin(getJoinUrl(orderIdString));
-                            joinHandler.sendMessage(message);
-                        } catch (IOException | JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }).start();
+            public void run() {
+                try {
+                    Message message = new Message();
+                    message.what = putJoin(getJoinUrl(orderIdString));
+                    joinHandler.sendMessage(message);
+                } catch (IOException | JSONException e) {
+                    e.printStackTrace();
+                }
             }
-        });
+        }).start());
 
         DialogInterface.OnClickListener quitClickListener = new DialogInterface.OnClickListener() {
             @RequiresApi(api = Build.VERSION_CODES.KITKAT)
@@ -189,8 +182,7 @@ public class OneOrderCaseActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
                 switch (which) {
                     case DialogInterface.BUTTON_POSITIVE:
-                        @SuppressLint("HandlerLeak")
-                        final Handler quitHandler = new Handler(){
+                        @SuppressLint("HandlerLeak") final Handler quitHandler = new Handler() {
                             @Override
                             public void handleMessage(@NonNull Message msg) {
                                 switch (msg.what) {
@@ -213,16 +205,13 @@ public class OneOrderCaseActivity extends AppCompatActivity {
                                 }
                             }
                         };
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                try {
-                                    Message message = new Message();
-                                    message.what = delQuitOrder(getQuitUrl(orderIdString, idContent));
-                                    quitHandler.sendMessage(message);
-                                } catch (IOException | JSONException e) {
-                                    e.printStackTrace();
-                                }
+                        new Thread(() -> {
+                            try {
+                                Message message = new Message();
+                                message.what = delQuitOrder(getQuitUrl(orderIdString, idContent));
+                                quitHandler.sendMessage(message);
+                            } catch (IOException | JSONException e) {
+                                e.printStackTrace();
                             }
                         }).start();
 
@@ -242,13 +231,7 @@ public class OneOrderCaseActivity extends AppCompatActivity {
                 .setPositiveButton("确定", quitClickListener)
                 .setNegativeButton("我再想想", quitClickListener);
 
-        leave.setOnClickListener(new View.OnClickListener() {
-            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-            @Override
-            public void onClick(View v) {
-                quitBuilder.show();
-            }
-        });
+        leave.setOnClickListener(v -> quitBuilder.show());
 
         DialogInterface.OnClickListener deleteClickListener = new DialogInterface.OnClickListener() {
             @RequiresApi(api = Build.VERSION_CODES.KITKAT)
@@ -304,20 +287,9 @@ public class OneOrderCaseActivity extends AppCompatActivity {
                 .setPositiveButton("确定", deleteClickListener)
                 .setNegativeButton("我再想想", deleteClickListener);
 
-        delete.setOnClickListener(new View.OnClickListener() {
-            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-            @Override
-            public void onClick(View v) {
-                deleteBuilder.show();
-            }
-        });
+        delete.setOnClickListener(v -> deleteBuilder.show());
 
-        back.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+        back.setOnClickListener(v -> finish());
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)

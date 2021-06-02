@@ -10,7 +10,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Build;
 import android.os.Bundle;
 import android.view.KeyEvent;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -94,6 +93,7 @@ public class OneGrpMsgCaseActivity extends AppCompatActivity {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.O)
     private void bindItemsAndOps() {
         setContentView(R.layout.activity_one_grpmsg_case);
 
@@ -107,12 +107,9 @@ public class OneGrpMsgCaseActivity extends AppCompatActivity {
         }
 
         ImageView backButton = findViewById(R.id.sysmsg_back_btn);
-        backButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                setResult(RESULT_OK);
-                finish();
-            }
+        backButton.setOnClickListener(v -> {
+            setResult(RESULT_OK);
+            finish();
         });
 
         grpMsgLayoutManager = new LinearLayoutManager(this, RecyclerView.VERTICAL, false);
@@ -121,32 +118,25 @@ public class OneGrpMsgCaseActivity extends AppCompatActivity {
         grpMsgRecyclerview.setAdapter(grpMsgAdapter);
 
         grpMsgSwipeRefresh = findViewById(R.id.grp_msg_swipe_refresh);
-        grpMsgSwipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                loadHistoryMsgs();
-                grpMsgSwipeRefresh.setRefreshing(false);
-            }
+        grpMsgSwipeRefresh.setOnRefreshListener(() -> {
+            loadHistoryMsgs();
+            grpMsgSwipeRefresh.setRefreshing(false);
         });
 
         msgInput = findViewById(R.id.msg_input);
         Button msgSendButton = findViewById(R.id.msg_send_button);
-        msgSendButton.setOnClickListener(new View.OnClickListener() {
-            @RequiresApi(api = Build.VERSION_CODES.O)
-            @Override
-            public void onClick(View v) {
-                String msgInputString = msgInput.getText().toString();
-                if (!msgInputString.isEmpty()) {
-                    DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-                    LocalDateTime now = LocalDateTime.now();
-                    String nowTime = dtf.format(now);
-                    String nowTimeToServer = nowTime.replace(' ', 'T');
-                    final GrpMsgContent msgContent = new GrpMsgContent(idContent, grpId, grpTitle, nicknameContent, "CHAT", nowTimeToServer, msgInputString);
-                    if (grpMsgWebSocket != null) {
-                        grpMsgWebSocket.send(new Gson().toJson(msgContent));
-                    }
-                    msgInput.setText("");
+        msgSendButton.setOnClickListener(v -> {
+            String msgInputString = msgInput.getText().toString();
+            if (!msgInputString.isEmpty()) {
+                DateTimeFormatter dtf = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+                LocalDateTime now = LocalDateTime.now();
+                String nowTime = dtf.format(now);
+                String nowTimeToServer = nowTime.replace(' ', 'T');
+                final GrpMsgContent msgContent = new GrpMsgContent(idContent, grpId, grpTitle, nicknameContent, "CHAT", nowTimeToServer, msgInputString);
+                if (grpMsgWebSocket != null) {
+                    grpMsgWebSocket.send(new Gson().toJson(msgContent));
                 }
+                msgInput.setText("");
             }
         });
     }

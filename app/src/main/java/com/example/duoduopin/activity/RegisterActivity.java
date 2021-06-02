@@ -5,7 +5,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -44,6 +43,7 @@ public class RegisterActivity extends AppCompatActivity {
     private EditText passwordInput;
     private EditText passwordReInput;
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -54,56 +54,52 @@ public class RegisterActivity extends AppCompatActivity {
         passwordReInput = findViewById(R.id.passwordReInput);
         Button register = findViewById(R.id.registerButton);
 
-        register.setOnClickListener(new View.OnClickListener() {
-            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-            @Override
-            public void onClick(View v) {
-                String username = usernameInput.getText().toString();
-                String nickname = nicknameInput.getText().toString();
-                String password = passwordInput.getText().toString();
-                String passwordRepeat = passwordReInput.getText().toString();
+        register.setOnClickListener(v -> {
+            String username = usernameInput.getText().toString();
+            String nickname = nicknameInput.getText().toString();
+            String password = passwordInput.getText().toString();
+            String passwordRepeat = passwordReInput.getText().toString();
 
-                if (username.isEmpty()) {
-                    Toast.makeText(v.getContext(), "请填写格式正确的手机号", Toast.LENGTH_SHORT).show();
-                } else if (nickname.isEmpty()) {
-                    Toast.makeText(v.getContext(), "请填写用户名", Toast.LENGTH_SHORT).show();
-                } else if (password.isEmpty())  {
-                    Toast.makeText(v.getContext(), "请输入密码", Toast.LENGTH_SHORT).show();
-                } else if (passwordRepeat.isEmpty()) {
-                    Toast.makeText(v.getContext(), "请输入确认密码", Toast.LENGTH_SHORT).show();
-                } else if (!password.equals(passwordRepeat)) {
-                    Toast.makeText(v.getContext(), "两次密码输入不一致", Toast.LENGTH_SHORT).show();
-                } else {
-                    JSONObject jwt = new JSONObject();
-                    //password = crypt(password);
-                    Log.d("build Password", "onClick: " + password);
-                    try {
-                        jwt.put("username", username);
-                        jwt.put("nickname", nickname);
-                        jwt.put("password", password);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                    }
+            if (username.isEmpty()) {
+                Toast.makeText(v.getContext(), "请填写格式正确的手机号", Toast.LENGTH_SHORT).show();
+            } else if (nickname.isEmpty()) {
+                Toast.makeText(v.getContext(), "请填写用户名", Toast.LENGTH_SHORT).show();
+            } else if (password.isEmpty()) {
+                Toast.makeText(v.getContext(), "请输入密码", Toast.LENGTH_SHORT).show();
+            } else if (passwordRepeat.isEmpty()) {
+                Toast.makeText(v.getContext(), "请输入确认密码", Toast.LENGTH_SHORT).show();
+            } else if (!password.equals(passwordRepeat)) {
+                Toast.makeText(v.getContext(), "两次密码输入不一致", Toast.LENGTH_SHORT).show();
+            } else {
+                JSONObject jwt = new JSONObject();
+                //password = crypt(password);
+                Log.d("build Password", "onClick: " + password);
+                try {
+                    jwt.put("username", username);
+                    jwt.put("nickname", nickname);
+                    jwt.put("password", password);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
 
-                    try {
-                        int SDK_INT = Build.VERSION.SDK_INT;
-                        if (SDK_INT > 8) {
-                            StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
-                            StrictMode.setThreadPolicy(policy);
-                            int state = putRequest(jwt.toString());
-                            if (state == 1) {
-                                Intent intent = new Intent(v.getContext(), LoginActivity.class);
-                                startActivity(intent);
-                                Toast.makeText(v.getContext(), "注册成功！", Toast.LENGTH_SHORT).show();
-                            } else if (state == 2) {
-                                Toast.makeText(v.getContext(), "此用户已存在！", Toast.LENGTH_SHORT).show();
-                            } else {
-                                Toast.makeText(v.getContext(), "未知错误", Toast.LENGTH_SHORT).show();
-                            }
+                try {
+                    int SDK_INT = Build.VERSION.SDK_INT;
+                    if (SDK_INT > 8) {
+                        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+                        StrictMode.setThreadPolicy(policy);
+                        int state = putRequest(jwt.toString());
+                        if (state == 1) {
+                            Intent intent = new Intent(v.getContext(), LoginActivity.class);
+                            startActivity(intent);
+                            Toast.makeText(v.getContext(), "注册成功！", Toast.LENGTH_SHORT).show();
+                        } else if (state == 2) {
+                            Toast.makeText(v.getContext(), "此用户已存在！", Toast.LENGTH_SHORT).show();
+                        } else {
+                            Toast.makeText(v.getContext(), "未知错误", Toast.LENGTH_SHORT).show();
                         }
-                    } catch (IOException | JSONException e) {
-                        e.printStackTrace();
                     }
+                } catch (IOException | JSONException e) {
+                    e.printStackTrace();
                 }
             }
         });
@@ -133,28 +129,4 @@ public class RegisterActivity extends AppCompatActivity {
         Log.d(TAG, "ret = " + ret);
         return ret;
     }
-
-    /*
-    public static String crypt(String string) {
-        if (string == null || string.length() == 0) {
-            throw new IllegalArgumentException("String to encrypt can't be null or zero length");
-        }
-        StringBuilder hexString = new StringBuilder();
-        try {
-            MessageDigest md = MessageDigest.getInstance("MD5");
-            md.update(string.getBytes());
-            byte[] hash = md.digest();
-            for (byte b : hash) {
-                if ((0xFF & b) < 0x10) {
-                    hexString.append("0").append(Integer.toHexString((0xFF & b)));
-                } else {
-                    hexString.append(Integer.toHexString(0xFF & b));
-                }
-            }
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        }
-        return hexString.toString();
-    }
-    */
 }

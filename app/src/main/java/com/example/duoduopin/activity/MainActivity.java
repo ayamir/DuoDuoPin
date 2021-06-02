@@ -26,7 +26,6 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.FragmentActivity;
 
-import com.amap.api.location.AMapLocation;
 import com.amap.api.location.AMapLocationClient;
 import com.amap.api.location.AMapLocationClientOption;
 import com.amap.api.location.AMapLocationListener;
@@ -79,16 +78,13 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         @Override
         public void handleMessage(@NonNull Message msg) {
             if (msg.what == SUCCESS) {
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            postQueryRecOrderList();
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        } catch (JSONException e) {
-                            e.printStackTrace();
-                        }
+                new Thread(() -> {
+                    try {
+                        postQueryRecOrderList();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
                 }).start();
             }
@@ -252,30 +248,27 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         locationClientOption.setLocationCacheEnable(false);
         locationClient.setLocationOption(locationClientOption);
 
-        AMapLocationListener locationListener = new AMapLocationListener() {
-            @Override
-            public void onLocationChanged(AMapLocation aMapLocation) {
-                final String TAG = "AMapError";
-                if (aMapLocation != null) {
-                    Log.e(TAG, "aMapLocation has response");
-                    if (aMapLocation.getErrorCode() == 0) {
-                        latitude = String.valueOf(aMapLocation.getLatitude());
-                        longitude = String.valueOf(aMapLocation.getLongitude());
-                        Log.e(TAG, "latitude = " + latitude + ", longitude = " + longitude);
-                        new Thread(new Runnable() {
-                            @Override
-                            public void run() {
-                                Message message = new Message();
-                                message.what = SUCCESS;
-                                locateSuccessHandler.sendMessage(message);
-                            }
-                        }).start();
-                    } else {
-                        Log.e(TAG, "location error, error code: " + aMapLocation.getErrorCode() + "\nerror info: " + aMapLocation.getErrorInfo());
-                    }
+        AMapLocationListener locationListener = aMapLocation -> {
+            final String TAG = "AMapError";
+            if (aMapLocation != null) {
+                Log.e(TAG, "aMapLocation has response");
+                if (aMapLocation.getErrorCode() == 0) {
+                    latitude = String.valueOf(aMapLocation.getLatitude());
+                    longitude = String.valueOf(aMapLocation.getLongitude());
+                    Log.e(TAG, "latitude = " + latitude + ", longitude = " + longitude);
+                    new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            Message message = new Message();
+                            message.what = SUCCESS;
+                            locateSuccessHandler.sendMessage(message);
+                        }
+                    }).start();
                 } else {
-                    Log.e(TAG, "location error");
+                    Log.e(TAG, "location error, error code: " + aMapLocation.getErrorCode() + "\nerror info: " + aMapLocation.getErrorInfo());
                 }
+            } else {
+                Log.e(TAG, "location error");
             }
         };
         locationClient.setLocationListener(locationListener);

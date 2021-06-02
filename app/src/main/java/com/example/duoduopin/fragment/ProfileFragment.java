@@ -65,7 +65,7 @@ public class ProfileFragment extends Fragment {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    @RequiresApi(api = Build.VERSION_CODES.R)
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         final GeneralMsgHandler myMsgHandler = new GeneralMsgHandler(getActivity());
@@ -73,76 +73,59 @@ public class ProfileFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
 
         Button logout = Objects.requireNonNull(getActivity()).findViewById(R.id.logout);
-        logout.setOnClickListener(new View.OnClickListener() {
-            @SuppressLint("CommitPrefEdits")
-            @RequiresApi(api = Build.VERSION_CODES.R)
-            @Override
-            public void onClick(View v) {
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            Message message = new Message();
-                            message.arg1 = LOGOUT;
-                            int state = delRequest();
-                            if (state == SUCCESS) {
-                                message.what = SUCCESS;
-                            } else {
-                                message.what = ERROR;
-                            }
-                            myMsgHandler.sendMessage(message);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+        logout.setOnClickListener(v -> {
+            new Thread(() -> {
+                try {
+                    Message message = new Message();
+                    message.arg1 = LOGOUT;
+                    int state = delRequest();
+                    if (state == SUCCESS) {
+                        message.what = SUCCESS;
+                    } else {
+                        message.what = ERROR;
                     }
-                }).start();
-                cleanPrefs();
-                getActivity().finishAndRemoveTask();
-            }
+                    myMsgHandler.sendMessage(message);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }).start();
+            cleanPrefs();
+            getActivity().finishAndRemoveTask();
         });
 
         TextView nickname = Objects.requireNonNull(getActivity()).findViewById(R.id.nicknameProfile);
         nickname.setText(nicknameContent);
 
         LinearLayout carCaseLayout = getActivity().findViewById(R.id.car_case_layout);
-        carCaseLayout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(v.getContext(), OrderCaseActivity.class);
-                intent.putExtra("from", "userId");
-                intent.putExtra("type", "CAR");
-                intent.putExtra("userId", idContent);
-                startActivity(intent);
-            }
+        carCaseLayout.setOnClickListener(v -> {
+            Intent intent = new Intent(v.getContext(), OrderCaseActivity.class);
+            intent.putExtra("from", "userId");
+            intent.putExtra("type", "CAR");
+            intent.putExtra("userId", idContent);
+            startActivity(intent);
         });
 
         LinearLayout orderCaseLayout = getActivity().findViewById(R.id.order_case_layout);
-        orderCaseLayout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(v.getContext(), OrderCaseActivity.class);
-                intent.putExtra("from", "userId");
-                intent.putExtra("type", "BILL");
-                intent.putExtra("userId", idContent);
-                startActivity(intent);
-            }
+        orderCaseLayout.setOnClickListener(v -> {
+            Intent intent = new Intent(v.getContext(), OrderCaseActivity.class);
+            intent.putExtra("from", "userId");
+            intent.putExtra("type", "BILL");
+            intent.putExtra("userId", idContent);
+            startActivity(intent);
         });
 
-        DialogInterface.OnClickListener clearListener = new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                switch (which) {
-                    case DialogInterface.BUTTON_POSITIVE:
-                        final MyDBHelper clearStorage = new MyDBHelper(getActivity(), "DuoDuoPin.db", null, 1);
-                        SQLiteDatabase db = clearStorage.getWritableDatabase();
-                        clearStorage.dropTables(db);
-                        Toast.makeText(getActivity(), "清除成功！", Toast.LENGTH_SHORT).show();
-                        clearStorage.onCreate(db);
-                        break;
-                    case DialogInterface.BUTTON_NEGATIVE:
-                        dialog.dismiss();
-                        break;
-                }
+        DialogInterface.OnClickListener clearListener = (dialog, which) -> {
+            switch (which) {
+                case DialogInterface.BUTTON_POSITIVE:
+                    final MyDBHelper clearStorage = new MyDBHelper(getActivity(), "DuoDuoPin.db", null, 1);
+                    SQLiteDatabase db = clearStorage.getWritableDatabase();
+                    clearStorage.dropTables(db);
+                    Toast.makeText(getActivity(), "清除成功！", Toast.LENGTH_SHORT).show();
+                    clearStorage.onCreate(db);
+                    break;
+                case DialogInterface.BUTTON_NEGATIVE:
+                    dialog.dismiss();
+                    break;
             }
         };
 
@@ -153,12 +136,7 @@ public class ProfileFragment extends Fragment {
                 .setNegativeButton("取消", clearListener);
 
         LinearLayout clearStorage = getActivity().findViewById(R.id.clear_storage_layout);
-        clearStorage.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                clearBuilder.show();
-            }
-        });
+        clearStorage.setOnClickListener(v -> clearBuilder.show());
 
     }
 

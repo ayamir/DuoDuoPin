@@ -7,8 +7,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
-import android.view.View;
-import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
@@ -107,45 +105,39 @@ public class OrderCaseActivity extends AppCompatActivity {
         switch (from) {
             case "userId":
                 final String userId = fromIntent.getStringExtra("userId");
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            Message message = new Message();
-                            int state = postQueryOrder(getQueryUrlByUserId(userId), false);
-                            if (state == SUCCESS) {
-                                message.what = SUCCESS;
-                            } else {
-                                message.what = ERROR;
-                            }
-                            handler.sendMessage(message);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        } catch (JSONException e) {
-                            e.printStackTrace();
+                new Thread(() -> {
+                    try {
+                        Message message = new Message();
+                        int state = postQueryOrder(getQueryUrlByUserId(userId), false);
+                        if (state == SUCCESS) {
+                            message.what = SUCCESS;
+                        } else {
+                            message.what = ERROR;
                         }
+                        handler.sendMessage(message);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
                 }).start();
                 break;
             case "orderId":
                 final String orderId = fromIntent.getStringExtra("orderId");
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            Message message = new Message();
-                            int state = postQueryOrder(getQueryUrlByOrderId(orderId), false);
-                            if (state == 1) {
-                                message.what = SUCCESS;
-                            } else {
-                                message.what = ERROR;
-                            }
-                            handler.sendMessage(message);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        } catch (JSONException e) {
-                            e.printStackTrace();
+                new Thread(() -> {
+                    try {
+                        Message message = new Message();
+                        int state = postQueryOrder(getQueryUrlByOrderId(orderId), false);
+                        if (state == 1) {
+                            message.what = SUCCESS;
+                        } else {
+                            message.what = ERROR;
                         }
+                        handler.sendMessage(message);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    } catch (JSONException e) {
+                        e.printStackTrace();
                     }
                 }).start();
                 break;
@@ -170,21 +162,18 @@ public class OrderCaseActivity extends AppCompatActivity {
                 longitude = fromIntent.getStringExtra("longitude");
                 latitude = fromIntent.getStringExtra("latitude");
                 Log.e("Search By Info", "orderType = " + orderType + ", distance = " + distance + ", longitude = " + longitude + ", latitude = " + latitude);
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            Message message = new Message();
-                            int state = postQueryOrder(queryByInfoUrl, true);
-                            if (state == 1) {
-                                message.what = SUCCESS;
-                            } else {
-                                message.what = ERROR;
-                            }
-                            handler.sendMessage(message);
-                        } catch (IOException | JSONException e) {
-                            e.printStackTrace();
+                new Thread(() -> {
+                    try {
+                        Message message = new Message();
+                        int state = postQueryOrder(queryByInfoUrl, true);
+                        if (state == 1) {
+                            message.what = SUCCESS;
+                        } else {
+                            message.what = ERROR;
                         }
+                        handler.sendMessage(message);
+                    } catch (IOException | JSONException e) {
+                        e.printStackTrace();
                     }
                 }).start();
                 break;
@@ -232,23 +221,20 @@ public class OrderCaseActivity extends AppCompatActivity {
                 new String[]{"title", "description", "curNumContent"},
                 new int[]{R.id.tv_title, R.id.tv_description, R.id.curNumContent});
         listView.setAdapter(adapter);
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Intent toIntent = new Intent(view.getContext(), OneOrderCaseActivity.class);
-                toIntent.putExtra("userId", detailCases.get((int) id).get("userId"));
-                toIntent.putExtra("nickname", detailCases.get((int) id).get("nickname"));
-                toIntent.putExtra("type", detailCases.get((int) id).get("type"));
-                toIntent.putExtra("orderId", detailCases.get((int) id).get("orderId"));
-                toIntent.putExtra("price", detailCases.get((int) id).get("price"));
-                toIntent.putExtra("address", detailCases.get((int) id).get("address"));
-                toIntent.putExtra("curPeople", detailCases.get((int) id).get("curPeople"));
-                toIntent.putExtra("maxPeople", detailCases.get((int) id).get("maxPeople"));
-                toIntent.putExtra("time", detailCases.get((int) id).get("time"));
-                toIntent.putExtra("description", detailCases.get((int) id).get("description"));
-                toIntent.putExtra("title", detailCases.get((int) id).get("title"));
-                startActivityForResult(toIntent, 1);
-            }
+        listView.setOnItemClickListener((parent, view, position, id) -> {
+            Intent toIntent = new Intent(view.getContext(), OneOrderCaseActivity.class);
+            toIntent.putExtra("userId", detailCases.get((int) id).get("userId"));
+            toIntent.putExtra("nickname", detailCases.get((int) id).get("nickname"));
+            toIntent.putExtra("type", detailCases.get((int) id).get("type"));
+            toIntent.putExtra("orderId", detailCases.get((int) id).get("orderId"));
+            toIntent.putExtra("price", detailCases.get((int) id).get("price"));
+            toIntent.putExtra("address", detailCases.get((int) id).get("address"));
+            toIntent.putExtra("curPeople", detailCases.get((int) id).get("curPeople"));
+            toIntent.putExtra("maxPeople", detailCases.get((int) id).get("maxPeople"));
+            toIntent.putExtra("time", detailCases.get((int) id).get("time"));
+            toIntent.putExtra("description", detailCases.get((int) id).get("description"));
+            toIntent.putExtra("title", detailCases.get((int) id).get("title"));
+            startActivityForResult(toIntent, 1);
         });
     }
 

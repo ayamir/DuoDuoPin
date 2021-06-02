@@ -1,7 +1,6 @@
 package com.example.duoduopin.activity;
 
 import android.annotation.SuppressLint;
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.database.sqlite.SQLiteDatabase;
@@ -114,12 +113,7 @@ public class OneSysMsgCaseActivity extends AppCompatActivity {
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void initialize() {
-        backButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                finish();
-            }
-        });
+        backButton.setOnClickListener(v -> finish());
 
         @SuppressLint("HandlerLeak") final Handler searchUserHandlers = new Handler() {
             @Override
@@ -131,134 +125,113 @@ public class OneSysMsgCaseActivity extends AppCompatActivity {
                 }
             }
         };
-        new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Message message = new Message();
-                    message.what = postSearchUser(getQueryUserUrl(senderIdString));
-                    searchUserHandlers.sendMessage(message);
-                } catch (IOException | JSONException e) {
-                    e.printStackTrace();
-                }
+        new Thread(() -> {
+            try {
+                Message message = new Message();
+                message.what = postSearchUser(getQueryUserUrl(senderIdString));
+                searchUserHandlers.sendMessage(message);
+            } catch (IOException | JSONException e) {
+                e.printStackTrace();
             }
         }).start();
 
         contentView.setText(contentString);
         timeView.setText(timeString);
-        checkDetailsLayout.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(final View v) {
-                @SuppressLint("HandlerLeak") final Handler checkDetailsHandler = new Handler() {
-                    @RequiresApi(api = Build.VERSION_CODES.O)
-                    @Override
-                    public void handleMessage(@NonNull Message msg) {
-                        if (msg.what == SUCCESS) {
-                            Intent toIntent = new Intent(v.getContext(), OneOrderCaseActivity.class);
-                            try {
-                                toIntent.putExtra("orderId", orderContentJSON.getString("billId"));
-                                toIntent.putExtra("userId", orderContentJSON.getString("userId"));
-                                toIntent.putExtra("nickname", orderContentJSON.getString("nickname"));
-                                toIntent.putExtra("type", orderContentJSON.getString("type"));
-                                toIntent.putExtra("price", orderContentJSON.getString("price"));
-                                toIntent.putExtra("address", orderContentJSON.getString("address"));
-                                toIntent.putExtra("curPeople", orderContentJSON.getString("curPeople"));
-                                toIntent.putExtra("maxPeople", orderContentJSON.getString("maxPeople"));
-                                long oldTime = Long.parseLong(orderContentJSON.getString("time"));
-                                String newTime = Instant.ofEpochMilli(oldTime).atZone(ZoneOffset.ofHours(8)).toLocalDateTime().toString().replace('T', ' ');
-                                toIntent.putExtra("time", newTime);
-                                toIntent.putExtra("description", orderContentJSON.getString("description"));
-                                toIntent.putExtra("title", orderContentJSON.getString("title"));
-                                startActivity(toIntent);
-                            } catch (JSONException e) {
-                                e.printStackTrace();
-                            }
-                        } else {
-                            Toast.makeText(v.getContext(), "获取拼单详情失败，请稍候再试！", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                };
-
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
+        checkDetailsLayout.setOnClickListener(v -> {
+            @SuppressLint("HandlerLeak") final Handler checkDetailsHandler = new Handler() {
+                @RequiresApi(api = Build.VERSION_CODES.O)
+                @Override
+                public void handleMessage(@NonNull Message msg) {
+                    if (msg.what == SUCCESS) {
+                        Intent toIntent = new Intent(v.getContext(), OneOrderCaseActivity.class);
                         try {
-                            Message message = new Message();
-                            message.what = postSearchOrder(getQueryUrlByOrderId(billIdString));
-                            checkDetailsHandler.sendMessage(message);
-                        } catch (IOException | JSONException e) {
+                            toIntent.putExtra("orderId", orderContentJSON.getString("billId"));
+                            toIntent.putExtra("userId", orderContentJSON.getString("userId"));
+                            toIntent.putExtra("nickname", orderContentJSON.getString("nickname"));
+                            toIntent.putExtra("type", orderContentJSON.getString("type"));
+                            toIntent.putExtra("price", orderContentJSON.getString("price"));
+                            toIntent.putExtra("address", orderContentJSON.getString("address"));
+                            toIntent.putExtra("curPeople", orderContentJSON.getString("curPeople"));
+                            toIntent.putExtra("maxPeople", orderContentJSON.getString("maxPeople"));
+                            long oldTime = Long.parseLong(orderContentJSON.getString("time"));
+                            String newTime = Instant.ofEpochMilli(oldTime).atZone(ZoneOffset.ofHours(8)).toLocalDateTime().toString().replace('T', ' ');
+                            toIntent.putExtra("time", newTime);
+                            toIntent.putExtra("description", orderContentJSON.getString("description"));
+                            toIntent.putExtra("title", orderContentJSON.getString("title"));
+                            startActivity(toIntent);
+                        } catch (JSONException e) {
                             e.printStackTrace();
                         }
+                    } else {
+                        Toast.makeText(v.getContext(), "获取拼单详情失败，请稍候再试！", Toast.LENGTH_SHORT).show();
                     }
-                }).start();
-            }
+                }
+            };
+
+            new Thread(() -> {
+                try {
+                    Message message = new Message();
+                    message.what = postSearchOrder(getQueryUrlByOrderId(billIdString));
+                    checkDetailsHandler.sendMessage(message);
+                } catch (IOException | JSONException e) {
+                    e.printStackTrace();
+                }
+            }).start();
         });
-        agree.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(final View v) {
-                @SuppressLint("HandlerLeak") final Handler allowHandler = new Handler() {
-                    @Override
-                    public void handleMessage(@NonNull Message msg) {
-                        if (msg.what == SUCCESS) {
-                            Toast.makeText(v.getContext(), "请求已通过！", Toast.LENGTH_SHORT).show();
-                            SQLiteDatabase db = myDBHelper.getWritableDatabase();
-                            db.execSQL("update SysMsg set isRead=" + "'" + String.valueOf(true) + "'" + " where messageId=" + "'" + messageIdString + "'");
-                            agree.setVisibility(View.INVISIBLE);
-                            reject.setVisibility(View.INVISIBLE);
-                        } else {
-                            Toast.makeText(v.getContext(), "请检查网络状况稍后再试！", Toast.LENGTH_SHORT).show();
-                        }
+        agree.setOnClickListener(v -> {
+            @SuppressLint("HandlerLeak") final Handler allowHandler = new Handler() {
+                @Override
+                public void handleMessage(@NonNull Message msg) {
+                    if (msg.what == SUCCESS) {
+                        Toast.makeText(v.getContext(), "请求已通过！", Toast.LENGTH_SHORT).show();
+                        SQLiteDatabase db = myDBHelper.getWritableDatabase();
+                        db.execSQL("update SysMsg set isRead=" + "'" + true + "'" + " where messageId=" + "'" + messageIdString + "'");
+                        agree.setVisibility(View.INVISIBLE);
+                        reject.setVisibility(View.INVISIBLE);
+                    } else {
+                        Toast.makeText(v.getContext(), "请检查网络状况稍后再试！", Toast.LENGTH_SHORT).show();
                     }
-                };
+                }
+            };
 
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            String allowUrl = getAllowUrl(messageIdString);
-                            Message message = new Message();
-                            message.what = postAllowOrReject(allowUrl);
-                            allowHandler.sendMessage(message);
-                        } catch (IOException | JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }).start();
-            }
+            new Thread(() -> {
+                try {
+                    String allowUrl = getAllowUrl(messageIdString);
+                    Message message = new Message();
+                    message.what = postAllowOrReject(allowUrl);
+                    allowHandler.sendMessage(message);
+                } catch (IOException | JSONException e) {
+                    e.printStackTrace();
+                }
+            }).start();
         });
-        reject.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(final View v) {
-                @SuppressLint("HandlerLeak") final Handler rejectHandler = new Handler() {
-                    @Override
-                    public void handleMessage(@NonNull Message msg) {
-                        if (msg.what == SUCCESS) {
-                            Toast.makeText(v.getContext(), "请求已拒绝！", Toast.LENGTH_SHORT).show();
-                            SQLiteDatabase db = myDBHelper.getWritableDatabase();
-                            db.execSQL("update SysMsg set isRead=" + "'" + String.valueOf(true) + "'" + " where messageId=" + "'" + messageIdString + "'");
-                            agree.setVisibility(View.INVISIBLE);
-                            reject.setVisibility(View.INVISIBLE);
-                        } else {
-                            Toast.makeText(v.getContext(), "请检查网络状况稍后再试！", Toast.LENGTH_SHORT).show();
-                        }
+        reject.setOnClickListener(v -> {
+            @SuppressLint("HandlerLeak") final Handler rejectHandler = new Handler() {
+                @Override
+                public void handleMessage(@NonNull Message msg) {
+                    if (msg.what == SUCCESS) {
+                        Toast.makeText(v.getContext(), "请求已拒绝！", Toast.LENGTH_SHORT).show();
+                        SQLiteDatabase db = myDBHelper.getWritableDatabase();
+                        db.execSQL("update SysMsg set isRead=" + "'" + true + "'" + " where messageId=" + "'" + messageIdString + "'");
+                        agree.setVisibility(View.INVISIBLE);
+                        reject.setVisibility(View.INVISIBLE);
+                    } else {
+                        Toast.makeText(v.getContext(), "请检查网络状况稍后再试！", Toast.LENGTH_SHORT).show();
                     }
-                };
+                }
+            };
 
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            String rejectUrl = getRejectUrl(messageIdString);
-                            Message message = new Message();
-                            message.what = postAllowOrReject(rejectUrl);
-                            rejectHandler.sendMessage(message);
-                        } catch (IOException | JSONException e) {
-                            e.printStackTrace();
-                        }
-                    }
-                }).start();
+            new Thread(() -> {
+                try {
+                    String rejectUrl = getRejectUrl(messageIdString);
+                    Message message = new Message();
+                    message.what = postAllowOrReject(rejectUrl);
+                    rejectHandler.sendMessage(message);
+                } catch (IOException | JSONException e) {
+                    e.printStackTrace();
+                }
+            }).start();
 
-            }
         });
     }
 

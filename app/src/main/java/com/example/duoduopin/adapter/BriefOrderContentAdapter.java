@@ -59,23 +59,20 @@ public class BriefOrderContentAdapter extends RecyclerView.Adapter<BriefOrderCon
         holder.tvCurrentNumber.setText(briefOrderContent.getCurrentNumber());
 
         final OrderContent orderContent = orderContentList.get(position);
-        holder.rlOneRecOrder.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(v.getContext(), OneOrderCaseActivity.class);
-                intent.putExtra("orderId", orderContent.getBillId());
-                intent.putExtra("userId", orderContent.getUserId());
-                intent.putExtra("nickname", orderContent.getNickname());
-                intent.putExtra("type", orderContent.getType());
-                intent.putExtra("price", orderContent.getPrice());
-                intent.putExtra("address", orderContent.getAddress());
-                intent.putExtra("curPeople", orderContent.getCurPeople());
-                intent.putExtra("maxPeople", orderContent.getMaxPeople());
-                intent.putExtra("time", orderContent.getTime());
-                intent.putExtra("description", orderContent.getDescription());
-                intent.putExtra("title", orderContent.getTitle());
-                v.getContext().startActivity(intent);
-            }
+        holder.rlOneRecOrder.setOnClickListener(v -> {
+            Intent intent = new Intent(v.getContext(), OneOrderCaseActivity.class);
+            intent.putExtra("orderId", orderContent.getBillId());
+            intent.putExtra("userId", orderContent.getUserId());
+            intent.putExtra("nickname", orderContent.getNickname());
+            intent.putExtra("type", orderContent.getType());
+            intent.putExtra("price", orderContent.getPrice());
+            intent.putExtra("address", orderContent.getAddress());
+            intent.putExtra("curPeople", orderContent.getCurPeople());
+            intent.putExtra("maxPeople", orderContent.getMaxPeople());
+            intent.putExtra("time", orderContent.getTime());
+            intent.putExtra("description", orderContent.getDescription());
+            intent.putExtra("title", orderContent.getTitle());
+            v.getContext().startActivity(intent);
         });
     }
 
