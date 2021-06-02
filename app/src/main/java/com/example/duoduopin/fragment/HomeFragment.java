@@ -46,6 +46,8 @@ import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Objects;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.example.duoduopin.activity.MainActivity.isLoaded;
 import static com.example.duoduopin.activity.MainActivity.recBriefOrderContentList;
@@ -54,6 +56,8 @@ import static com.example.duoduopin.tool.Constants.brief_order_content_load_sign
 
 public class HomeFragment extends Fragment {
 
+    private final ArrayList<OrderContent> recKeywordContentList = new ArrayList<>();
+    private final ArrayList<BriefOrderContent> recBriefKeywordContentList = new ArrayList<>();
     private final ArrayList<OrderContent> recBillContentList = new ArrayList<>();
     private final ArrayList<BriefOrderContent> recBriefBillContentList = new ArrayList<>();
     private final ArrayList<OrderContent> recCarContentList = new ArrayList<>();
@@ -247,31 +251,6 @@ public class HomeFragment extends Fragment {
         });
     }
 
-    private void displayBillOrCar(boolean isBill) {
-        if (isLoaded) {
-            recBillContentList.clear();
-            recBriefBillContentList.clear();
-            recCarContentList.clear();
-            recBriefCarContentList.clear();
-            for (int i = 0; i < recOrderContentList.size(); i++) {
-                if (recOrderContentList.get(i).getType().equals("BILL")) {
-                    recBillContentList.add(recOrderContentList.get(i));
-                    recBriefBillContentList.add(recBriefOrderContentList.get(i));
-                } else {
-                    recCarContentList.add(recOrderContentList.get(i));
-                    recBriefCarContentList.add(recBriefOrderContentList.get(i));
-                }
-            }
-            if (isBill) {
-                BriefOrderContentAdapter briefBillContentAdapter = new BriefOrderContentAdapter(recBillContentList, recBriefBillContentList);
-                rvContentList.setAdapter(briefBillContentAdapter);
-            } else {
-                BriefOrderContentAdapter briefCarContentAdapter = new BriefOrderContentAdapter(recCarContentList, recBriefCarContentList);
-                rvContentList.setAdapter(briefCarContentAdapter);
-            }
-        }
-    }
-
     private void bindMainItems() {
         FloatingActionButton fabOrder = getActivity().findViewById(R.id.fab_order);
         fabOrder.setOnClickListener(v -> displayBillOrCar(true));
@@ -280,7 +259,10 @@ public class HomeFragment extends Fragment {
         fabCar.setOnClickListener(v -> displayBillOrCar(false));
 
         EditText searchBar = getActivity().findViewById(R.id.searchBar);
-        searchBar.setOnClickListener(v -> Toast.makeText(getActivity(), "等待进一步开发...", Toast.LENGTH_SHORT).show());
+        searchBar.setOnClickListener(v -> {
+            String keyword = searchBar.getText().toString().trim();
+            filterByKeyword(keyword);
+        });
 
         ImageView selectLogo = getActivity().findViewById(R.id.selectLogo);
         selectLogo.setOnClickListener(v -> Toast.makeText(getActivity(), "请从屏幕左边缘向右滑动", Toast.LENGTH_SHORT).show());
@@ -306,6 +288,53 @@ public class HomeFragment extends Fragment {
 
         briefOrderContentAdapter = new BriefOrderContentAdapter(recOrderContentList, recBriefOrderContentList);
         rvContentList.setAdapter(briefOrderContentAdapter);
+    }
+
+    private void filterByKeyword(String keyword) {
+        if (isLoaded) {
+            recKeywordContentList.clear();
+            recBriefKeywordContentList.clear();
+
+            Pattern pn = Pattern.compile(".*" + keyword + ".*");
+            for (int i = 0; i < recOrderContentList.size(); i++) {
+                String title = recOrderContentList.get(i).getTitle();
+                Matcher matcher = pn.matcher(title);
+                if (matcher.find()) {
+                    recKeywordContentList.add(recOrderContentList.get(i));
+                    recBriefKeywordContentList.add(recBriefOrderContentList.get(i));
+                } else {
+                    Log.e("filter", "第" + i + "条内容没有被匹配，其标题为" + title);
+                }
+            }
+
+            BriefOrderContentAdapter briefKeywordContentAdapter = new BriefOrderContentAdapter(recKeywordContentList, recBriefKeywordContentList);
+            rvContentList.setAdapter(briefKeywordContentAdapter);
+        }
+    }
+
+    private void displayBillOrCar(boolean isBill) {
+        if (isLoaded) {
+            recBillContentList.clear();
+            recBriefBillContentList.clear();
+            recCarContentList.clear();
+            recBriefCarContentList.clear();
+            for (int i = 0; i < recOrderContentList.size(); i++) {
+                if (recOrderContentList.get(i).getType().equals("BILL")) {
+                    recBillContentList.add(recOrderContentList.get(i));
+                    recBriefBillContentList.add(recBriefOrderContentList.get(i));
+                } else {
+                    recCarContentList.add(recOrderContentList.get(i));
+                    recBriefCarContentList.add(recBriefOrderContentList.get(i));
+                }
+            }
+            if (isBill) {
+                BriefOrderContentAdapter briefBillContentAdapter = new BriefOrderContentAdapter(recBillContentList, recBriefBillContentList);
+                rvContentList.setAdapter(briefBillContentAdapter);
+            } else {
+                BriefOrderContentAdapter briefCarContentAdapter = new BriefOrderContentAdapter(recCarContentList, recBriefCarContentList);
+                rvContentList.setAdapter(briefCarContentAdapter);
+            }
+        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)

@@ -64,14 +64,23 @@ import static com.example.duoduopin.tool.Constants.API_KEY;
 import static com.example.duoduopin.tool.Constants.brief_order_content_load_signal;
 
 public class MainActivity extends FragmentActivity implements View.OnClickListener {
-    private ImageView home, message, order, profile;
+    public static final String prefName = "tokenData";
+    public static final OkHttpClient client = new OkHttpClient().newBuilder()
+            .readTimeout(60, TimeUnit.SECONDS)
+            .writeTimeout(60, TimeUnit.SECONDS)
+            .connectTimeout(60, TimeUnit.SECONDS)
+            .build();
     public static String latitude, longitude;
-
+    public static SharedPreferences prefs;
+    public static boolean isMessageClicked = false;
+    public static boolean isLoaded = false;
+    public static String idContent;
+    public static String tokenContent;
+    public static String usernameContent;
+    public static String nicknameContent;
+    public static ArrayList<OrderContent> recOrderContentList;
+    public static ArrayList<BriefOrderContent> recBriefOrderContentList = new ArrayList<>();
     private final int LOCATION_REQUEST_CODE = 1;
-    private AMapLocationClient locationClient;
-
-    private boolean isConnected = false;
-
     @SuppressLint("HandlerLeak")
     private final Handler locateSuccessHandler = new Handler() {
         @RequiresApi(api = Build.VERSION_CODES.O)
@@ -90,29 +99,6 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
             }
         }
     };
-
-
-    public static SharedPreferences prefs;
-    public static final String prefName = "tokenData";
-
-    public static final OkHttpClient client = new OkHttpClient().newBuilder()
-            .readTimeout(60, TimeUnit.SECONDS)
-            .writeTimeout(60, TimeUnit.SECONDS)
-            .connectTimeout(60, TimeUnit.SECONDS)
-            .build();
-
-    public static boolean isMessageClicked = false;
-    public static boolean isLoaded = false;
-
-    public static String idContent;
-    public static String tokenContent;
-    public static String usernameContent;
-    public static String nicknameContent;
-
-    public static ArrayList<OrderContent> recOrderContentList;
-    public static ArrayList<BriefOrderContent> recBriefOrderContentList = new ArrayList<>();
-
-
     private final ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder iBinder) {
@@ -126,7 +112,9 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
             Log.e("MainActivity", "onServiceDisconnected");
         }
     };
-
+    private ImageView home, message, order, profile;
+    private AMapLocationClient locationClient;
+    private boolean isConnected = false;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
@@ -216,9 +204,6 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == LOCATION_REQUEST_CODE) {
-            if (locationClient == null) {
-                Toast.makeText(this, "定位服务客户端不存在！", Toast.LENGTH_SHORT).show();
-            }
             boolean isGranted = true;
             int i = 0;
             for (int grantResult : grantResults) {
