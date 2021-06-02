@@ -256,13 +256,10 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
                     latitude = String.valueOf(aMapLocation.getLatitude());
                     longitude = String.valueOf(aMapLocation.getLongitude());
                     Log.e(TAG, "latitude = " + latitude + ", longitude = " + longitude);
-                    new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            Message message = new Message();
-                            message.what = SUCCESS;
-                            locateSuccessHandler.sendMessage(message);
-                        }
+                    new Thread(() -> {
+                        Message message = new Message();
+                        message.what = SUCCESS;
+                        locateSuccessHandler.sendMessage(message);
                     }).start();
                 } else {
                     Log.e(TAG, "location error, error code: " + aMapLocation.getErrorCode() + "\nerror info: " + aMapLocation.getErrorInfo());
