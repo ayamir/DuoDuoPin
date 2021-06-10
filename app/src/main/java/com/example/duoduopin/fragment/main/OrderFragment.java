@@ -1,4 +1,4 @@
-package com.example.duoduopin.fragment;
+package com.example.duoduopin.fragment.main;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;

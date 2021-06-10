@@ -1,4 +1,4 @@
-package com.example.duoduopin.fragment;
+package com.example.duoduopin.fragment.main;
 
 import android.annotation.SuppressLint;
 import android.app.Fragment;
@@ -14,6 +14,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -25,6 +26,7 @@ import androidx.appcompat.app.AlertDialog;
 
 import com.example.duoduopin.R;
 import com.example.duoduopin.activity.OrderCaseActivity;
+import com.example.duoduopin.activity.profile.EditUserInfoActivity;
 import com.example.duoduopin.handler.GeneralMsgHandler;
 import com.example.duoduopin.tool.MyDBHelper;
 
@@ -48,6 +50,10 @@ import static com.example.duoduopin.handler.GeneralMsgHandler.SUCCESS;
 import static com.example.duoduopin.tool.Constants.logoutUrl;
 
 public class ProfileFragment extends Fragment {
+    public static final int EDIT_USER_INFO_REQUEST = 4000;
+    public static final int EDIT_USER_NICKNAME_REQUEST = 40001;
+    public static final int EDIT_USER_HEAD_REQUEST = 4002;
+    private TextView tvProfileNickname;
 
     @Nullable
     @Override
@@ -65,6 +71,27 @@ public class ProfileFragment extends Fragment {
         }
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == EDIT_USER_INFO_REQUEST) {
+            if (resultCode == SUCCESS) {
+                if (data != null) {
+                    boolean isNicknameChanged = data.getBooleanExtra("isNicknameChanged", false);
+                    if (isNicknameChanged) {
+                        nicknameContent = data.getStringExtra("nickname");
+                        tvProfileNickname.setText(nicknameContent);
+                    }
+                    boolean isHeadChanged = data.getBooleanExtra("isHeadChanged", false);
+                    if (isHeadChanged) {
+                        String headPath = data.getStringExtra("headPath");
+                        // TODO: handle headPath
+                    }
+                }
+            }
+        }
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.R)
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
@@ -72,29 +99,21 @@ public class ProfileFragment extends Fragment {
 
         super.onActivityCreated(savedInstanceState);
 
-        Button logout = Objects.requireNonNull(getActivity()).findViewById(R.id.logout);
-        logout.setOnClickListener(v -> {
-            new Thread(() -> {
-                try {
-                    Message message = new Message();
-                    message.arg1 = LOGOUT;
-                    int state = delRequest();
-                    if (state == SUCCESS) {
-                        message.what = SUCCESS;
-                    } else {
-                        message.what = ERROR;
-                    }
-                    myMsgHandler.sendMessage(message);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }).start();
-            cleanPrefs();
-            getActivity().finishAndRemoveTask();
+        TextView tvProfileEdit = getActivity().findViewById(R.id.tv_profile_edit);
+        tvProfileEdit.setOnClickListener(v -> {
+            Intent intent = new Intent(v.getContext(), EditUserInfoActivity.class);
+            // TODO: Add credit
+            intent.putExtra("credit", "");
+            startActivityForResult(intent, EDIT_USER_INFO_REQUEST);
         });
 
-        TextView nickname = Objects.requireNonNull(getActivity()).findViewById(R.id.nicknameProfile);
-        nickname.setText(nicknameContent);
+        ImageView ivUserHead = getActivity().findViewById(R.id.iv_profile_user_head);
+
+        tvProfileNickname = Objects.requireNonNull(getActivity()).findViewById(R.id.tv_profile_nickname);
+        tvProfileNickname.setText(nicknameContent);
+
+        TextView tvProfileUserCredit = Objects.requireNonNull(getActivity().findViewById(R.id.tv_profile_user_credit));
+
 
         LinearLayout carCaseLayout = getActivity().findViewById(R.id.car_case_layout);
         carCaseLayout.setOnClickListener(v -> {
@@ -138,6 +157,26 @@ public class ProfileFragment extends Fragment {
         LinearLayout clearStorage = getActivity().findViewById(R.id.clear_storage_layout);
         clearStorage.setOnClickListener(v -> clearBuilder.show());
 
+        Button logout = Objects.requireNonNull(getActivity()).findViewById(R.id.logout);
+        logout.setOnClickListener(v -> {
+            new Thread(() -> {
+                try {
+                    Message message = new Message();
+                    message.arg1 = LOGOUT;
+                    int state = delRequest();
+                    if (state == SUCCESS) {
+                        message.what = SUCCESS;
+                    } else {
+                        message.what = ERROR;
+                    }
+                    myMsgHandler.sendMessage(message);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }).start();
+            cleanPrefs();
+            getActivity().finishAndRemoveTask();
+        });
     }
 
     private void cleanPrefs() {

@@ -96,7 +96,7 @@ public class OneSysMsgCaseActivity extends AppCompatActivity {
     }
 
     private void bindViews() {
-        backButton = findViewById(R.id.back_button);
+        backButton = findViewById(R.id.iv_edit_back);
         senderNickname = findViewById(R.id.sender_nickname);
         contentView = findViewById(R.id.content_view);
         timeView = findViewById(R.id.time_view);

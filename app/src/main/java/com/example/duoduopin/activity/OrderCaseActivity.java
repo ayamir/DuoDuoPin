@@ -87,14 +87,11 @@ public class OrderCaseActivity extends AppCompatActivity {
         switchShow();
 
         orderCaseSwipeRefresh = findViewById(R.id.order_case_swipe_refresh);
-        orderCaseSwipeRefresh.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                cases.clear();
-                detailCases.clear();
-                switchShow();
-                orderCaseSwipeRefresh.setRefreshing(false);
-            }
+        orderCaseSwipeRefresh.setOnRefreshListener(() -> {
+            cases.clear();
+            detailCases.clear();
+            switchShow();
+            orderCaseSwipeRefresh.setRefreshing(false);
         });
 
     }

@@ -4,8 +4,6 @@ import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -13,7 +11,6 @@ import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -21,16 +18,19 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.FragmentActivity;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.duoduopin.R;
+import com.example.duoduopin.adapter.OrderTabAdapter;
+import com.google.android.material.tabs.TabLayout;
+import com.google.android.material.tabs.TabLayoutMediator;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -52,9 +52,20 @@ import static com.example.duoduopin.tool.Constants.getQueryMemberUrl;
 import static com.example.duoduopin.tool.Constants.getQuitUrl;
 import static com.example.duoduopin.tool.Constants.group_quit_signal;
 
-public class OneOrderCaseActivity extends AppCompatActivity {
+public class OneOrderCaseActivity extends FragmentActivity {
+    private final int MAIN_POS = 0;
+    private final int DETAILS_POS = 1;
+    private final int MEMBER_POS = 2;
 
-    private final ArrayList<String> members = new ArrayList<>();
+    private final String MAIN_TAB_CONTENT = "拼单内容";
+    private final String DETAILS_TAB_CONTENT = "拼单详情";
+    private final String MEMBER_TAB_CONTENT = "拼单成员";
+
+    private final ArrayList<String> memberIds = new ArrayList<>();
+    private final ArrayList<String> memberNicknameList = new ArrayList<>();
+    private final ArrayList<String> memberCreditList = new ArrayList<>();
+
+    private final OrderTabAdapter tabAdapter = new OrderTabAdapter(this);
     private String userIdString;
     private String nicknameString;
     private String orderIdString;
@@ -67,10 +78,14 @@ public class OneOrderCaseActivity extends AppCompatActivity {
     private String descriptionString;
     private String titleString;
     private String imageUrl = "";
-    private Button delete, join, leave;
-    private ImageView back;
+    private String headPath;
+    private String creditString;
+    private Button btnDelete, btnJoin, btnLeave;
+    private ImageView ivBack;
     private ImageView ivItemPic;
     private TextView tvItemComment;
+    private TabLayout tabLayout;
+    private ViewPager2 viewPager2;
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
@@ -78,7 +93,6 @@ public class OneOrderCaseActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_one_order_case);
         getInfoFromIntent();
-        initValue();
         try {
             bindItems();
         } catch (IOException e) {
@@ -91,16 +105,16 @@ public class OneOrderCaseActivity extends AppCompatActivity {
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void setVisibility() {
         if (userIdString.equals(idContent)) {
-            delete.setVisibility(View.VISIBLE);
-            leave.setVisibility(View.INVISIBLE);
-            join.setVisibility(View.INVISIBLE);
+            btnDelete.setVisibility(View.VISIBLE);
+            btnLeave.setVisibility(View.INVISIBLE);
+            btnJoin.setVisibility(View.INVISIBLE);
         } else {
-            delete.setVisibility(View.INVISIBLE);
+            btnDelete.setVisibility(View.INVISIBLE);
         }
-        if (imageUrl.isEmpty()) {
-            ivItemPic.setVisibility(View.INVISIBLE);
-            tvItemComment.setVisibility(View.INVISIBLE);
-        }
+//        if (imageUrl.isEmpty()) {
+//            ivItemPic.setVisibility(View.INVISIBLE);
+//            tvItemComment.setVisibility(View.INVISIBLE);
+//        }
 
         @SuppressLint("HandlerLeak") final Handler isInHandler = new Handler() {
             @Override
@@ -109,11 +123,11 @@ public class OneOrderCaseActivity extends AppCompatActivity {
                 if (msg.what == SUCCESS) {
                     if (isInMembers()) {
                         if (userIdString.equals(idContent))
-                            leave.setVisibility(View.INVISIBLE);
-                        join.setVisibility(View.INVISIBLE);
+                            btnLeave.setVisibility(View.INVISIBLE);
+                        btnJoin.setVisibility(View.INVISIBLE);
                     } else {
-                        leave.setVisibility(View.INVISIBLE);
-                        join.setVisibility(View.VISIBLE);
+                        btnLeave.setVisibility(View.INVISIBLE);
+                        btnJoin.setVisibility(View.VISIBLE);
                     }
                 }
             }
@@ -132,7 +146,7 @@ public class OneOrderCaseActivity extends AppCompatActivity {
     }
 
     private boolean isInMembers() {
-        return members.contains(idContent);
+        return memberIds.contains(idContent);
     }
 
     private void getInfoFromIntent() {
@@ -157,21 +171,87 @@ public class OneOrderCaseActivity extends AppCompatActivity {
         }
     }
 
-    private void bindItems() throws IOException {
-        ivItemPic = findViewById(R.id.iv_item_pic);
-        tvItemComment = findViewById(R.id.tv_item_comment);
-        if (!imageUrl.isEmpty()) {
-            Bitmap bitmap = BitmapFactory.decodeStream(new URL(imageUrl).openStream());
-            ivItemPic.setImageBitmap(bitmap);
-        }
-        join = findViewById(R.id.joinButton);
-        leave = findViewById(R.id.leaveButton);
-        delete = findViewById(R.id.deleteButton);
-        back = findViewById(R.id.backButton);
+    private Bundle setMainBundle() {
+        Bundle bundle = new Bundle();
+        bundle.putString("imageUrl", imageUrl);
+        bundle.putString("price", priceString);
+        bundle.putString("title", titleString);
+        bundle.putString("description", descriptionString);
+        bundle.putString("headPath", headPath);
+        bundle.putString("nickname", nicknameString);
+        bundle.putString("credit", creditString);
+
+        return bundle;
     }
 
+    private Bundle setDetailsBundle() {
+        Bundle bundle = new Bundle();
+        bundle.putString("userId", userIdString);
+        bundle.putString("type", typeString);
+        bundle.putString("orderId", orderIdString);
+        bundle.putString("price", priceString);
+        bundle.putString("curPeople", curPeopleString);
+        bundle.putString("maxPeople", maxPeopleString);
+        bundle.putString("time", timeString);
+        bundle.putString("address", addressString);
+
+        return bundle;
+    }
+
+    private Bundle setMemberBundle() {
+        Bundle bundle = new Bundle();
+        bundle.putStringArrayList("nicknameList", memberNicknameList);
+        bundle.putStringArrayList("creditList", memberCreditList);
+        return bundle;
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (viewPager2.getCurrentItem() == 0) {
+            super.onBackPressed();
+        } else {
+            viewPager2.setCurrentItem(viewPager2.getCurrentItem() - 1);
+        }
+    }
+
+    private void bindItems() throws IOException {
+        tabAdapter.setBundle(setMainBundle(), MAIN_POS);
+        tabAdapter.setBundle(setDetailsBundle(), DETAILS_POS);
+        tabAdapter.setBundle(setMemberBundle(), MEMBER_POS);
+
+        tabLayout = findViewById(R.id.tab_layout);
+        viewPager2 = findViewById(R.id.viewpager2);
+        viewPager2.setOrientation(ViewPager2.ORIENTATION_HORIZONTAL);
+        viewPager2.setAdapter(tabAdapter);
+        new TabLayoutMediator(tabLayout, viewPager2, (tab, position) -> {
+            switch (position) {
+                case 1:
+                    tab.setText(DETAILS_TAB_CONTENT);
+                    break;
+                case 2:
+                    tab.setText(MEMBER_TAB_CONTENT);
+                    break;
+                default:
+                    tab.setText(MAIN_TAB_CONTENT);
+                    break;
+            }
+        }).attach();
+
+//        ivItemPic = findViewById(R.id.iv_item_pic);
+//        tvItemComment = findViewById(R.id.tv_item_comment);
+//        if (!imageUrl.isEmpty()) {
+//            Bitmap bitmap = BitmapFactory.decodeStream(new URL(imageUrl).openStream());
+//            ivItemPic.setImageBitmap(bitmap);
+//        }
+        btnJoin = findViewById(R.id.btn_join);
+        btnLeave = findViewById(R.id.btn_leave);
+        btnDelete = findViewById(R.id.btn_delete);
+        ivBack = findViewById(R.id.btn_back);
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void bindOperation() {
-        join.setOnClickListener(v -> new Thread(new Runnable() {
+        btnJoin.setOnClickListener(v -> new Thread(new Runnable() {
             @SuppressLint("HandlerLeak")
             final Handler joinHandler = new Handler() {
                 @Override
@@ -208,52 +288,48 @@ public class OneOrderCaseActivity extends AppCompatActivity {
             }
         }).start());
 
-        DialogInterface.OnClickListener quitClickListener = new DialogInterface.OnClickListener() {
-            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                switch (which) {
-                    case DialogInterface.BUTTON_POSITIVE:
-                        @SuppressLint("HandlerLeak") final Handler quitHandler = new Handler() {
-                            @Override
-                            public void handleMessage(@NonNull Message msg) {
-                                switch (msg.what) {
-                                    case SUCCESS:
-                                        Toast.makeText(OneOrderCaseActivity.this, "您已成功退出该小组", Toast.LENGTH_SHORT).show();
+        DialogInterface.OnClickListener quitClickListener = (dialog, which) -> {
+            switch (which) {
+                case DialogInterface.BUTTON_POSITIVE:
+                    @SuppressLint("HandlerLeak") final Handler quitHandler = new Handler() {
+                        @Override
+                        public void handleMessage(@NonNull Message msg) {
+                            switch (msg.what) {
+                                case SUCCESS:
+                                    Toast.makeText(OneOrderCaseActivity.this, "您已成功退出该小组", Toast.LENGTH_SHORT).show();
 
-                                        // To close websocket, remove tip
-                                        Intent quitIntent = new Intent();
-                                        quitIntent.putExtra("quitGrpId", orderIdString);
-                                        Log.e("quitOrder", "quitGrpId =" + orderIdString);
-                                        quitIntent.setAction(group_quit_signal);
-                                        sendBroadcast(quitIntent);
-                                        break;
-                                    case ERROR:
-                                        Toast.makeText(OneOrderCaseActivity.this, "遇到未知错误，请稍后再试", Toast.LENGTH_SHORT).show();
-                                        break;
-                                    default:
-                                        Toast.makeText(OneOrderCaseActivity.this, "退出小组失败，请稍后再试", Toast.LENGTH_SHORT).show();
-                                        break;
-                                }
+                                    // To close websocket, remove tip
+                                    Intent quitIntent = new Intent();
+                                    quitIntent.putExtra("quitGrpId", orderIdString);
+                                    Log.e("quitOrder", "quitGrpId =" + orderIdString);
+                                    quitIntent.setAction(group_quit_signal);
+                                    sendBroadcast(quitIntent);
+                                    break;
+                                case ERROR:
+                                    Toast.makeText(OneOrderCaseActivity.this, "遇到未知错误，请稍后再试", Toast.LENGTH_SHORT).show();
+                                    break;
+                                default:
+                                    Toast.makeText(OneOrderCaseActivity.this, "退出小组失败，请稍后再试", Toast.LENGTH_SHORT).show();
+                                    break;
                             }
-                        };
-                        new Thread(() -> {
-                            try {
-                                Message message = new Message();
-                                message.what = delQuitOrder(getQuitUrl(orderIdString, idContent));
-                                quitHandler.sendMessage(message);
-                            } catch (IOException | JSONException e) {
-                                e.printStackTrace();
-                            }
-                        }).start();
+                        }
+                    };
+                    new Thread(() -> {
+                        try {
+                            Message message = new Message();
+                            message.what = delQuitOrder(getQuitUrl(orderIdString, idContent));
+                            quitHandler.sendMessage(message);
+                        } catch (IOException | JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }).start();
 
-                        setResult(RESULT_OK, null);
-                        finish();
-                        break;
-                    case DialogInterface.BUTTON_NEGATIVE:
-                        dialog.dismiss();
-                        break;
-                }
+                    setResult(RESULT_OK, null);
+                    finish();
+                    break;
+                case DialogInterface.BUTTON_NEGATIVE:
+                    dialog.dismiss();
+                    break;
             }
         };
 
@@ -263,54 +339,50 @@ public class OneOrderCaseActivity extends AppCompatActivity {
                 .setPositiveButton("确定", quitClickListener)
                 .setNegativeButton("我再想想", quitClickListener);
 
-        leave.setOnClickListener(v -> quitBuilder.show());
+        btnLeave.setOnClickListener(v -> quitBuilder.show());
 
-        DialogInterface.OnClickListener deleteClickListener = new DialogInterface.OnClickListener() {
-            @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                switch (which) {
-                    case DialogInterface.BUTTON_POSITIVE:
-                        new Thread(new Runnable() {
+        DialogInterface.OnClickListener deleteClickListener = (dialog, which) -> {
+            switch (which) {
+                case DialogInterface.BUTTON_POSITIVE:
+                    new Thread(new Runnable() {
+                        @SuppressLint("HandlerLeak")
+                        final Handler deleteHandler = new Handler() {
                             @SuppressLint("HandlerLeak")
-                            final Handler deleteHandler = new Handler() {
-                                @SuppressLint("HandlerLeak")
-                                @Override
-                                public void handleMessage(@NonNull Message msg) {
-                                    if (msg.what == SUCCESS) {
-                                        Toast.makeText(OneOrderCaseActivity.this, "解散成功！", Toast.LENGTH_SHORT).show();
-
-                                        // To close websocket, remove tip
-                                        Intent delIntent = new Intent();
-                                        delIntent.putExtra("quitGrpId", orderIdString);
-                                        Log.e("delOrder", "quitGrpId =" + orderIdString);
-                                        delIntent.setAction(group_quit_signal);
-                                        sendBroadcast(delIntent);
-                                    } else {
-                                        Toast.makeText(OneOrderCaseActivity.this, "解散失败！", Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-                            };
-
                             @Override
-                            public void run() {
-                                try {
-                                    Message message = new Message();
-                                    message.what = delDisbandOrder(getDelOrderUrl(orderIdString));
-                                    deleteHandler.sendMessage(message);
-                                } catch (IOException e) {
-                                    e.printStackTrace();
+                            public void handleMessage(@NonNull Message msg) {
+                                if (msg.what == SUCCESS) {
+                                    Toast.makeText(OneOrderCaseActivity.this, "解散成功！", Toast.LENGTH_SHORT).show();
+
+                                    // To close websocket, remove tip
+                                    Intent delIntent = new Intent();
+                                    delIntent.putExtra("quitGrpId", orderIdString);
+                                    Log.e("delOrder", "quitGrpId =" + orderIdString);
+                                    delIntent.setAction(group_quit_signal);
+                                    sendBroadcast(delIntent);
+                                } else {
+                                    Toast.makeText(OneOrderCaseActivity.this, "解散失败！", Toast.LENGTH_SHORT).show();
                                 }
                             }
-                        }).start();
+                        };
 
-                        setResult(RESULT_OK, null);
-                        finish();
-                        break;
-                    case DialogInterface.BUTTON_NEGATIVE:
-                        dialog.dismiss();
-                        break;
-                }
+                        @Override
+                        public void run() {
+                            try {
+                                Message message = new Message();
+                                message.what = delDisbandOrder(getDelOrderUrl(orderIdString));
+                                deleteHandler.sendMessage(message);
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }).start();
+
+                    setResult(RESULT_OK, null);
+                    finish();
+                    break;
+                case DialogInterface.BUTTON_NEGATIVE:
+                    dialog.dismiss();
+                    break;
             }
         };
 
@@ -320,9 +392,9 @@ public class OneOrderCaseActivity extends AppCompatActivity {
                 .setPositiveButton("确定", deleteClickListener)
                 .setNegativeButton("我再想想", deleteClickListener);
 
-        delete.setOnClickListener(v -> deleteBuilder.show());
+        btnDelete.setOnClickListener(v -> deleteBuilder.show());
 
-        back.setOnClickListener(v -> finish());
+        ivBack.setOnClickListener(v -> finish());
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
@@ -347,7 +419,7 @@ public class OneOrderCaseActivity extends AppCompatActivity {
                 ret = 1;
                 JSONArray contentArray = new JSONArray(responseJSON.getString("content"));
                 for (int i = 0; i < contentArray.length(); i++) {
-                    members.add(contentArray.getJSONObject(i).getString("userId"));
+                    memberIds.add(contentArray.getJSONObject(i).getString("userId"));
                 }
             } else {
                 ret = 2;
@@ -441,31 +513,5 @@ public class OneOrderCaseActivity extends AppCompatActivity {
         }
 
         return ret;
-    }
-
-    private void initValue() {
-        EditText nickname = findViewById(R.id.msg_nickname_left);
-        EditText userId = findViewById(R.id.userId);
-        EditText orderId = findViewById(R.id.orderId);
-        EditText type = findViewById(R.id.type);
-        EditText price = findViewById(R.id.price);
-        EditText address = findViewById(R.id.address);
-        EditText curPeople = findViewById(R.id.curNumber);
-        EditText maxPeople = findViewById(R.id.maxNumber);
-        TextView time = findViewById(R.id.msg_time_left);
-        TextView description = findViewById(R.id.tv_description);
-        TextView title = findViewById(R.id.tv_title);
-
-        nickname.setText(nicknameString);
-        userId.setText(userIdString);
-        type.setText(typeString);
-        orderId.setText(orderIdString);
-        price.setText(priceString);
-        address.setText(addressString);
-        curPeople.setText(curPeopleString);
-        maxPeople.setText(maxPeopleString);
-        time.setText(timeString);
-        description.setText(descriptionString);
-        title.setText(titleString);
     }
 }

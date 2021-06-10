@@ -37,7 +37,7 @@ import okhttp3.WebSocket;
 
 import static com.example.duoduopin.activity.MainActivity.idContent;
 import static com.example.duoduopin.activity.MainActivity.nicknameContent;
-import static com.example.duoduopin.fragment.MessageFragment.recGrpMsgService;
+import static com.example.duoduopin.fragment.main.MessageFragment.recGrpMsgService;
 import static com.example.duoduopin.tool.Constants.group_new_msg_signal;
 
 public class OneGrpMsgCaseActivity extends AppCompatActivity {
@@ -66,7 +66,7 @@ public class OneGrpMsgCaseActivity extends AppCompatActivity {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

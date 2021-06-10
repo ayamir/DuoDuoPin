@@ -7,7 +7,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
 import android.util.Log;
-import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -66,12 +65,9 @@ public class LoginActivity extends AppCompatActivity {
         passwordInput = findViewById(R.id.passwordInput);
         Button loginButton = findViewById(R.id.loginButton);
         TextView toRegisterButton = findViewById(R.id.toRegisterButton);
-        toRegisterButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent intent = new Intent(v.getContext(), RegisterActivity.class);
-                startActivity(intent);
-            }
+        toRegisterButton.setOnClickListener(v -> {
+            Intent intent = new Intent(v.getContext(), RegisterActivity.class);
+            startActivity(intent);
         });
 
         loginButton.setOnClickListener(v -> {
@@ -136,6 +132,7 @@ public class LoginActivity extends AppCompatActivity {
 
         if (code == 100) {
             JSONObject contentJson = new JSONObject(responseJSON.getString("content"));
+            Log.e("Login return value test", responseJSON.getString("content"));
             idContent = contentJson.optString(idFromServer);
             tokenContent = contentJson.optString(tokenFromServer);
             nicknameContent = contentJson.optString(nicknameFromServer);
