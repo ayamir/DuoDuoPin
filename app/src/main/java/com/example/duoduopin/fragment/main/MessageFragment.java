@@ -31,8 +31,8 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.duoduopin.R;
-import com.example.duoduopin.activity.OneGrpMsgCaseActivity;
-import com.example.duoduopin.activity.SysMsgCaseActivity;
+import com.example.duoduopin.activity.message.OneGrpMsgCaseActivity;
+import com.example.duoduopin.activity.message.SysMsgCaseActivity;
 import com.example.duoduopin.bean.BriefGrpMsg;
 import com.example.duoduopin.bean.GrpMsgContent;
 import com.example.duoduopin.service.RecGrpMsgService;

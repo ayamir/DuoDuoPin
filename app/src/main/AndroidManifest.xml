@@ -37,12 +37,12 @@
 
         <activity android:name=".activity.RegisterActivity" />
         <activity android:name=".activity.AssistantLocationActivity" />
-        <activity android:name=".activity.OneOrderCaseActivity" />
-        <activity android:name=".activity.OrderCaseActivity" />
+        <activity android:name=".activity.order.OneOrderCaseActivity" />
+        <activity android:name=".activity.order.OrderCaseActivity" />
         <activity android:name=".activity.LoginActivity" />
-        <activity android:name=".activity.SysMsgCaseActivity" />
-        <activity android:name=".activity.OneSysMsgCaseActivity" />
-        <activity android:name=".activity.OneGrpMsgCaseActivity" />
+        <activity android:name=".activity.message.SysMsgCaseActivity" />
+        <activity android:name=".activity.message.OneSysMsgCaseActivity" />
+        <activity android:name=".activity.message.OneGrpMsgCaseActivity" />
         <activity android:name=".activity.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

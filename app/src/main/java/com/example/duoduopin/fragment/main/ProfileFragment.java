@@ -25,7 +25,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AlertDialog;
 
 import com.example.duoduopin.R;
-import com.example.duoduopin.activity.OrderCaseActivity;
+import com.example.duoduopin.activity.order.OrderCaseActivity;
 import com.example.duoduopin.activity.profile.EditUserInfoActivity;
 import com.example.duoduopin.handler.GeneralMsgHandler;
 import com.example.duoduopin.tool.MyDBHelper;

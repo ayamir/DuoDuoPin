@@ -11,7 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.duoduopin.R;
-import com.example.duoduopin.activity.OneOrderCaseActivity;
+import com.example.duoduopin.activity.order.OneOrderCaseActivity;
 import com.example.duoduopin.bean.BriefOrderContent;
 import com.example.duoduopin.bean.OrderContent;
 

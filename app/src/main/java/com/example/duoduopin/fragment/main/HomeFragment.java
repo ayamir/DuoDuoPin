@@ -37,7 +37,7 @@ import com.bigkoo.pickerview.builder.TimePickerBuilder;
 import com.bigkoo.pickerview.view.TimePickerView;
 import com.example.duoduopin.R;
 import com.example.duoduopin.activity.AssistantLocationActivity;
-import com.example.duoduopin.activity.OrderCaseActivity;
+import com.example.duoduopin.activity.order.OrderCaseActivity;
 import com.example.duoduopin.adapter.BriefOrderContentAdapter;
 import com.example.duoduopin.bean.BriefOrderContent;
 import com.example.duoduopin.bean.OrderContent;

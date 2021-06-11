@@ -1,4 +1,4 @@
-package com.example.duoduopin.activity;
+package com.example.duoduopin.activity.message;
 
 import android.annotation.SuppressLint;
 import android.content.ContentValues;

@@ -1,4 +1,4 @@
-package com.example.duoduopin.activity;
+package com.example.duoduopin.activity.message;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
@@ -22,6 +22,7 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.duoduopin.R;
+import com.example.duoduopin.activity.order.OneOrderCaseActivity;
 import com.example.duoduopin.tool.MyDBHelper;
 
 import org.json.JSONArray;
