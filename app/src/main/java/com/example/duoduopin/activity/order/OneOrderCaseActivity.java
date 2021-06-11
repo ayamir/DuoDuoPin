@@ -457,7 +457,6 @@ public class OneOrderCaseActivity extends FragmentActivity {
         } else {
             ret = -1;
         }
-
         return ret;
     }
 

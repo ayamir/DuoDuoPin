@@ -24,6 +24,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.duoduopin.R;
 import com.example.duoduopin.adapter.GrpMsgAdapter;
+import com.example.duoduopin.bean.BriefMemberInfo;
 import com.example.duoduopin.bean.GrpMsgContent;
 import com.example.duoduopin.bean.GrpMsgDisplay;
 import com.example.duoduopin.tool.MyDBHelper;
@@ -43,6 +44,7 @@ import static com.example.duoduopin.tool.Constants.group_new_msg_signal;
 public class OneGrpMsgCaseActivity extends AppCompatActivity {
     private String grpId;
     private String grpTitle;
+    private ArrayList<BriefMemberInfo> memberInfoList;
 
     private EditText msgInput;
     private LinearLayoutManager grpMsgLayoutManager;
@@ -70,6 +72,7 @@ public class OneGrpMsgCaseActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_one_grpmsg_case);
 
         getInfoFromIntent();
         bindItemsAndOps();
@@ -93,9 +96,20 @@ public class OneGrpMsgCaseActivity extends AppCompatActivity {
         }
     }
 
+    private void getMemberInfoList() {
+        // TODO: get member info list from server
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void bindItemsAndOps() {
-        setContentView(R.layout.activity_one_grpmsg_case);
+        ImageView ivGroupDetails = findViewById(R.id.iv_group_details);
+        ivGroupDetails.setOnClickListener(v -> {
+            Intent intent = new Intent(v.getContext(), GrpDetailsActivity.class);
+            intent.putExtra("orderId", grpId);
+            intent.putExtra("groupTitle", grpTitle);
+            intent.putExtra("memberInfoList", memberInfoList);
+            v.getContext().startActivity(intent);
+        });
 
         if (grpId != null && recGrpMsgService != null) {
             grpMsgWebSocket = recGrpMsgService.getWebSocketMap().get(grpId);
