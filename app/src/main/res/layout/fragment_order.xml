@@ -1,345 +1,333 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_gravity="left"
-    app:layout_constraintLeft_toLeftOf="parent"
-    app:layout_constraintRight_toRightOf="parent"
-    app:layout_constraintTop_toBottomOf="parent"
-    tools:context=".activity.MainActivity">
+    android:orientation="vertical">
 
-    <RelativeLayout
-        android:id="@+id/header"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_weight="0"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHeight_percent="0.08"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.0"
-        app:layout_constraintWidth_percent="1">
+        app:layout_constraintVertical_bias="0">
 
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
+            android:layout_marginTop="15dp"
+            android:layout_marginBottom="15dp"
             android:text="发起拼单"
-            android:textSize="20sp" />
-    </RelativeLayout>
+            android:textSize="18sp"
+            app:layout_constraintBottom_toBottomOf="parent"
 
-    <ScrollView
-        android:id="@+id/scroll"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHeight_percent="0.78"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/header"
-        app:layout_constraintVertical_bias="0.0">
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
-        <LinearLayout
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical">
+            android:layout_height="match_parent"
+            tools:ignore="UselessParent">
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical">
-
-                <ImageView
-                    android:id="@+id/iv_upload_pic"
-                    android:layout_width="match_parent"
-                    android:layout_height="158dp"
-                    android:src="@drawable/camera" />
-
-                <TextView
-                    android:id="@+id/tv_upload_pic"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="center_horizontal|center_vertical"
-                    android:text="添加图片"
-                    android:textSize="18sp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:paddingTop="10dp">
-
-                <TextView
-                    android:layout_width="9dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="30dp"
-                    android:layout_marginLeft="30dp"
-                    android:layout_weight="1"
-                    android:text="标题："
-                    android:textSize="18sp" />
-
-                <EditText
-                    android:id="@+id/titleInput"
-                    android:layout_width="200dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:ems="10"
-                    android:hint="请输入"
-                    android:inputType="textPersonName" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:paddingTop="10dp">
-
-                <TextView
-                    android:layout_width="219dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="30dp"
-                    android:layout_marginLeft="30dp"
-                    android:layout_weight="1"
-                    android:text="类型："
-                    android:textSize="18sp" />
-
-                <Spinner
-                    android:id="@+id/typeInput"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="30dp"
-                    android:layout_marginRight="30dp"
-                    android:layout_weight="1"
-                    android:addStatesFromChildren="false"
-                    android:dropDownWidth="wrap_content"
-                    android:entries="@array/searchItemType"
-                    android:fadeScrollbars="false"
-                    android:spinnerMode="dropdown"
-                    android:textSize="18sp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:paddingTop="10dp">
-
-                <TextView
-                    android:layout_width="38dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="30dp"
-                    android:layout_weight="1"
-                    android:text="详细地址："
-                    android:textSize="18sp" />
-
-                <EditText
-                    android:id="@+id/addressInput"
-                    android:layout_width="200dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginRight="30dp"
-                    android:layout_weight="1"
-                    android:ems="10"
-                    android:hint="请输入"
-                    android:inputType="textPersonName"
-                    android:paddingRight="30dp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:paddingTop="10dp">
-
-                <TextView
-                    android:id="@+id/msg_time_left"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="30dp"
-                    android:text="时间："
-                    android:textSize="18sp" />
-
-
-                <TextView
-                    android:id="@+id/timeInput"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="45dp"
-                    android:hint="2021-01-01 00:00:00"
-                    android:textSize="18sp" />
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:paddingTop="10dp">
-
-                <TextView
-                    android:layout_width="50dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="30dp"
-                    android:layout_weight="1"
-                    android:text="当前人数："
-                    android:textSize="18sp" />
-
-                <EditText
-                    android:id="@+id/curNumberInput"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginRight="30dp"
-                    android:layout_weight="1"
-                    android:ems="10"
-                    android:hint="请输入当前人数"
-                    android:inputType="number" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:paddingTop="10dp">
-
-                <TextView
-                    android:layout_width="48dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="30dp"
-                    android:layout_weight="1"
-                    android:text="最大人数："
-                    android:textSize="18sp" />
-
-                <EditText
-                    android:id="@+id/maxNumberInput"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginRight="30dp"
-                    android:layout_weight="1"
-                    android:ems="10"
-                    android:hint="请输入最大人数"
-                    android:inputType="number" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:paddingTop="10dp">
-
-                <TextView
-                    android:layout_width="78dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="30dp"
-                    android:layout_weight="1"
-                    android:text="预计价格："
-                    android:textSize="18sp" />
-
-                <EditText
-                    android:id="@+id/priceInput"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:ems="10"
-                    android:hint="请输入预计价格"
-                    android:inputType="numberDecimal" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="left"
-                    android:layout_marginLeft="0dp"
-                    android:layout_marginRight="30dp"
-                    android:layout_weight="1"
-                    android:gravity="left"
-                    android:text="¥"
-                    android:textSize="30sp" />
-            </LinearLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:paddingTop="10dp">
-
-                <TextView
-                    android:layout_width="38dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="30dp"
-                    android:layout_weight="1"
-                    android:text="经纬度："
-                    android:textSize="18sp" />
-
-                <EditText
-                    android:id="@+id/tudeInput"
-                    android:layout_width="200dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginRight="30dp"
-                    android:layout_weight="1"
-                    android:ems="10"
-                    android:hint="将定位得到的值复制到此即可"
-                    android:inputType="textPersonName"
-                    android:paddingRight="30dp" />
-            </LinearLayout>
-
-
-            <Button
-                android:id="@+id/locationButton"
-                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_weight="1"
-                android:background="@drawable/button_circle_shape"
-                android:text="定位"
-                android:textSize="18sp" />
+                android:orientation="vertical"
+                android:padding="15dp">
 
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="horizontal"
-                android:paddingTop="10dp">
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="30dp"
-                    android:layout_weight="1"
-                    android:text="描述："
-                    android:textSize="18sp" />
+                    <ImageView
+                        android:id="@+id/iv_upload_pic"
+                        android:layout_width="match_parent"
+                        android:layout_height="158dp"
+                        android:src="@drawable/camera" />
 
-                <EditText
-                    android:id="@+id/descriptionInput"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginRight="30dp"
-                    android:layout_weight="1"
-                    android:background="@drawable/edit_bg"
-                    android:ems="10"
-                    android:gravity="top"
-                    android:inputType="textMultiLine"
-                    android:textSize="18sp" />
+                    <TextView
+                        android:id="@+id/tv_upload_pic"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_horizontal|center_vertical"
+                        android:text="添加图片"
+                        android:textSize="18sp" />
+                </LinearLayout>
 
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/textView4"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_weight="0"
+                        android:text="标题"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/et_title"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:ems="10"
+                        android:hint="请输入标题"
+                        android:inputType="textPersonName"
+                        android:text="Name" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="20dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/textView5"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0"
+                        android:text="类型"
+                        android:textSize="18sp" />
+
+                    <Spinner
+                        android:id="@+id/typeInput"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:addStatesFromChildren="false"
+                        android:dropDownWidth="wrap_content"
+                        android:entries="@array/searchItemType"
+                        android:fadeScrollbars="false"
+                        android:spinnerMode="dropdown"
+                        android:textSize="18sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/ll_locate"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="20dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/textView8"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0"
+                        android:text="地址"
+                        android:textSize="18sp" />
+
+                    <TextView
+                        android:id="@+id/tv_address"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="北京邮电大学西门"
+                        android:textSize="18sp" />
+
+                    <TextView
+                        android:id="@+id/textView14"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="20dp"
+                        android:layout_marginRight="20dp"
+                        android:layout_weight="0"
+                        android:text=">"
+                        android:textSize="18sp" />
+
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="20dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/textView15"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="0"
+                        android:text="时间"
+                        android:textSize="18sp" />
+
+                    <TextView
+                        android:id="@+id/tv_time"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="2021-01-01 00:00:00"
+                        android:textSize="18sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="20dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/textView18"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_weight="0"
+                        android:text="当前人数"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/et_cur_people"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:ems="10"
+                        android:hint="请输入当前人数" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="20dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/textView19"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_weight="0"
+                        android:text="最大人数"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/et_max_people"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:ems="10"
+                        android:hint="请输入最大人数" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="20dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/priceInputtip"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_weight="0"
+                        android:text="预计价格"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/et_price"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1" />
+
+                    <TextView
+                        android:id="@+id/textView21"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="20dp"
+                        android:layout_marginRight="20dp"
+                        android:layout_weight="0"
+                        android:text="¥"
+                        android:textSize="18sp" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="20dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/textView22"
+                        android:layout_width="100dp"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_weight="0"
+                        android:text="经纬度"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/et_tude"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginTop="20dp"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/textView24"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="描述"
+                        android:textSize="18sp" />
+
+                    <EditText
+                        android:id="@+id/et_description"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/edit_bg"
+                        android:ems="10"
+                        android:gravity="top"
+                        android:hint="在这里输入你的描述吧~"
+                        android:inputType="textMultiLine"
+                        android:padding="5dp"
+                        android:textSize="18sp" />
+                </LinearLayout>
             </LinearLayout>
-        </LinearLayout>
-    </ScrollView>
+
+        </ScrollView>
+    </LinearLayout>
 
     <Button
         android:id="@+id/submitOrderButton"
-        android:layout_width="0dp"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_marginStart="15dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginEnd="15dp"
+        android:layout_marginRight="15dp"
+        android:layout_marginBottom="15dp"
+        android:layout_weight="0"
         android:background="@drawable/button_circle_shape"
-        android:text="提 交"
-        android:textSize="18sp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintHeight_percent="0.065"
-        app:layout_constraintHorizontal_bias="0.497"
-        app:layout_constraintLeft_toLeftOf="parent"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/scroll"
-        app:layout_constraintVertical_bias="0.404"
-        app:layout_constraintWidth_percent="0.5" />
-</androidx.constraintlayout.widget.ConstraintLayout>
+        android:text="提交"
+        android:textSize="18sp" />
+
+
+</LinearLayout>

@@ -25,6 +25,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -36,8 +37,8 @@ import androidx.annotation.RequiresApi;
 import com.bigkoo.pickerview.builder.TimePickerBuilder;
 import com.bigkoo.pickerview.view.TimePickerView;
 import com.example.duoduopin.R;
-import com.example.duoduopin.activity.AssistantLocationActivity;
 import com.example.duoduopin.activity.OneOrderCaseActivity;
+import com.example.duoduopin.activity.order.LocateActivity;
 import com.example.duoduopin.tool.GlideEngine;
 import com.huantansheng.easyphotos.EasyPhotos;
 import com.huantansheng.easyphotos.callback.SelectCallback;
@@ -70,12 +71,24 @@ import static com.example.duoduopin.tool.Constants.createOrderUrl;
 import static com.example.duoduopin.tool.Constants.imageUploadUrl;
 
 public class OrderFragment extends Fragment {
-    private String typeString;
-    private EditText title, description, address, curPeople, maxPeople, price, tude;
-    private TextView time;
+    private final int ADDRESS_REQUEST = 3000;
+    private LinearLayout llLocate;
+
+    private EditText etTitle;
+    private EditText etDescription;
+    private EditText etCurPeople;
+    private EditText etMaxPeople;
+    private EditText etPrice;
+    private EditText etTude;
+
     private ImageView ivUploadPic;
+
     private TextView tvUploadPic;
+    private TextView tvAddress;
+    private TextView tvTime;
     private TimePickerView pvTime;
+
+    private String typeString;
     private String orderId;
     private String imageType;
     private String imageName;
@@ -153,10 +166,36 @@ public class OrderFragment extends Fragment {
                 });
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == ADDRESS_REQUEST) {
+            if (resultCode == SUCCESS) {
+                if (data != null) {
+                    String address = data.getStringExtra("address");
+                    tvAddress.setText(address);
+                    boolean isChosen = data.getBooleanExtra("isChosen", false);
+                    if (isChosen) {
+                        String tude = data.getStringExtra("tude");
+                        etTude.setText(tude);
+                    } else {
+                        // TODO: clipboard
+                    }
+                }
+            }
+        }
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
+
+        llLocate = getActivity().findViewById(R.id.ll_locate);
+        llLocate.setOnClickListener(v -> {
+            Intent intent = new Intent(this.getActivity(), LocateActivity.class);
+            startActivityForResult(intent, ADDRESS_REQUEST);
+        });
 
         ivUploadPic = getActivity().findViewById(R.id.iv_upload_pic);
         ivUploadPic.setOnClickListener(v -> {
@@ -166,17 +205,17 @@ public class OrderFragment extends Fragment {
         tvUploadPic.setOnClickListener(v -> {
             selectImage(v.getContext());
         });
-        title = getActivity().findViewById(R.id.titleInput);
-        description = getActivity().findViewById(R.id.descriptionInput);
-        address = getActivity().findViewById(R.id.addressInput);
-        time = getActivity().findViewById(R.id.timeInput);
-        curPeople = getActivity().findViewById(R.id.curNumberInput);
-        maxPeople = getActivity().findViewById(R.id.maxNumberInput);
-        price = getActivity().findViewById(R.id.priceInput);
-        tude = getActivity().findViewById(R.id.tudeInput);
+        etTitle = getActivity().findViewById(R.id.et_title);
+        etDescription = getActivity().findViewById(R.id.et_description);
+        tvAddress = getActivity().findViewById(R.id.tv_address);
+        tvTime = getActivity().findViewById(R.id.tv_time);
+        etCurPeople = getActivity().findViewById(R.id.et_cur_people);
+        etMaxPeople = getActivity().findViewById(R.id.et_max_people);
+        etPrice = getActivity().findViewById(R.id.et_price);
+        etTude = getActivity().findViewById(R.id.et_tude);
 
-        time = getActivity().findViewById(R.id.timeInput);
-        time.setOnClickListener(v -> pvTime.show(v));
+        tvTime = getActivity().findViewById(R.id.tv_time);
+        tvTime.setOnClickListener(v -> pvTime.show(v));
         initTimePicker();
 
         Spinner spinner = getActivity().findViewById(R.id.typeInput);
@@ -204,26 +243,20 @@ public class OrderFragment extends Fragment {
             }
         });
 
-        Button location = getActivity().findViewById(R.id.locationButton);
-        location.setOnClickListener(v -> {
-            Intent intent = new Intent(v.getContext(), AssistantLocationActivity.class);
-            startActivity(intent);
-        });
-
         Button submitOrder = getActivity().findViewById(R.id.submitOrderButton);
         submitOrder.setOnClickListener(v -> {
             boolean canPost = true;
 
-            final String titleString = title.getText().toString();
-            final String descString = description.getText().toString();
-            final String addrString = address.getText().toString();
-            final String timeString = time.getText().toString();
-            final String curPeopleString = curPeople.getText().toString();
-            final String maxPeopleString = maxPeople.getText().toString();
-            final String priceString = price.getText().toString();
+            final String titleString = etTitle.getText().toString();
+            final String descString = etDescription.getText().toString();
+            final String addrString = tvAddress.getText().toString();
+            final String timeString = tvTime.getText().toString();
+            final String curPeopleString = etCurPeople.getText().toString();
+            final String maxPeopleString = etMaxPeople.getText().toString();
+            final String priceString = etPrice.getText().toString();
             String latitudeString = "", longitudeString = "";
-            if (!tude.getText().toString().isEmpty()) {
-                String[] tudeString = tude.getText().toString().split(",");
+            if (!etTude.getText().toString().isEmpty()) {
+                String[] tudeString = etTude.getText().toString().split(",");
                 longitudeString = tudeString[0];
                 latitudeString = tudeString[1];
             }
@@ -364,7 +397,7 @@ public class OrderFragment extends Fragment {
         pvTime = new TimePickerBuilder(getActivity(), (date, v) -> {
             Toast.makeText(v.getContext(), getTime(date), Toast.LENGTH_SHORT).show();
             Log.i("pvTime", "onTimeSelect");
-            time.setText(getTime(date));
+            tvTime.setText(getTime(date));
         })
                 .setTimeSelectChangeListener(date -> Log.i("pvTime", "onTimeSelectChanged"))
                 .setType(new boolean[]{true, true, true, true, true, true})

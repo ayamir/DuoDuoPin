@@ -1,0 +1,233 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_weight="0"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="15dp"
+            android:layout_marginBottom="15dp"
+            android:text="选择拼单地址"
+            android:textSize="18sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.5"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/iv_locate_back"
+            android:layout_width="40dp"
+            android:layout_height="35dp"
+            android:layout_marginStart="10dp"
+            android:layout_marginLeft="10dp"
+            android:src="@drawable/fanhui3"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.5" />
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_weight="0"
+        android:orientation="vertical"
+        android:padding="15dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tv_locate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_weight="0"
+                android:background="@drawable/location_circle"
+                android:drawableRight="@drawable/location2"
+                android:text="定位"
+                android:textSize="18sp" />
+
+            <EditText
+                android:id="@+id/et_address"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginLeft="20dp"
+                android:layout_weight="1"
+                android:background="@drawable/location_bar"
+                android:hint="显示选择的地址" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical">
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <LinearLayout
+                    android:id="@+id/common_address"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:id="@+id/ll_ximen"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tv_ximen"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:paddingTop="20dp"
+                            android:text="北京邮电大学西门"
+                            android:textSize="18sp" />
+
+                        <TextView
+                            android:id="@+id/textView13"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="西土城路10号"
+                            android:textColor="#A8A3A3" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/ll_xuesi"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tv_xuesi"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:paddingTop="20dp"
+                            android:text="北京邮电大学学生公寓四号楼"
+                            android:textSize="18sp" />
+
+                        <TextView
+                            android:id="@+id/textView17"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="西土城路10号"
+                            android:textColor="#A8A3A3" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/ll_mancoffee"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tv_mancoffee"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:paddingTop="20dp"
+                            android:text="漫咖啡"
+                            android:textSize="18sp" />
+
+                        <TextView
+                            android:id="@+id/textView23"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="西土城路10号邮电大学校园内"
+                            android:textColor="#A8A3A3" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/ll_dongmen"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tv_dongmen"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:paddingTop="20dp"
+                            android:text="北京邮电大学东门"
+                            android:textSize="18sp" />
+
+                        <TextView
+                            android:id="@+id/textView28"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="西土城路10号"
+                            android:textColor="#A8A3A3" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/ll_keyanlou"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tv_keyanlou"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:paddingTop="20dp"
+                            android:text="北京邮电大学科研楼"
+                            android:textSize="18sp" />
+
+                        <TextView
+                            android:id="@+id/textView26"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="西土城路10号"
+                            android:textColor="#A8A3A3" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:id="@+id/ll_nanmen"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="vertical">
+
+                        <TextView
+                            android:id="@+id/tv_nanmen"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:paddingTop="20dp"
+                            android:text="北京邮电大学南门"
+                            android:textSize="18sp" />
+
+                        <TextView
+                            android:id="@+id/textView31"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="西土城路10号"
+                            android:textColor="#A8A3A3" />
+                    </LinearLayout>
+
+                </LinearLayout>
+            </ScrollView>
+        </LinearLayout>
+
+    </LinearLayout>
+
+
+</LinearLayout>

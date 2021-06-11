@@ -27,7 +27,13 @@
         <service
             android:name=".service.RecGrpMsgService"
             android:enabled="true"
-            android:exported="false"/>
+            android:exported="false" />
+
+        <activity android:name=".activity.order.LocateActivity" />
+
+        <activity android:name=".activity.profile.EditPasswordActivity" />
+        <activity android:name=".activity.profile.EditHeadActivity" />
+        <activity android:name=".activity.profile.EditNicknameActivity" />
 
         <activity android:name=".activity.RegisterActivity" />
         <activity android:name=".activity.AssistantLocationActivity" />
