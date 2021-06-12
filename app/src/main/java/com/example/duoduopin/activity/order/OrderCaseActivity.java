@@ -17,7 +17,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.duoduopin.R;
-import com.example.duoduopin.bean.OrderContent;
+import com.example.duoduopin.pojo.OrderContent;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 

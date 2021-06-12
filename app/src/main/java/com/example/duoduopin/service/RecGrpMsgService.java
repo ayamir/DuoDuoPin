@@ -9,8 +9,8 @@ import android.util.Log;
 
 import androidx.annotation.RequiresApi;
 
-import com.example.duoduopin.bean.GrpMsgContent;
-import com.example.duoduopin.bean.OrderContent;
+import com.example.duoduopin.pojo.GrpMsgContent;
+import com.example.duoduopin.pojo.OrderContent;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
@@ -36,9 +36,9 @@ import okhttp3.WebSocket;
 import okhttp3.WebSocketListener;
 import okio.ByteString;
 
+import static com.example.duoduopin.activity.MainActivity.client;
 import static com.example.duoduopin.activity.MainActivity.idContent;
 import static com.example.duoduopin.activity.MainActivity.tokenContent;
-import static com.example.duoduopin.activity.MainActivity.client;
 import static com.example.duoduopin.handler.GeneralMsgHandler.ERROR;
 import static com.example.duoduopin.handler.GeneralMsgHandler.SUCCESS;
 import static com.example.duoduopin.tool.Constants.getChatUrl;

@@ -21,7 +21,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.duoduopin.R;
 import com.example.duoduopin.adapter.BriefMemberInfoAdapter;
-import com.example.duoduopin.bean.BriefMemberInfo;
+import com.example.duoduopin.pojo.BriefMemberInfo;
 
 import org.json.JSONException;
 import org.json.JSONObject;

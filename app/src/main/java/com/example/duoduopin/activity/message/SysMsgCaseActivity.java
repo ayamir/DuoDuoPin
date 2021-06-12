@@ -23,7 +23,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.duoduopin.R;
-import com.example.duoduopin.bean.SysMsgContent;
+import com.example.duoduopin.pojo.SysMsgContent;
 import com.example.duoduopin.tool.MyDBHelper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

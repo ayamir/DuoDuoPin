@@ -39,8 +39,8 @@ import com.example.duoduopin.R;
 import com.example.duoduopin.activity.AssistantLocationActivity;
 import com.example.duoduopin.activity.order.OrderCaseActivity;
 import com.example.duoduopin.adapter.BriefOrderContentAdapter;
-import com.example.duoduopin.bean.BriefOrderContent;
-import com.example.duoduopin.bean.OrderContent;
+import com.example.duoduopin.pojo.BriefOrderContent;
+import com.example.duoduopin.pojo.OrderContent;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;

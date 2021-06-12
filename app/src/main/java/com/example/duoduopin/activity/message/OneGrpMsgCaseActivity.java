@@ -24,9 +24,9 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.duoduopin.R;
 import com.example.duoduopin.adapter.GrpMsgAdapter;
-import com.example.duoduopin.bean.BriefMemberInfo;
-import com.example.duoduopin.bean.GrpMsgContent;
-import com.example.duoduopin.bean.GrpMsgDisplay;
+import com.example.duoduopin.pojo.BriefMemberInfo;
+import com.example.duoduopin.pojo.GrpMsgContent;
+import com.example.duoduopin.pojo.GrpMsgDisplay;
 import com.example.duoduopin.tool.MyDBHelper;
 import com.google.gson.Gson;
 

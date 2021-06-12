@@ -12,8 +12,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.duoduopin.R;
 import com.example.duoduopin.activity.order.OneOrderCaseActivity;
-import com.example.duoduopin.bean.BriefOrderContent;
-import com.example.duoduopin.bean.OrderContent;
+import com.example.duoduopin.pojo.BriefOrderContent;
+import com.example.duoduopin.pojo.OrderContent;
 
 import java.util.ArrayList;
 

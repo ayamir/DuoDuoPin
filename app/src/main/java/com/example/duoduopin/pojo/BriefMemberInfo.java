@@ -1,4 +1,4 @@
-package com.example.duoduopin.bean;
+package com.example.duoduopin.pojo;
 
 import android.os.Parcel;
 import android.os.Parcelable;

@@ -11,7 +11,7 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.duoduopin.R;
-import com.example.duoduopin.bean.GrpMsgDisplay;
+import com.example.duoduopin.pojo.GrpMsgDisplay;
 
 import java.util.List;
 
