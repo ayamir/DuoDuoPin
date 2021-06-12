@@ -70,22 +70,11 @@ import static com.example.duoduopin.tool.Constants.group_new_msg_signal;
 import static com.example.duoduopin.tool.Constants.group_quit_signal;
 
 public class MessageFragment extends Fragment {
-    private ListView listView;
-    private SwipeRefreshLayout swipeRefreshLayout;
-
-    private ArrayList<String> grpIdList;
+    public static RecGrpMsgService recGrpMsgService;
     private final HashMap<String, ArrayList<GrpMsgContent>> allGrpsMsgListMap = new HashMap<>();
     private final HashMap<String, BriefGrpMsg> briefGrpMsgMap = new HashMap<>();
-
-    private MyDBHelper myDBHelper;
-    public static RecGrpMsgService recGrpMsgService;
-
-    private GrpMsgReceiverBrief grpMsgReceiverBrief;
-    private GrpQuitReceiver grpQuitReceiver;
-    private GrpIdLoadedReceiver grpIdLoadedReceiver;
-    private int unread = 0;
-
-    @SuppressLint("HandlerLeak") final Handler handler = new Handler() {
+    @SuppressLint("HandlerLeak")
+    final Handler handler = new Handler() {
         @Override
         public void handleMessage(@NonNull Message msg) {
             if (msg.what == SUCCESS) {
@@ -106,7 +95,10 @@ public class MessageFragment extends Fragment {
             }
         }
     };
-
+    private ListView listView;
+    private SwipeRefreshLayout swipeRefreshLayout;
+    private ArrayList<String> grpIdList;
+    private MyDBHelper myDBHelper;
     private final ServiceConnection connection = new ServiceConnection() {
         @RequiresApi(api = Build.VERSION_CODES.O)
         @Override
@@ -121,59 +113,10 @@ public class MessageFragment extends Fragment {
             Log.e("MessageFragment", "onServiceDisconnected");
         }
     };
-
-    public void newUnread() {
-        unread++;
-        setAllUnreadFlag();
-    }
-
-    public void read() {
-        unread--;
-        setAllUnreadFlag();
-    }
-
-    private void setAllUnreadFlag() {
-        if (unread != 0) {
-
-        } else {
-
-        }
-    }
-
-    private void setOneUnreadFlag(int grpId) {
-
-    }
-
-    private class GrpMsgReceiverBrief extends BroadcastReceiver {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            GrpMsgContent newMsg = (GrpMsgContent) intent.getSerializableExtra("newMsg");
-
-            // Insert to DB
-            insertToDB(newMsg);
-            queryFromDB(newMsg.getBillId());
-            if (context == getActivity()) {
-                showItems();
-            }
-            // TODO: 为MessageFragment和对应的群组显示消息提示的小红点
-            read();
-        }
-    }
-
-    private class GrpQuitReceiver extends BroadcastReceiver {
-        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            String quitGrpId = intent.getStringExtra("quitGrpId");
-
-            Objects.requireNonNull(recGrpMsgService.getWebSocketMap().get(quitGrpId)).close(1000, "You have quited " + quitGrpId + " group!");
-            recGrpMsgService.getWebSocketMap().remove(quitGrpId);
-            briefGrpMsgMap.remove(quitGrpId);
-            if (context == getActivity())
-                showItems();
-            cleanDB(quitGrpId);
-        }
-    }
+    private final int unread = 0;
+    private GrpMsgReceiverBrief grpMsgReceiverBrief;
+    private GrpQuitReceiver grpQuitReceiver;
+    private GrpIdLoadedReceiver grpIdLoadedReceiver;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void bindItemsAndOps() {
@@ -370,33 +313,6 @@ public class MessageFragment extends Fragment {
         return ret;
     }
 
-    private class GrpIdLoadedReceiver extends BroadcastReceiver {
-        @RequiresApi(api = Build.VERSION_CODES.O)
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            int signal = intent.getIntExtra("grpIdList", ERROR);
-            if (signal == SUCCESS) {
-                final String TAG = "grpIdList";
-                grpIdList = recGrpMsgService.getGrpIdList();
-
-                if (grpIdList != null) {
-                    for (String id : grpIdList) {
-                        Log.e(TAG, "id = " + id);
-                    }
-                    // Get full message records from server
-                    new Thread(() -> {
-                        Message message = new Message();
-                        message.what = checkOfflineMsg(false);
-                        handler.sendMessage(message);
-                    }).start();
-                    Log.e("MessageFragment", "onServiceConnected");
-                } else {
-                    Log.e(TAG, "grpIdList == null");
-                }
-            }
-        }
-    }
-
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -448,5 +364,61 @@ public class MessageFragment extends Fragment {
         SQLiteDatabase db = myDBHelper.getWritableDatabase();
         String[] args = new String[]{grpId};
         db.delete("GrpMsg", "groupId=?", args);
+    }
+
+    private class GrpMsgReceiverBrief extends BroadcastReceiver {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            GrpMsgContent newMsg = (GrpMsgContent) intent.getSerializableExtra("newMsg");
+
+            // Insert to DB
+            insertToDB(newMsg);
+            queryFromDB(newMsg.getBillId());
+            if (context == getActivity()) {
+                showItems();
+            }
+        }
+    }
+
+    private class GrpQuitReceiver extends BroadcastReceiver {
+        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String quitGrpId = intent.getStringExtra("quitGrpId");
+
+            Objects.requireNonNull(recGrpMsgService.getWebSocketMap().get(quitGrpId)).close(1000, "You have quited " + quitGrpId + " group!");
+            recGrpMsgService.getWebSocketMap().remove(quitGrpId);
+            briefGrpMsgMap.remove(quitGrpId);
+            if (context == getActivity())
+                showItems();
+            cleanDB(quitGrpId);
+        }
+    }
+
+    private class GrpIdLoadedReceiver extends BroadcastReceiver {
+        @RequiresApi(api = Build.VERSION_CODES.O)
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            int signal = intent.getIntExtra("grpIdList", ERROR);
+            if (signal == SUCCESS) {
+                final String TAG = "grpIdList";
+                grpIdList = recGrpMsgService.getGrpIdList();
+
+                if (grpIdList != null) {
+                    for (String id : grpIdList) {
+                        Log.e(TAG, "id = " + id);
+                    }
+                    // Get full message records from server
+                    new Thread(() -> {
+                        Message message = new Message();
+                        message.what = checkOfflineMsg(false);
+                        handler.sendMessage(message);
+                    }).start();
+                    Log.e("MessageFragment", "onServiceConnected");
+                } else {
+                    Log.e(TAG, "grpIdList == null");
+                }
+            }
+        }
     }
 }
