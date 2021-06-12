@@ -70,7 +70,7 @@ public class SysMsgCaseActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_sysmsg_layout);
+        setContentView(R.layout.activity_sys_msg_layout);
 
         listView = findViewById(R.id.sysMsgCase);
         swipeRefreshLayout = findViewById(R.id.sys_msg_swipe_refresh);
@@ -113,7 +113,7 @@ public class SysMsgCaseActivity extends AppCompatActivity {
             Log.e("", "showItems: cases is empty");
         }
 
-        SimpleAdapter adapter = new SimpleAdapter(this, cases, R.layout.system_message_tip,
+        SimpleAdapter adapter = new SimpleAdapter(this, cases, R.layout.tip_msg_sys,
                 new String[]{"title", "content", "time"},
                 new int[]{R.id.sys_msg_title, R.id.sys_msg_content, R.id.sys_msg_time});
 

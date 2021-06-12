@@ -32,6 +32,8 @@ public class Constants {
     public static final String checkSysMsgUrl = baseUrl + "system/check/";
     public static final String broadMessageUrl = baseUrl + "system/broad/";
 
+    public static final String creditUrl = baseUrl + "Credit/";
+
     public static String getQueryUserUrl(String userId) {
         return queryUserUrl + userId;
     }
