@@ -238,7 +238,7 @@ public class MessageFragment extends Fragment {
             cases.add(map);
         }
 
-        SimpleAdapter adapter = new SimpleAdapter(getActivity(), cases, R.layout.group_message_tip,
+        SimpleAdapter adapter = new SimpleAdapter(getActivity(), cases, R.layout.tip_msg_grp,
                 new String[]{"grpMsgTime", "msgOwnerNickname", "grpMsgContent", "grpTitle"},
                 new int[]{R.id.grp_msg_time, R.id.grp_msg_nickname, R.id.grp_msg_content, R.id.grp_title});
         listView.setAdapter(adapter);

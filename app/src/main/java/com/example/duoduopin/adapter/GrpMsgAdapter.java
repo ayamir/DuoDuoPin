@@ -80,12 +80,12 @@ public class GrpMsgAdapter extends RecyclerView.Adapter<GrpMsgAdapter.GrpMsgView
     @Override
     public GrpMsgViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         if (viewType == 0) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.msg_item_left, parent, false);
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.tip_msg_grp_left, parent, false);
             final GrpMsgViewHolderLeft holder = new GrpMsgViewHolderLeft(view);
             holder.msgContent.setOnClickListener(v -> Toast.makeText(v.getContext(), "点击别人的消息", Toast.LENGTH_SHORT).show());
             return holder;
         } else {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.msg_item_right, parent, false);
+            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.tip_msg_grp_right, parent, false);
             final GrpMsgViewHolderRight holder = new GrpMsgViewHolderRight(view);
             holder.msgContent.setOnClickListener(new View.OnClickListener() {
                 @Override

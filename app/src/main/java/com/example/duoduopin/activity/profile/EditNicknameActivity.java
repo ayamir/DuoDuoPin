@@ -18,7 +18,7 @@ public class EditNicknameActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.edit_nickname);
+        setContentView(R.layout.activity_edit_nickname);
 
         loadInfo();
         bindItemAndOps();

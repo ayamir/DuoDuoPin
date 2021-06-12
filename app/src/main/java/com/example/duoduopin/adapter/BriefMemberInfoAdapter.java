@@ -31,7 +31,7 @@ public class BriefMemberInfoAdapter extends RecyclerView.Adapter<BriefMemberInfo
     @NotNull
     @Override
     public MemberInfoViewHolder onCreateViewHolder(@NonNull @NotNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.person_item, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.tip_item_person, parent, false);
         return new MemberInfoViewHolder(view);
     }
 

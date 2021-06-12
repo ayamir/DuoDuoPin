@@ -20,7 +20,7 @@ public class EditUserInfoActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.edit_user_info);
+        setContentView(R.layout.activity_edit_user_info);
 
         loadInfo();
         bindItemAndOps();

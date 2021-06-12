@@ -26,27 +26,10 @@ public class BriefOrderContentAdapter extends RecyclerView.Adapter<BriefOrderCon
         this.briefOrderContentList = briefOrderContentList;
     }
 
-    public static class HomeContentViewHolder extends RecyclerView.ViewHolder {
-        RelativeLayout rlOneRecOrder;
-        TextView tvNickname;
-        TextView tvTitle;
-        TextView tvDescription;
-        TextView tvCurrentNumber;
-
-        public HomeContentViewHolder(@NonNull View itemView) {
-            super(itemView);
-            rlOneRecOrder = itemView.findViewById(R.id.rl_one_rec_order);
-            tvNickname = itemView.findViewById(R.id.tv_nickname);
-            tvTitle = itemView.findViewById(R.id.tv_title);
-            tvDescription = itemView.findViewById(R.id.tv_description);
-            tvCurrentNumber = itemView.findViewById(R.id.tv_current_number);
-        }
-    }
-
     @NonNull
     @Override
     public HomeContentViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.rec_item, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.tip_item_rec, parent, false);
         return new HomeContentViewHolder(view);
     }
 
@@ -60,7 +43,6 @@ public class BriefOrderContentAdapter extends RecyclerView.Adapter<BriefOrderCon
 
         final OrderContent orderContent = orderContentList.get(position);
         holder.rlOneRecOrder.setOnClickListener(v -> {
-            // TODO: 通知重新统计未读消息的小组
             Intent intent = new Intent(v.getContext(), OneOrderCaseActivity.class);
             intent.putExtra("orderId", orderContent.getBillId());
             intent.putExtra("userId", orderContent.getUserId());
@@ -88,5 +70,22 @@ public class BriefOrderContentAdapter extends RecyclerView.Adapter<BriefOrderCon
     public void add(BriefOrderContent briefOrderContent) {
         briefOrderContentList.add(briefOrderContent);
         notifyItemInserted(briefOrderContentList.size() + 1);
+    }
+
+    public static class HomeContentViewHolder extends RecyclerView.ViewHolder {
+        RelativeLayout rlOneRecOrder;
+        TextView tvNickname;
+        TextView tvTitle;
+        TextView tvDescription;
+        TextView tvCurrentNumber;
+
+        public HomeContentViewHolder(@NonNull View itemView) {
+            super(itemView);
+            rlOneRecOrder = itemView.findViewById(R.id.rl_one_rec_order);
+            tvNickname = itemView.findViewById(R.id.tv_nickname);
+            tvTitle = itemView.findViewById(R.id.tv_title);
+            tvDescription = itemView.findViewById(R.id.tv_description);
+            tvCurrentNumber = itemView.findViewById(R.id.tv_current_number);
+        }
     }
 }

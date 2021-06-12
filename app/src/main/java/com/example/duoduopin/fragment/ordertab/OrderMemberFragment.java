@@ -34,7 +34,7 @@ public class OrderMemberFragment extends Fragment {
     @org.jetbrains.annotations.Nullable
     @Override
     public View onCreateView(@NonNull @NotNull LayoutInflater inflater, @Nullable @org.jetbrains.annotations.Nullable ViewGroup container, @Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
-        return inflater.inflate(R.layout.one_order_member, container, false);
+        return inflater.inflate(R.layout.tab_order_member, container, false);
     }
 
     @Override

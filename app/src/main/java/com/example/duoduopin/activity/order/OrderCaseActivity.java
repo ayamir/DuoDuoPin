@@ -214,7 +214,7 @@ public class OrderCaseActivity extends AppCompatActivity {
             }
         }
 
-        SimpleAdapter adapter = new SimpleAdapter(this, cases, R.layout.order_info_tip,
+        SimpleAdapter adapter = new SimpleAdapter(this, cases, R.layout.tip_item_order,
                 new String[]{"title", "description", "curNumContent"},
                 new int[]{R.id.tv_title, R.id.tv_description, R.id.curNumContent});
         listView.setAdapter(adapter);

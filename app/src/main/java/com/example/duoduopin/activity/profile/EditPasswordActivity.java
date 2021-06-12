@@ -20,7 +20,7 @@ public class EditPasswordActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.edit_password);
+        setContentView(R.layout.activity_edit_password);
 
         ImageView ivEditPasswordBack = findViewById(R.id.iv_edit_password_back);
         ivEditPasswordBack.setOnClickListener(v -> finish());
