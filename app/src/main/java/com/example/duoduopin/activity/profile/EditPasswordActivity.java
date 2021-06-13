@@ -12,6 +12,24 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.duoduopin.R;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.IOException;
+
+import okhttp3.Call;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+
+import static com.example.duoduopin.activity.LoginActivity.JSON;
+import static com.example.duoduopin.activity.MainActivity.client;
+import static com.example.duoduopin.activity.MainActivity.idContent;
+import static com.example.duoduopin.activity.MainActivity.tokenContent;
+import static com.example.duoduopin.handler.GeneralMsgHandler.ERROR;
+import static com.example.duoduopin.handler.GeneralMsgHandler.SUCCESS;
+import static com.example.duoduopin.tool.Constants.changePasswdUrl;
+
 public class EditPasswordActivity extends AppCompatActivity {
     private EditText etOldPassword;
     private EditText etNewPassword;
@@ -31,16 +49,21 @@ public class EditPasswordActivity extends AppCompatActivity {
 
         Button btnCommitPassword = findViewById(R.id.btn_commit_password);
         btnCommitPassword.setOnClickListener(v -> {
-            boolean canCommit = true;
+            boolean canCommit;
             canCommit = checkEmpty(v.getContext());
             if (canCommit) {
-                canCommit = checkEqual(v.getContext());
+                canCommit = checkEqual();
             }
             if (canCommit) {
-                int res = postChangePassword();
-                if (res == 0) {
+                int res = 0;
+                try {
+                    res = postChangePassword();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                if (res == SUCCESS) {
                     Toast.makeText(v.getContext(), "密码修改成功！", Toast.LENGTH_SHORT).show();
-                } else if (res == 1) {
+                } else if (res == ERROR) {
                     Toast.makeText(v.getContext(), "请检查旧密码是否正确！", Toast.LENGTH_SHORT).show();
                 } else {
                     Toast.makeText(v.getContext(), "遇到未知问题，请检查网络之后稍后再试！", Toast.LENGTH_SHORT).show();
@@ -49,14 +72,39 @@ public class EditPasswordActivity extends AppCompatActivity {
         });
     }
 
-    private int postChangePassword() {
-        int res = 0;
-        // TODO: post to change password
+    private int postChangePassword() throws IOException {
+        int res;
+
+        final String password = etNewPassword.getText().toString();
+
+        final JSONObject jsonObject = new JSONObject();
+        try {
+            jsonObject.put("password", password);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+
+        RequestBody body = RequestBody.create(jsonObject.toString(), JSON);
+
+        final Request request = new Request.Builder()
+                .url(changePasswdUrl)
+                .header("token", idContent + "_" + tokenContent)
+                .post(body)
+                .build();
+
+        Call call = client.newCall(request);
+        Response response = call.execute();
+
+        if (response.code() == 200) {
+            res = SUCCESS;
+        } else {
+            res = ERROR;
+        }
 
         return res;
     }
 
-    private boolean checkEqual(Context context) {
+    private boolean checkEqual() {
         boolean res = true;
 
         if (!etNewPassword.getText().equals(etRepeatPassword.getText()))

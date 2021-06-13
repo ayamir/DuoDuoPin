@@ -13,6 +13,7 @@ public class Constants {
     public static final String registerUrl = baseUrl + "User/register/";
     public static final String loginUrl = baseUrl + "User/login/";
     public static final String logoutUrl = baseUrl + "User/logout/";
+    public static final String changePasswdUrl = baseUrl + "User/update/";
 
     public static final String queryUrl = baseUrl + "ShareBill/";
     public static final String queryByInfoUrl = queryUrl + "info/";
