@@ -110,6 +110,7 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
             }
         }
     };
+
     private final ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder iBinder) {
@@ -303,8 +304,6 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
                         long oldTime = Long.parseLong(orderContent.getTime());
                         String newTime = Instant.ofEpochMilli(oldTime).atZone(ZoneOffset.ofHours(8)).toLocalDateTime().toString().replace('T', ' ');
                         orderContent.setTime(newTime);
-
-                        recBriefOrderContentList.add(new BriefOrderContent(orderContent.getNickname(), orderContent.getTitle(), orderContent.getDescription(), orderContent.getCurPeople()));
                     }
                 }
                 Intent intent = new Intent();

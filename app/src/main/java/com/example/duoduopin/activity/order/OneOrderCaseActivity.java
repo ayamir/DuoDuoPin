@@ -31,6 +31,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Objects;
@@ -45,6 +46,7 @@ import static com.example.duoduopin.activity.MainActivity.client;
 import static com.example.duoduopin.activity.MainActivity.idContent;
 import static com.example.duoduopin.activity.MainActivity.tokenContent;
 import static com.example.duoduopin.handler.GeneralMsgHandler.ERROR;
+import static com.example.duoduopin.handler.GeneralMsgHandler.FAILED;
 import static com.example.duoduopin.handler.GeneralMsgHandler.GROUP_FULL;
 import static com.example.duoduopin.handler.GeneralMsgHandler.JOIN_REPEAT;
 import static com.example.duoduopin.handler.GeneralMsgHandler.SUCCESS;
@@ -163,17 +165,15 @@ public class OneOrderCaseActivity extends FragmentActivity {
         }
     }
 
-    private Bundle setMainBundle() {
-        Bundle bundle = new Bundle();
-        bundle.putString("imageUrl", imageUrl);
-        bundle.putString("price", priceString);
-        bundle.putString("title", titleString);
-        bundle.putString("description", descriptionString);
-        bundle.putString("headPath", headPath);
-        bundle.putString("nickname", nicknameString);
-        bundle.putString("credit", creditString);
-
-        return bundle;
+    public static String getDownloadPath(String memberHeadUrl, String memberId) {
+        if (!memberHeadUrl.equals("null")) {
+            String format = memberHeadUrl.substring(memberHeadUrl.lastIndexOf('.'));
+            String filepath = basePath + File.separator + memberId + "_head" + format;
+            FileDownloader.getImpl().create(memberHeadUrl).setPath(filepath).start();
+            return filepath;
+        } else {
+            return "";
+        }
     }
 
     private Bundle setDetailsBundle() {
@@ -229,12 +229,6 @@ public class OneOrderCaseActivity extends FragmentActivity {
             }
         }).attach();
 
-//        ivItemPic = findViewById(R.id.iv_item_pic);
-//        tvItemComment = findViewById(R.id.tv_item_comment);
-//        if (!imageUrl.isEmpty()) {
-//            Bitmap bitmap = BitmapFactory.decodeStream(new URL(imageUrl).openStream());
-//            ivItemPic.setImageBitmap(bitmap);
-//        }
         btnJoin = findViewById(R.id.btn_join);
         btnLeave = findViewById(R.id.btn_leave);
         btnDelete = findViewById(R.id.btn_delete);
@@ -388,10 +382,24 @@ public class OneOrderCaseActivity extends FragmentActivity {
         ivBack.setOnClickListener(v -> finish());
     }
 
+    private Bundle setMainBundle() {
+        Bundle bundle = new Bundle();
+        bundle.putString("type", typeString);
+        bundle.putString("imageUrl", imageUrl);
+        bundle.putString("price", priceString);
+        bundle.putString("title", titleString);
+        bundle.putString("description", descriptionString);
+        bundle.putString("userId", userIdString);
+        bundle.putString("nickname", nicknameString);
+        bundle.putString("credit", creditString);
+
+        return bundle;
+    }
+
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private int postQueryGrpMem(String url) throws IOException, JSONException {
         final String TAG = "postQueryGrpMem";
-        int ret = 0;
+        int ret;
 
         final Request request = new Request.Builder()
                 .url(url)
@@ -407,7 +415,7 @@ public class OneOrderCaseActivity extends FragmentActivity {
             String codeString = responseJSON.getString("code");
             int code = Integer.parseInt(codeString);
             if (code == 100) {
-                ret = 1;
+                ret = SUCCESS;
                 JSONArray contentArray = new JSONArray(responseJSON.getString("content"));
                 for (int i = 0; i < contentArray.length(); i++) {
                     String userId = contentArray.getJSONObject(i).getString("userId");
@@ -422,23 +430,12 @@ public class OneOrderCaseActivity extends FragmentActivity {
                     memberInfoList.add(briefMemberInfo);
                 }
             } else {
-                ret = 2;
+                ret = FAILED;
             }
         } else {
-            ret = -1;
+            ret = ERROR;
         }
         return ret;
-    }
-
-    private String getDownloadPath(String memberHeadUrl, String memberId) {
-        if (!memberHeadUrl.equals("null")) {
-            String format = memberHeadUrl.substring(memberHeadUrl.lastIndexOf('.'));
-            String filepath = basePath + memberId + "_head." + format;
-            FileDownloader.getImpl().create(memberHeadUrl).setPath(filepath).start();
-            return filepath;
-        } else {
-            return "";
-        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)

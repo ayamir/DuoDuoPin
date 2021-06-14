@@ -52,7 +52,7 @@ public class BriefMemberInfoAdapter extends RecyclerView.Adapter<BriefMemberInfo
 
         holder.clPersonItem.setOnClickListener(v -> {
             Intent intent = new Intent(v.getContext(), PersonInfoActivity.class);
-            intent.putExtra("headPath", headpath);
+            intent.putExtra("headpath", headpath);
             intent.putExtra("nickname", nickname);
             intent.putExtra("userId", userId);
             intent.putExtra("credit", credit);

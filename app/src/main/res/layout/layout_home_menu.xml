@@ -74,14 +74,14 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:layout_marginTop="5dp"
+                android:layout_marginTop="10dp"
                 android:orientation="horizontal"
                 android:paddingTop="10dp">
 
                 <TextView
-                    android:layout_width="272dp"
+                    android:layout_width="100dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
+                    android:layout_weight="0"
                     android:text="类型："
                     android:textSize="18sp" />
 
@@ -89,6 +89,8 @@
                     android:id="@+id/type"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginLeft="10dp"
                     android:layout_marginRight="30dp"
                     android:layout_weight="1"
                     android:addStatesFromChildren="false"
@@ -101,21 +103,24 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:layout_marginTop="10dp"
                 android:orientation="horizontal"
                 android:paddingTop="10dp">
 
                 <TextView
-                    android:layout_width="123dp"
+                    android:layout_width="100dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
+                    android:layout_weight="0"
                     android:text="起始时间："
                     android:textSize="18sp" />
 
                 <TextView
                     android:id="@+id/timeStart"
-                    android:layout_width="185dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="45dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginLeft="10dp"
+                    android:layout_weight="1"
                     android:hint="2021-01-01 00:00:00"
                     android:textSize="18sp" />
 
@@ -124,13 +129,14 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:layout_marginTop="10dp"
                 android:orientation="horizontal"
                 android:paddingTop="10dp">
 
                 <TextView
-                    android:layout_width="220dp"
+                    android:layout_width="100dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
+                    android:layout_weight="0"
                     android:text="终止时间："
                     android:textSize="18sp" />
 
@@ -138,7 +144,9 @@
                     android:id="@+id/timeEnd"
                     android:layout_width="186dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginLeft="45dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginLeft="10dp"
+                    android:layout_weight="1"
                     android:hint="2021-01-01 00:00:00"
                     android:textSize="18sp" />
 
@@ -153,14 +161,17 @@
                 <TextView
                     android:layout_width="100dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="0"
                     android:text="最低价格："
                     android:textSize="18sp" />
 
                 <EditText
                     android:id="@+id/minPrice"
-                    android:layout_width="67dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginLeft="10dp"
                     android:layout_weight="1"
                     android:ems="10"
                     android:inputType="numberDecimal" />
@@ -168,11 +179,11 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="bottom|left"
+                    android:layout_gravity="center_vertical"
                     android:layout_marginLeft="0dp"
-                    android:layout_marginRight="30dp"
-                    android:layout_weight="1"
-                    android:gravity="left"
+                    android:layout_marginEnd="20dp"
+                    android:layout_marginRight="20dp"
+                    android:layout_weight="0"
                     android:text="¥"
                     android:textSize="18sp" />
 
@@ -187,14 +198,17 @@
                 <TextView
                     android:layout_width="100dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="0"
                     android:text="最高价格："
                     android:textSize="18sp" />
 
                 <EditText
                     android:id="@+id/maxPrice"
-                    android:layout_width="72dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginLeft="10dp"
                     android:layout_weight="1"
                     android:ems="10"
                     android:inputType="numberDecimal" />
@@ -202,90 +216,70 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="bottom|left"
+                    android:layout_gravity="center_vertical"
                     android:layout_marginLeft="0dp"
-                    android:layout_marginRight="30dp"
-                    android:layout_weight="1"
-                    android:gravity="left"
+                    android:layout_marginEnd="20dp"
+                    android:layout_marginRight="20dp"
+                    android:layout_weight="0"
                     android:text="¥"
                     android:textSize="18sp" />
             </LinearLayout>
 
             <LinearLayout
-                android:id="@+id/ll_menu_locate"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_marginTop="20dp"
-                android:orientation="horizontal">
-
-                <TextView
-                    android:id="@+id/textView8"
-                    android:layout_width="100dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="0"
-                    android:text="地址："
-                    android:textSize="18sp" />
-
-                <TextView
-                    android:id="@+id/tv_menu_address"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="北京邮电大学西门"
-                    android:textSize="18sp" />
-
-                <TextView
-                    android:id="@+id/textView14"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="20dp"
-                    android:layout_marginRight="20dp"
-                    android:layout_weight="0"
-                    android:text=">"
-                    android:textSize="18sp" />
-
-            </LinearLayout>
-
-            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:orientation="horizontal"
                 android:paddingTop="10dp">
 
                 <TextView
-                    android:layout_width="wrap_content"
+                    android:layout_width="100dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="0"
                     android:text="经纬度："
                     android:textSize="18sp" />
 
                 <EditText
                     android:id="@+id/et_menu_tude"
-                    android:layout_width="244dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:ems="10"
-                    android:hint="将定位得到的值复制到此即可" />
+                    android:layout_marginStart="10dp"
+                    android:layout_marginLeft="10dp"
+                    android:layout_weight="1" />
+
+                <ImageView
+                    android:id="@+id/iv_locate"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginEnd="10dp"
+                    android:layout_marginRight="10dp"
+                    android:layout_weight="0"
+                    android:src="@drawable/location2" />
 
             </LinearLayout>
+
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
+                android:layout_marginTop="10dp"
                 android:orientation="horizontal"
                 android:paddingTop="10dp">
 
                 <TextView
-                    android:layout_width="174dp"
+                    android:layout_width="100dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
+                    android:layout_weight="0"
                     android:text="距离："
                     android:textSize="18sp" />
 
                 <Spinner
                     android:id="@+id/distance"
-                    android:layout_width="198dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginLeft="10dp"
                     android:layout_marginRight="30dp"
                     android:layout_weight="1"
                     android:addStatesFromChildren="false"
@@ -303,9 +297,9 @@
                 android:paddingTop="10dp">
 
                 <TextView
-                    android:layout_width="223dp"
+                    android:layout_width="100dp"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
+                    android:layout_weight="0"
                     android:text="描述："
                     android:textSize="18sp" />
 
@@ -313,7 +307,10 @@
                     android:id="@+id/tv_description"
                     android:layout_width="254dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginRight="30dp"
+                    android:layout_marginStart="10dp"
+                    android:layout_marginLeft="10dp"
+                    android:layout_marginEnd="20dp"
+                    android:layout_marginRight="20dp"
                     android:layout_weight="1"
                     android:background="@drawable/edit_bg"
                     android:ems="10"

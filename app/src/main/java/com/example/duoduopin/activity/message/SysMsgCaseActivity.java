@@ -121,14 +121,21 @@ public class SysMsgCaseActivity extends AppCompatActivity {
         listView.setOnItemClickListener((parent, view, position, id) -> {
             SQLiteDatabase db = myDBHelper.getWritableDatabase();
             ContentValues values = new ContentValues();
-            values.put("messageId", dCases.get((int) id).get("messageId"));
-            values.put("senderId", dCases.get((int) id).get("senderId"));
-            values.put("receiverId", dCases.get((int) id).get("receiverId"));
-            values.put("billId", dCases.get((int) id).get("billId"));
+            String messageId = dCases.get((int) id).get("messageId");
+            String senderId = dCases.get((int) id).get("senderId");
+            String receiverId = dCases.get((int) id).get("receiverId");
+            String billId = dCases.get((int) id).get("billId");
             String type = dCases.get((int) id).get("type");
+            String time = dCases.get((int) id).get("time");
+            String content = dCases.get((int) id).get("content");
+
+            values.put("messageId", messageId);
+            values.put("senderId", senderId);
+            values.put("receiverId", receiverId);
+            values.put("billId", billId);
             values.put("type", type);
-            values.put("time", dCases.get((int) id).get("time"));
-            values.put("content", dCases.get((int) id).get("content"));
+            values.put("time", time);
+            values.put("content", content);
             if (type != null) {
                 if (type.equals("APPLY")) {
                     values.put("isRead", String.valueOf(false));
@@ -138,15 +145,24 @@ public class SysMsgCaseActivity extends AppCompatActivity {
             }
             db.replace("SysMsg", null, values);
 
-            Intent toIntent = new Intent(view.getContext(), OneSysMsgCaseActivity.class);
-            toIntent.putExtra("messageId", dCases.get((int) id).get("messageId"));
-            toIntent.putExtra("senderId", dCases.get((int) id).get("senderId"));
-            toIntent.putExtra("billId", dCases.get((int) id).get("billId"));
-            toIntent.putExtra("messageType", dCases.get((int) id).get("type"));
-            toIntent.putExtra("time", dCases.get((int) id).get("time"));
-            toIntent.putExtra("content", dCases.get((int) id).get("content"));
-            toIntent.putExtra("isRead", dCases.get((int) id).get("isRead"));
-            startActivity(toIntent);
+            String isRead = dCases.get((int) id).get("isRead");
+            if (type != null) {
+                Intent toIntent;
+                if (type.equals("COMPL")) {
+                    toIntent = new Intent(view.getContext(), OneSysMsgCaseActivity.class);
+                    toIntent.putExtra("messageId", messageId);
+                    toIntent.putExtra("senderId", senderId);
+                    toIntent.putExtra("billId", billId);
+                    toIntent.putExtra("messageType", type);
+                    toIntent.putExtra("time", time);
+                    toIntent.putExtra("content", content);
+                } else {
+                    toIntent = new Intent(view.getContext(), SysMsgCreditActivity.class);
+                    toIntent.putExtra("groupId", billId);
+                }
+                toIntent.putExtra("isRead", isRead);
+                startActivity(toIntent);
+            }
         });
     }
 

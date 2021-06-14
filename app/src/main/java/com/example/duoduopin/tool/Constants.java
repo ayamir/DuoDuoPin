@@ -32,6 +32,7 @@ public class Constants {
     private static final String wsUrl = "ws://123.57.12.189:8080/";
     public static final String chatUrl = wsUrl + "ws/chat/";
     public static final String sysMessageUrl = wsUrl + "ws/system/";
+    public static final String notifyMessage = baseUrl + "message/";
 
     public static String getQueryUserUrl(String userId) {
         return queryUserUrl + userId;
@@ -89,11 +90,15 @@ public class Constants {
         return sysMessageUrl + userId;
     }
 
-    public static String getUploadToServerUrl(boolean isUpdate) {
+    public static String getHeadUploadToServer(boolean isUpdate) {
         if (isUpdate) {
             return headUpdateToServerUrl;
         } else {
             return headUploadToServerUrl;
         }
+    }
+
+    public static String getImageUploadToServerUrl(String orderId) {
+        return imageUploadToServerUrl + orderId;
     }
 }

@@ -16,11 +16,14 @@ import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.duoduopin.R;
+import com.liulishuo.filedownloader.BaseDownloadTask;
+import com.liulishuo.filedownloader.FileDownloadListener;
 import com.liulishuo.filedownloader.FileDownloader;
 
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -111,10 +114,46 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     private void downloadHead() {
+        String TAG = "downloadHead";
         if (!headUrl.equals("null")) {
             String format = headUrl.substring(headUrl.lastIndexOf('.'));
-            String filepath = basePath + idContent + "_head." + format;
-            FileDownloader.getImpl().create(headUrl).setPath(filepath).start();
+            String filepath = basePath + File.separator + idContent + "_head" + format;
+            Log.e(TAG, filepath);
+            Log.e(TAG, headUrl);
+            FileDownloader.getImpl().create(headUrl).setPath(filepath)
+                    .addHeader("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0")
+                    .setListener(new FileDownloadListener() {
+                        @Override
+                        protected void pending(BaseDownloadTask task, int soFarBytes, int totalBytes) {
+                            Log.e(TAG, "Task " + task.getUrl() + ", downloading " + soFarBytes + ", total " + totalBytes);
+                        }
+
+                        @Override
+                        protected void progress(BaseDownloadTask task, int soFarBytes, int totalBytes) {
+                            Log.e(TAG, "Task " + task.getUrl() + ", downloading " + soFarBytes + ", total " + totalBytes);
+
+                        }
+
+                        @Override
+                        protected void completed(BaseDownloadTask task) {
+                            Log.e(TAG, "Task " + task.getUrl() + "finished");
+                        }
+
+                        @Override
+                        protected void paused(BaseDownloadTask task, int soFarBytes, int totalBytes) {
+
+                        }
+
+                        @Override
+                        protected void error(BaseDownloadTask task, Throwable e) {
+                            Log.e(TAG, "Task " + task.getUrl() + "error!");
+                        }
+
+                        @Override
+                        protected void warn(BaseDownloadTask task) {
+
+                        }
+                    }).start();
         }
     }
 
@@ -153,7 +192,8 @@ public class LoginActivity extends AppCompatActivity {
             usernameContent = username;
             headUrl = contentJson.optString(urlFromServer);
             if (!headUrl.equals("null")) {
-                headPath = idContent + "_head.png";
+                String format = headUrl.substring(headUrl.lastIndexOf('.'));
+                headPath = basePath + "/" + idContent + "_head" + format;
             }
             creditContent = contentJson.optString(creditFromServer);
 

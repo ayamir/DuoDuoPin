@@ -71,7 +71,8 @@ import static com.example.duoduopin.handler.GeneralMsgHandler.ERROR;
 import static com.example.duoduopin.handler.GeneralMsgHandler.SUCCESS;
 import static com.example.duoduopin.tool.Constants.API_KEY_TO_BED;
 import static com.example.duoduopin.tool.Constants.createOrderUrl;
-import static com.example.duoduopin.tool.Constants.imageUploadToServerUrl;
+import static com.example.duoduopin.tool.Constants.getImageUploadToServerUrl;
+import static com.example.duoduopin.tool.Constants.notifyMessage;
 import static com.example.duoduopin.tool.Constants.uploadToBedUrl;
 
 public class OrderFragment extends Fragment {
@@ -193,7 +194,7 @@ public class OrderFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        LinearLayout llLocate = getActivity().findViewById(R.id.ll_menu_locate);
+        LinearLayout llLocate = getActivity().findViewById(R.id.ll_locate);
         llLocate.setOnClickListener(v -> {
             Intent intent = new Intent(this.getActivity(), LocateActivity.class);
             intent.putExtra("address", "");
@@ -301,6 +302,7 @@ public class OrderFragment extends Fragment {
                             public void handleMessage(@NonNull Message msg) {
                                 if (msg.what == SUCCESS) {
                                     imageUrl = (String) msg.obj;
+                                    Log.e("uploadToBed", imageUrl);
                                     Toast.makeText(v.getContext(), "图片上传成功！", Toast.LENGTH_SHORT).show();
                                 } else {
                                     imageUrl = (String) msg.obj;
@@ -314,7 +316,14 @@ public class OrderFragment extends Fragment {
                         public void run() {
                             try {
                                 Message message = new Message();
-                                message.obj = uploadToBed(imageType, imagePath);
+                                String url = uploadToBed(imageType, imagePath);
+                                Log.e("uploadToBed", "picLink = " + url);
+                                if (url.isEmpty()) {
+                                    message.what = ERROR;
+                                } else {
+                                    message.what = SUCCESS;
+                                    message.obj = url;
+                                }
                                 uploadOrderImageHandler.sendMessage(message);
                             } catch (IOException | JSONException e) {
                                 e.printStackTrace();
@@ -355,6 +364,9 @@ public class OrderFragment extends Fragment {
                                         } else {
                                             Log.e("uploadHeadToServer", "上传到服务器失败");
                                         }
+                                        if (msg.arg1 != SUCCESS) {
+                                            Log.e("notifyMessage", "failed");
+                                        }
                                     }
                                 };
 
@@ -362,7 +374,10 @@ public class OrderFragment extends Fragment {
                                 public void run() {
                                     try {
                                         Message message = new Message();
-                                        message.what = postUploadImage(imageUrl);
+                                        if (imageUrl != null) {
+                                            message.what = postUploadImage(imageUrl);
+                                        }
+                                        message.arg1 = postNotifyMessage();
                                         uploadImageToServerHandler.sendMessage(message);
                                     } catch (IOException e) {
                                         e.printStackTrace();
@@ -404,16 +419,40 @@ public class OrderFragment extends Fragment {
         });
     }
 
+    private int postNotifyMessage() throws IOException {
+        int res;
+
+        RequestBody body = new FormBody.Builder()
+                .add("BillId", orderId)
+                .build();
+
+        Request request = new Request.Builder()
+                .url(notifyMessage)
+                .header("token", idContent + "_" + tokenContent)
+                .post(body)
+                .build();
+
+        Call call = client.newCall(request);
+        Response response = call.execute();
+
+        if (response.code() == 200) {
+            res = SUCCESS;
+        } else {
+            res = ERROR;
+        }
+
+        return res;
+    }
+
     private int postUploadImage(String imageUrl) throws IOException {
         int res;
 
         RequestBody body = new FormBody.Builder()
-                .add("id", orderId)
-                .add("url", imageUrl)
+                .add("path", imageUrl)
                 .build();
 
         Request request = new Request.Builder()
-                .url(imageUploadToServerUrl)
+                .url(getImageUploadToServerUrl(orderId))
                 .header("token", idContent + "_" + tokenContent)
                 .post(body)
                 .build();

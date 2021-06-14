@@ -46,14 +46,14 @@ import static com.example.duoduopin.activity.MainActivity.tokenContent;
 import static com.example.duoduopin.handler.GeneralMsgHandler.ERROR;
 import static com.example.duoduopin.handler.GeneralMsgHandler.SUCCESS;
 import static com.example.duoduopin.tool.Constants.API_KEY_TO_BED;
-import static com.example.duoduopin.tool.Constants.getUploadToServerUrl;
+import static com.example.duoduopin.tool.Constants.getHeadUploadToServer;
 import static com.example.duoduopin.tool.Constants.uploadToBedUrl;
 
 public class EditHeadActivity extends AppCompatActivity {
     private final OkHttpClient client = new OkHttpClient.Builder().build();
     private ImageView ivHead;
-    private String imageType;
-    private String imagePath;
+    private String imageType = "";
+    private String imagePath = "";
 
     @Override
     protected void onCreate(@Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
@@ -90,17 +90,29 @@ public class EditHeadActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     try {
-                        Message message = new Message();
-                        String imageUrl = uploadToBed(imageType, imagePath);
-                        int res;
-                        if (!headPath.isEmpty()) {
-                            res = uploadHead(true, imageUrl);
-                        } else {
-                            res = uploadHead(false, imageUrl);
+                        if (!imagePath.isEmpty()) {
+                            String TAG = "uploadToServer";
+                            Message message = new Message();
+                            String imageUrl = uploadToBed(imageType, imagePath);
+                            Log.e(TAG, "imageUrl: " + imageUrl);
+                            int res;
+                            File file = new File(headPath);
+                            if (!imageUrl.isEmpty()) {
+                                if (file.exists()) {
+                                    Log.e(TAG, "update");
+                                    res = uploadHead(true, imageUrl);
+                                } else {
+                                    Log.e(TAG, "upload");
+                                    res = uploadHead(false, imageUrl);
+                                }
+                            } else {
+                                res = ERROR;
+                                Log.e(TAG, "imageUrl: " + imageUrl);
+                            }
+                            message.what = res;
+                            message.obj = imageUrl;
+                            commitHeadHandler.sendMessage(message);
                         }
-                        message.what = res;
-                        message.obj = imageUrl;
-                        commitHeadHandler.sendMessage(message);
                     } catch (IOException | JSONException e) {
                         e.printStackTrace();
                     }
@@ -159,7 +171,7 @@ public class EditHeadActivity extends AppCompatActivity {
             JSONObject responseJSON = new JSONObject(Objects.requireNonNull(response.body()).string());
             JSONObject dataJSON = new JSONObject(responseJSON.getString("data"));
             picLink = dataJSON.getString("url");
-            Log.e(TAG, "piclink = " + picLink);
+            Log.e(TAG, "picLink: " + picLink);
         } else {
             Log.e(TAG, Objects.requireNonNull(response.body()).string());
         }
@@ -171,10 +183,10 @@ public class EditHeadActivity extends AppCompatActivity {
         final String TAG = "uploadHead";
         int res;
 
-        String uploadUrl = getUploadToServerUrl(isUpdate);
+        String uploadUrl = getHeadUploadToServer(isUpdate);
 
         RequestBody body = new FormBody.Builder()
-                .add("url", imageUrl)
+                .add("path", imageUrl)
                 .build();
 
         Request request = new Request.Builder()

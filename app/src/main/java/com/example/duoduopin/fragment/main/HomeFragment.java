@@ -22,7 +22,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -40,7 +39,6 @@ import com.example.duoduopin.R;
 import com.example.duoduopin.activity.order.LocateActivity;
 import com.example.duoduopin.activity.order.OrderCaseActivity;
 import com.example.duoduopin.adapter.BriefOrderContentAdapter;
-import com.example.duoduopin.pojo.BriefOrderContent;
 import com.example.duoduopin.pojo.OrderContent;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
@@ -59,11 +57,8 @@ import static com.example.duoduopin.tool.Constants.brief_order_content_load_sign
 public class HomeFragment extends Fragment {
 
     private final ArrayList<OrderContent> recKeywordContentList = new ArrayList<>();
-    private final ArrayList<BriefOrderContent> recBriefKeywordContentList = new ArrayList<>();
     private final ArrayList<OrderContent> recBillContentList = new ArrayList<>();
-    private final ArrayList<BriefOrderContent> recBriefBillContentList = new ArrayList<>();
     private final ArrayList<OrderContent> recCarContentList = new ArrayList<>();
-    private final ArrayList<BriefOrderContent> recBriefCarContentList = new ArrayList<>();
     private String searchIdString;
     private EditText searchId;
     private TextView timeStart;
@@ -71,7 +66,6 @@ public class HomeFragment extends Fragment {
     private EditText minPrice;
     private EditText maxPrice;
     private EditText description;
-    private TextView tvAddress;
     private EditText etTude;
     private TimePickerView pvTimeStart;
     private TimePickerView pvTimeEnd;
@@ -120,8 +114,6 @@ public class HomeFragment extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK) {
-            String address = data.getStringExtra("address");
-            tvAddress.setText(address);
             String tude = data.getStringExtra("tude");
             boolean isChosen = data.getBooleanExtra("isChosen", false);
             if (isChosen) {
@@ -224,16 +216,14 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        LinearLayout llMenuLocate = getActivity().findViewById(R.id.ll_menu_locate);
-        llMenuLocate.setOnClickListener(v -> {
+        ImageView ivLocate = getActivity().findViewById(R.id.iv_locate);
+        ivLocate.setOnClickListener(v -> {
             Intent intent = new Intent(v.getContext(), LocateActivity.class);
             intent.putExtra("address", "");
             intent.putExtra("tude", "");
             intent.putExtra("isChosen", false);
             startActivityForResult(intent, 0);
         });
-
-        tvAddress = getActivity().findViewById(R.id.tv_menu_address);
 
         minPrice = getActivity().findViewById(R.id.minPrice);
         maxPrice = getActivity().findViewById(R.id.maxPrice);
@@ -301,7 +291,7 @@ public class HomeFragment extends Fragment {
         }
         srlHomeContent.setOnRefreshListener(() -> {
             if (isLoaded) {
-                briefOrderContentAdapter = new BriefOrderContentAdapter(recOrderContentList, recBriefOrderContentList);
+                BriefOrderContentAdapter briefOrderContentAdapter = new BriefOrderContentAdapter(recOrderContentList);
                 rvContentList.setAdapter(briefOrderContentAdapter);
                 srlHomeContent.setRefreshing(false);
             }
@@ -311,14 +301,15 @@ public class HomeFragment extends Fragment {
         LinearLayoutManager homeContentLayoutManager = new LinearLayoutManager(getActivity(), RecyclerView.VERTICAL, false);
         rvContentList.setLayoutManager(homeContentLayoutManager);
 
-        briefOrderContentAdapter = new BriefOrderContentAdapter(recOrderContentList, recBriefOrderContentList);
-        rvContentList.setAdapter(briefOrderContentAdapter);
+        if (recOrderContentList != null) {
+            briefOrderContentAdapter = new BriefOrderContentAdapter(recOrderContentList);
+            rvContentList.setAdapter(briefOrderContentAdapter);
+        }
     }
 
     private void filterByKeyword(String keyword) {
         if (isLoaded) {
             recKeywordContentList.clear();
-            recBriefKeywordContentList.clear();
 
             Pattern pn = Pattern.compile(".*" + keyword + ".*");
             for (int i = 0; i < recOrderContentList.size(); i++) {
@@ -326,13 +317,12 @@ public class HomeFragment extends Fragment {
                 Matcher matcher = pn.matcher(title);
                 if (matcher.find()) {
                     recKeywordContentList.add(recOrderContentList.get(i));
-                    recBriefKeywordContentList.add(recBriefOrderContentList.get(i));
                 } else {
                     Log.e("filter", "第" + i + "条内容没有被匹配，其标题为" + title);
                 }
             }
 
-            BriefOrderContentAdapter briefKeywordContentAdapter = new BriefOrderContentAdapter(recKeywordContentList, recBriefKeywordContentList);
+            BriefOrderContentAdapter briefKeywordContentAdapter = new BriefOrderContentAdapter(recKeywordContentList);
             rvContentList.setAdapter(briefKeywordContentAdapter);
         }
     }
@@ -340,23 +330,19 @@ public class HomeFragment extends Fragment {
     private void displayBillOrCar(boolean isBill) {
         if (isLoaded) {
             recBillContentList.clear();
-            recBriefBillContentList.clear();
             recCarContentList.clear();
-            recBriefCarContentList.clear();
             for (int i = 0; i < recOrderContentList.size(); i++) {
                 if (recOrderContentList.get(i).getType().equals("BILL")) {
                     recBillContentList.add(recOrderContentList.get(i));
-                    recBriefBillContentList.add(recBriefOrderContentList.get(i));
                 } else {
                     recCarContentList.add(recOrderContentList.get(i));
-                    recBriefCarContentList.add(recBriefOrderContentList.get(i));
                 }
             }
             if (isBill) {
-                BriefOrderContentAdapter briefBillContentAdapter = new BriefOrderContentAdapter(recBillContentList, recBriefBillContentList);
+                BriefOrderContentAdapter briefBillContentAdapter = new BriefOrderContentAdapter(recBillContentList);
                 rvContentList.setAdapter(briefBillContentAdapter);
             } else {
-                BriefOrderContentAdapter briefCarContentAdapter = new BriefOrderContentAdapter(recCarContentList, recBriefCarContentList);
+                BriefOrderContentAdapter briefCarContentAdapter = new BriefOrderContentAdapter(recCarContentList);
                 rvContentList.setAdapter(briefCarContentAdapter);
             }
         }
@@ -440,7 +426,7 @@ public class HomeFragment extends Fragment {
     private class BriefOrderContentReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            briefOrderContentAdapter = new BriefOrderContentAdapter(recOrderContentList, recBriefOrderContentList);
+            briefOrderContentAdapter = new BriefOrderContentAdapter(recOrderContentList);
             rvContentList.setAdapter(briefOrderContentAdapter);
             isLoaded = true;
             srlHomeContent.setRefreshing(false);
