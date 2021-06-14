@@ -12,7 +12,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -23,8 +22,10 @@ import androidx.viewpager2.widget.ViewPager2;
 
 import com.example.duoduopin.R;
 import com.example.duoduopin.adapter.OrderTabAdapter;
+import com.example.duoduopin.pojo.BriefMemberInfo;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
+import com.liulishuo.filedownloader.FileDownloader;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -39,6 +40,7 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+import static com.example.duoduopin.activity.MainActivity.basePath;
 import static com.example.duoduopin.activity.MainActivity.client;
 import static com.example.duoduopin.activity.MainActivity.idContent;
 import static com.example.duoduopin.activity.MainActivity.tokenContent;
@@ -53,17 +55,13 @@ import static com.example.duoduopin.tool.Constants.getQuitUrl;
 import static com.example.duoduopin.tool.Constants.group_quit_signal;
 
 public class OneOrderCaseActivity extends FragmentActivity {
-    private final int MAIN_POS = 0;
-    private final int DETAILS_POS = 1;
-    private final int MEMBER_POS = 2;
 
     private final String MAIN_TAB_CONTENT = "拼单内容";
     private final String DETAILS_TAB_CONTENT = "拼单详情";
     private final String MEMBER_TAB_CONTENT = "拼单成员";
 
+    private final ArrayList<BriefMemberInfo> memberInfoList = new ArrayList<>();
     private final ArrayList<String> memberIds = new ArrayList<>();
-    private final ArrayList<String> memberNicknameList = new ArrayList<>();
-    private final ArrayList<String> memberCreditList = new ArrayList<>();
 
     private final OrderTabAdapter tabAdapter = new OrderTabAdapter(this);
     private String userIdString;
@@ -82,8 +80,6 @@ public class OneOrderCaseActivity extends FragmentActivity {
     private String creditString;
     private Button btnDelete, btnJoin, btnLeave;
     private ImageView ivBack;
-    private ImageView ivItemPic;
-    private TextView tvItemComment;
     private TabLayout tabLayout;
     private ViewPager2 viewPager2;
 
@@ -93,11 +89,7 @@ public class OneOrderCaseActivity extends FragmentActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_one_order_case);
         getInfoFromIntent();
-        try {
-            bindItems();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        bindItems();
         bindOperation();
         setVisibility();
     }
@@ -111,10 +103,6 @@ public class OneOrderCaseActivity extends FragmentActivity {
         } else {
             btnDelete.setVisibility(View.INVISIBLE);
         }
-//        if (imageUrl.isEmpty()) {
-//            ivItemPic.setVisibility(View.INVISIBLE);
-//            tvItemComment.setVisibility(View.INVISIBLE);
-//        }
 
         @SuppressLint("HandlerLeak") final Handler isInHandler = new Handler() {
             @Override
@@ -129,6 +117,9 @@ public class OneOrderCaseActivity extends FragmentActivity {
                         btnLeave.setVisibility(View.INVISIBLE);
                         btnJoin.setVisibility(View.VISIBLE);
                     }
+
+                    int MEMBER_POS = 2;
+                    tabAdapter.setBundle(setMemberBundle(), MEMBER_POS);
                 }
             }
         };
@@ -153,6 +144,7 @@ public class OneOrderCaseActivity extends FragmentActivity {
         Intent fromIntent = getIntent();
         if (fromIntent != null) {
             orderIdString = fromIntent.getStringExtra("orderId");
+            Log.e("infoFromIntent", orderIdString);
             if (orderIdString != null) {
                 userIdString = fromIntent.getStringExtra("userId");
                 nicknameString = fromIntent.getStringExtra("nickname");
@@ -200,8 +192,7 @@ public class OneOrderCaseActivity extends FragmentActivity {
 
     private Bundle setMemberBundle() {
         Bundle bundle = new Bundle();
-        bundle.putStringArrayList("nicknameList", memberNicknameList);
-        bundle.putStringArrayList("creditList", memberCreditList);
+        bundle.putParcelableArrayList("memberInfoList", memberInfoList);
         return bundle;
     }
 
@@ -214,10 +205,11 @@ public class OneOrderCaseActivity extends FragmentActivity {
         }
     }
 
-    private void bindItems() throws IOException {
+    private void bindItems() {
+        int MAIN_POS = 0;
         tabAdapter.setBundle(setMainBundle(), MAIN_POS);
+        int DETAILS_POS = 1;
         tabAdapter.setBundle(setDetailsBundle(), DETAILS_POS);
-        tabAdapter.setBundle(setMemberBundle(), MEMBER_POS);
 
         tabLayout = findViewById(R.id.tab_layout);
         viewPager2 = findViewById(R.id.viewpager2);
@@ -347,7 +339,6 @@ public class OneOrderCaseActivity extends FragmentActivity {
                     new Thread(new Runnable() {
                         @SuppressLint("HandlerLeak")
                         final Handler deleteHandler = new Handler() {
-                            @SuppressLint("HandlerLeak")
                             @Override
                             public void handleMessage(@NonNull Message msg) {
                                 if (msg.what == SUCCESS) {
@@ -419,7 +410,16 @@ public class OneOrderCaseActivity extends FragmentActivity {
                 ret = 1;
                 JSONArray contentArray = new JSONArray(responseJSON.getString("content"));
                 for (int i = 0; i < contentArray.length(); i++) {
-                    memberIds.add(contentArray.getJSONObject(i).getString("userId"));
+                    String userId = contentArray.getJSONObject(i).getString("userId");
+                    String nickname = contentArray.getJSONObject(i).getString("nickname");
+                    String memberHeadUrl = contentArray.getJSONObject(i).getString("url");
+                    String credit = contentArray.getJSONObject(i).getString("point");
+                    String path = getDownloadPath(memberHeadUrl, userId);
+                    BriefMemberInfo briefMemberInfo = new BriefMemberInfo(nickname, credit, userId, path);
+                    Log.e(TAG, briefMemberInfo.toString());
+
+                    memberIds.add(userId);
+                    memberInfoList.add(briefMemberInfo);
                 }
             } else {
                 ret = 2;
@@ -427,8 +427,18 @@ public class OneOrderCaseActivity extends FragmentActivity {
         } else {
             ret = -1;
         }
-
         return ret;
+    }
+
+    private String getDownloadPath(String memberHeadUrl, String memberId) {
+        if (!memberHeadUrl.equals("null")) {
+            String format = memberHeadUrl.substring(memberHeadUrl.lastIndexOf('.'));
+            String filepath = basePath + memberId + "_head." + format;
+            FileDownloader.getImpl().create(memberHeadUrl).setPath(filepath).start();
+            return filepath;
+        } else {
+            return "";
+        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)

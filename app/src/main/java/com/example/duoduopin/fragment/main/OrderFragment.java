@@ -54,12 +54,14 @@ import java.util.Date;
 import java.util.Objects;
 
 import okhttp3.Call;
+import okhttp3.FormBody;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 
+import static android.app.Activity.RESULT_OK;
 import static com.example.duoduopin.activity.LoginActivity.JSON;
 import static com.example.duoduopin.activity.MainActivity.client;
 import static com.example.duoduopin.activity.MainActivity.idContent;
@@ -67,13 +69,12 @@ import static com.example.duoduopin.activity.MainActivity.nicknameContent;
 import static com.example.duoduopin.activity.MainActivity.tokenContent;
 import static com.example.duoduopin.handler.GeneralMsgHandler.ERROR;
 import static com.example.duoduopin.handler.GeneralMsgHandler.SUCCESS;
+import static com.example.duoduopin.tool.Constants.API_KEY_TO_BED;
 import static com.example.duoduopin.tool.Constants.createOrderUrl;
-import static com.example.duoduopin.tool.Constants.imageUploadUrl;
+import static com.example.duoduopin.tool.Constants.imageUploadToServerUrl;
+import static com.example.duoduopin.tool.Constants.uploadToBedUrl;
 
 public class OrderFragment extends Fragment {
-    private final int ADDRESS_REQUEST = 3000;
-    private LinearLayout llLocate;
-
     private EditText etTitle;
     private EditText etDescription;
     private EditText etCurPeople;
@@ -91,8 +92,7 @@ public class OrderFragment extends Fragment {
     private String typeString;
     private String orderId;
     private String imageType;
-    private String imageName;
-    private String imagePath;
+    private String imagePath = "";
     private String imageUrl;
 
     @Nullable
@@ -111,7 +111,7 @@ public class OrderFragment extends Fragment {
         }
     }
 
-    private String uploadToBed(String imageName, String imageType, String imagePath) throws IOException, JSONException {
+    private String uploadToBed(String imageType, String imagePath) throws IOException, JSONException {
         final String TAG = "uploadPic";
         String picLink = "";
 
@@ -119,10 +119,13 @@ public class OrderFragment extends Fragment {
         RequestBody imageBody = RequestBody.create(MediaType.parse(imageType), imageFile);
         RequestBody requestBody = new MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
-                .addFormDataPart(imageName, imagePath, imageBody)
+                .addFormDataPart("smfile", imageFile.getName(), imageBody)
                 .build();
+
         final Request request = new Request.Builder()
-                .url(imageUploadUrl)
+                .url(uploadToBedUrl)
+                .header("Authorization", API_KEY_TO_BED)
+                .header("User-Agent", "Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0")
                 .post(requestBody)
                 .build();
 
@@ -148,7 +151,6 @@ public class OrderFragment extends Fragment {
                     public void onResult(ArrayList<Photo> photos, boolean isOriginal) {
                         if (photos.size() == 1) {
                             Photo photo = photos.get(0);
-                            imageName = photo.name;
                             imageType = photo.type;
                             imagePath = photo.path;
                             Log.e(TAG, "imagePath = " + imagePath);
@@ -159,7 +161,6 @@ public class OrderFragment extends Fragment {
 
                     @Override
                     public void onCancel() {
-                        imageName = "";
                         imageType = "";
                         imagePath = "";
                     }
@@ -169,18 +170,19 @@ public class OrderFragment extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == ADDRESS_REQUEST) {
-            if (resultCode == SUCCESS) {
-                if (data != null) {
-                    String address = data.getStringExtra("address");
-                    tvAddress.setText(address);
-                    boolean isChosen = data.getBooleanExtra("isChosen", false);
-                    if (isChosen) {
-                        String tude = data.getStringExtra("tude");
-                        etTude.setText(tude);
-                    } else {
-                        // TODO: clipboard
-                    }
+
+        if (resultCode == RESULT_OK) {
+            if (data != null) {
+                String address = data.getStringExtra("address");
+                tvAddress.setText(address);
+                boolean isChosen = data.getBooleanExtra("isChosen", false);
+                if (isChosen) {
+                    String tude = data.getStringExtra("tude");
+                    etTude.setText(tude);
+                } else {
+                    // TODO: clipboard
+                    etTude.setText("");
+                    etTude.setHint("请从剪切板粘贴经纬度~");
                 }
             }
         }
@@ -191,10 +193,13 @@ public class OrderFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        llLocate = getActivity().findViewById(R.id.ll_locate);
+        LinearLayout llLocate = getActivity().findViewById(R.id.ll_locate);
         llLocate.setOnClickListener(v -> {
             Intent intent = new Intent(this.getActivity(), LocateActivity.class);
-            startActivityForResult(intent, ADDRESS_REQUEST);
+            intent.putExtra("address", "");
+            intent.putExtra("isChosen", false);
+            intent.putExtra("tude", "");
+            startActivityForResult(intent, 0);
         });
 
         ivUploadPic = getActivity().findViewById(R.id.iv_upload_pic);
@@ -289,17 +294,39 @@ public class OrderFragment extends Fragment {
             if (canPost) {
                 boolean isBill = typeString.equals("BILL");
                 if (isBill) {
-                    try {
-                        imageUrl = uploadToBed(imageName, imageType, imagePath);
-                    } catch (IOException | JSONException e) {
-                        e.printStackTrace();
-                    }
+                    new Thread(new Runnable() {
+                        @SuppressLint("HandlerLeak")
+                        final Handler uploadOrderImageHandler = new Handler() {
+                            @Override
+                            public void handleMessage(@NonNull Message msg) {
+                                if (msg.what == SUCCESS) {
+                                    imageUrl = (String) msg.obj;
+                                    Toast.makeText(v.getContext(), "图片上传成功！", Toast.LENGTH_SHORT).show();
+                                } else {
+                                    imageUrl = (String) msg.obj;
+                                    Log.e("headUpload", "failed: imageUrl = " + imageUrl);
+                                }
+
+                            }
+                        };
+
+                        @Override
+                        public void run() {
+                            try {
+                                Message message = new Message();
+                                message.obj = uploadToBed(imageType, imagePath);
+                                uploadOrderImageHandler.sendMessage(message);
+                            } catch (IOException | JSONException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    }).start();
+
                 } else {
                     imageUrl = "";
                 }
                 final JSONObject jsonObject = new JSONObject();
                 try {
-                    jsonObject.put("imageUrl", imageUrl);
                     jsonObject.put("title", titleString);
                     jsonObject.put("type", typeString);
                     jsonObject.put("description", descString);
@@ -318,6 +345,30 @@ public class OrderFragment extends Fragment {
                     @Override
                     public void handleMessage(@NonNull Message msg) {
                         if (msg.what == SUCCESS) {
+                            new Thread(new Runnable() {
+                                @SuppressLint("HandlerLeak")
+                                final Handler uploadImageToServerHandler = new Handler() {
+                                    @Override
+                                    public void handleMessage(@NonNull Message msg) {
+                                        if (msg.what == SUCCESS) {
+                                            Log.e("uploadHeadToServer", "上传到服务器成功");
+                                        } else {
+                                            Log.e("uploadHeadToServer", "上传到服务器失败");
+                                        }
+                                    }
+                                };
+
+                                @Override
+                                public void run() {
+                                    try {
+                                        Message message = new Message();
+                                        message.what = postUploadImage(imageUrl);
+                                        uploadImageToServerHandler.sendMessage(message);
+                                    } catch (IOException e) {
+                                        e.printStackTrace();
+                                    }
+                                }
+                            }).start();
                             Toast.makeText(getActivity(), "创建成功", Toast.LENGTH_SHORT).show();
                             Intent intent = new Intent(getActivity(), OneOrderCaseActivity.class);
                             intent.putExtra("orderId", orderId);
@@ -351,6 +402,32 @@ public class OrderFragment extends Fragment {
                 }).start();
             }
         });
+    }
+
+    private int postUploadImage(String imageUrl) throws IOException {
+        int res;
+
+        RequestBody body = new FormBody.Builder()
+                .add("id", orderId)
+                .add("url", imageUrl)
+                .build();
+
+        Request request = new Request.Builder()
+                .url(imageUploadToServerUrl)
+                .header("token", idContent + "_" + tokenContent)
+                .post(body)
+                .build();
+
+        Call call = client.newCall(request);
+        Response response = call.execute();
+
+        if (response.code() == 200) {
+            res = SUCCESS;
+        } else {
+            res = ERROR;
+        }
+
+        return res;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
@@ -425,5 +502,4 @@ public class OrderFragment extends Fragment {
             }
         }
     }
-
 }

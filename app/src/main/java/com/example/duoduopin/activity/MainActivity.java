@@ -11,8 +11,11 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -39,6 +42,7 @@ import com.example.duoduopin.pojo.OrderContent;
 import com.example.duoduopin.service.RecSysMsgService;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.liulishuo.filedownloader.FileDownloader;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -60,11 +64,12 @@ import okhttp3.Response;
 import static android.content.pm.PackageManager.PERMISSION_GRANTED;
 import static com.example.duoduopin.activity.LoginActivity.JSON;
 import static com.example.duoduopin.handler.GeneralMsgHandler.SUCCESS;
-import static com.example.duoduopin.tool.Constants.API_KEY;
+import static com.example.duoduopin.tool.Constants.API_KEY_TO_MAP;
 import static com.example.duoduopin.tool.Constants.brief_order_content_load_signal;
 
 public class MainActivity extends FragmentActivity implements View.OnClickListener {
     public static final String prefName = "tokenData";
+    public static final String basePath = Environment.getExternalStoragePublicDirectory("Download").getAbsolutePath();
     public static final OkHttpClient client = new OkHttpClient().newBuilder()
             .readTimeout(60, TimeUnit.SECONDS)
             .writeTimeout(60, TimeUnit.SECONDS)
@@ -78,9 +83,15 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     public static String tokenContent;
     public static String usernameContent;
     public static String nicknameContent;
+    public static String creditContent;
+    public static String headUrl;
+    public static String headPath = "";
+    public static Bitmap head;
     public static ArrayList<OrderContent> recOrderContentList;
     public static ArrayList<BriefOrderContent> recBriefOrderContentList = new ArrayList<>();
     private final int LOCATION_REQUEST_CODE = 1;
+
+
     @SuppressLint("HandlerLeak")
     private final Handler locateSuccessHandler = new Handler() {
         @RequiresApi(api = Build.VERSION_CODES.O)
@@ -113,13 +124,13 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         }
     };
     private ImageView home, message, order, profile;
-    private AMapLocationClient locationClient;
     private boolean isConnected = false;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        FileDownloader.setup(this);
         checkLogin();
 
         initListener();
@@ -141,6 +152,8 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         String token = prefs.getString("token", "");
         String username = prefs.getString("username", "");
         String nickname = prefs.getString("nickname", "");
+        String credit = prefs.getString("credit", "");
+        headPath = prefs.getString("headPath", "");
         Long lastOnlineTime = prefs.getLong("lastOnlineTime", 0);
         Long nowTime = System.currentTimeMillis() / 1000L;
         long timeOffset = (nowTime - lastOnlineTime) / (3600 * 24);
@@ -148,7 +161,7 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
             Toast.makeText(this, "请先登录！", Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(this, LoginActivity.class);
             startActivityForResult(intent, 1);
-        } else if (timeOffset > 2) {
+        } else if (timeOffset > 3) {
             Toast.makeText(this, "登录已过期，请重新登录！", Toast.LENGTH_SHORT).show();
             Intent intent = new Intent(this, LoginActivity.class);
             startActivityForResult(intent, 1);
@@ -157,6 +170,10 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
             tokenContent = token;
             usernameContent = username;
             nicknameContent = nickname;
+            creditContent = credit;
+            if (!headPath.isEmpty()) {
+                head = BitmapFactory.decodeFile(headPath);
+            }
 
             if (checkPermission()) {
                 getLocatePermission();
@@ -223,8 +240,8 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     }
 
     private void startLocationRequest() {
-        AMapLocationClient.setApiKey(API_KEY);
-        locationClient = new AMapLocationClient(this);
+        AMapLocationClient.setApiKey(API_KEY_TO_MAP);
+        AMapLocationClient locationClient = new AMapLocationClient(this);
 
         AMapLocationClientOption locationClientOption = new AMapLocationClientOption();
         locationClientOption.setLocationMode(AMapLocationClientOption.AMapLocationMode.Hight_Accuracy);
@@ -278,7 +295,7 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
             Response response = call.execute();
 
             if (response.code() == 200) {
-                JSONObject responseJSON = new JSONObject(response.body().string());
+                JSONObject responseJSON = new JSONObject(Objects.requireNonNull(response.body()).string());
                 recOrderContentList = new Gson().fromJson(responseJSON.getString("content"), new TypeToken<List<OrderContent>>() {
                 }.getType());
                 if (recOrderContentList != null) {

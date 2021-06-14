@@ -1,6 +1,7 @@
 package com.example.duoduopin.fragment.ordertab;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,6 +9,7 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.duoduopin.R;
@@ -42,7 +44,10 @@ public class OrderMemberFragment extends Fragment {
         super.onCreate(savedInstanceState);
         Bundle arguments = getArguments();
         if (arguments != null) {
-            memberInfoList = arguments.getParcelableArrayList("memberInfo");
+            memberInfoList = arguments.getParcelableArrayList("memberInfoList");
+            if (memberInfoList == null) {
+                Log.e("memberFragment", "memberInfoList is null!");
+            }
         }
     }
 
@@ -52,6 +57,7 @@ public class OrderMemberFragment extends Fragment {
 
         RecyclerView rvOrderMember = view.findViewById(R.id.rv_order_member);
         BriefMemberInfoAdapter adapter = new BriefMemberInfoAdapter(memberInfoList);
+        rvOrderMember.setLayoutManager(new LinearLayoutManager(view.getContext()));
         rvOrderMember.setAdapter(adapter);
     }
 }

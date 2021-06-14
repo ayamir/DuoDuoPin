@@ -38,6 +38,8 @@ import okhttp3.Request;
 import okhttp3.Response;
 
 import static com.example.duoduopin.activity.MainActivity.client;
+import static com.example.duoduopin.activity.MainActivity.creditContent;
+import static com.example.duoduopin.activity.MainActivity.head;
 import static com.example.duoduopin.activity.MainActivity.idContent;
 import static com.example.duoduopin.activity.MainActivity.nicknameContent;
 import static com.example.duoduopin.activity.MainActivity.prefs;
@@ -51,7 +53,7 @@ import static com.example.duoduopin.tool.Constants.logoutUrl;
 
 public class ProfileFragment extends Fragment {
     public static final int EDIT_USER_INFO_REQUEST = 4000;
-    public static final int EDIT_USER_NICKNAME_REQUEST = 40001;
+    public static final int EDIT_USER_NICKNAME_REQUEST = 4001;
     public static final int EDIT_USER_HEAD_REQUEST = 4002;
     private TextView tvProfileNickname;
 
@@ -108,11 +110,13 @@ public class ProfileFragment extends Fragment {
         });
 
         ImageView ivUserHead = getActivity().findViewById(R.id.iv_profile_user_head);
+        ivUserHead.setImageBitmap(head);
 
         tvProfileNickname = Objects.requireNonNull(getActivity()).findViewById(R.id.tv_profile_nickname);
         tvProfileNickname.setText(nicknameContent);
 
         TextView tvProfileUserCredit = Objects.requireNonNull(getActivity().findViewById(R.id.tv_profile_user_credit));
+        tvProfileUserCredit.setText(creditContent);
 
 
         LinearLayout carCaseLayout = getActivity().findViewById(R.id.car_case_layout);

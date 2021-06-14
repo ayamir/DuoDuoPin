@@ -14,6 +14,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.duoduopin.R;
+import com.example.duoduopin.activity.PersonInfoActivity;
 import com.example.duoduopin.pojo.BriefMemberInfo;
 
 import org.jetbrains.annotations.NotNull;
@@ -50,7 +51,7 @@ public class BriefMemberInfoAdapter extends RecyclerView.Adapter<BriefMemberInfo
         holder.ivMemberHead.setImageBitmap(head);
 
         holder.clPersonItem.setOnClickListener(v -> {
-            Intent intent = new Intent();
+            Intent intent = new Intent(v.getContext(), PersonInfoActivity.class);
             intent.putExtra("headPath", headpath);
             intent.putExtra("nickname", nickname);
             intent.putExtra("userId", userId);
@@ -61,7 +62,11 @@ public class BriefMemberInfoAdapter extends RecyclerView.Adapter<BriefMemberInfo
 
     @Override
     public int getItemCount() {
-        return memberInfoList.size();
+        if (memberInfoList != null) {
+            return memberInfoList.size();
+        } else {
+            return 0;
+        }
     }
 
     public static class MemberInfoViewHolder extends RecyclerView.ViewHolder {

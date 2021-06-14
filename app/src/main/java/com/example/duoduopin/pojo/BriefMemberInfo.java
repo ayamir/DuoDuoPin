@@ -3,6 +3,8 @@ package com.example.duoduopin.pojo;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import androidx.annotation.NonNull;
+
 public class BriefMemberInfo implements Parcelable {
     public static final Creator<BriefMemberInfo> CREATOR = new Creator<BriefMemberInfo>() {
         @Override
@@ -61,5 +63,14 @@ public class BriefMemberInfo implements Parcelable {
 
     public String getHeadpath() {
         return headpath;
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return "\n\nnickname = " + nickname +
+                "\nuserId = " + userId +
+                "\ncredit = " + credit +
+                "\nheadpath = " + headpath;
     }
 }

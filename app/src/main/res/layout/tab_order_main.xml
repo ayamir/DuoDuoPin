@@ -12,27 +12,14 @@
         android:orientation="vertical">
 
 
-        <FrameLayout
-            android:id="@+id/lunbo"
+        <ImageView
+            android:id="@+id/iv_image"
             android:layout_width="match_parent"
-            android:layout_height="300dp">
+            android:layout_height="300dp"
+            android:layout_weight="1"
+            android:contentDescription="拼单图片">
 
-            <androidx.viewpager2.widget.ViewPager2
-                android:id="@+id/gallery"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:unselectedAlpha="1" />
-
-            <LinearLayout
-                android:id="@+id/CarouselLayoutPage"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center|bottom"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:padding="10dip" />
-
-        </FrameLayout>
+        </ImageView>
 
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
