@@ -193,7 +193,7 @@ public class OrderFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-        LinearLayout llLocate = getActivity().findViewById(R.id.ll_locate);
+        LinearLayout llLocate = getActivity().findViewById(R.id.ll_menu_locate);
         llLocate.setOnClickListener(v -> {
             Intent intent = new Intent(this.getActivity(), LocateActivity.class);
             intent.putExtra("address", "");

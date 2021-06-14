@@ -22,6 +22,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -36,7 +37,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.bigkoo.pickerview.builder.TimePickerBuilder;
 import com.bigkoo.pickerview.view.TimePickerView;
 import com.example.duoduopin.R;
-import com.example.duoduopin.activity.AssistantLocationActivity;
+import com.example.duoduopin.activity.order.LocateActivity;
 import com.example.duoduopin.activity.order.OrderCaseActivity;
 import com.example.duoduopin.adapter.BriefOrderContentAdapter;
 import com.example.duoduopin.pojo.BriefOrderContent;
@@ -49,6 +50,7 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static android.app.Activity.RESULT_OK;
 import static com.example.duoduopin.activity.MainActivity.isLoaded;
 import static com.example.duoduopin.activity.MainActivity.recBriefOrderContentList;
 import static com.example.duoduopin.activity.MainActivity.recOrderContentList;
@@ -69,7 +71,8 @@ public class HomeFragment extends Fragment {
     private EditText minPrice;
     private EditText maxPrice;
     private EditText description;
-    private EditText tude;
+    private TextView tvAddress;
+    private EditText etTude;
     private TimePickerView pvTimeStart;
     private TimePickerView pvTimeEnd;
     private String typeString, distanceString;
@@ -111,6 +114,23 @@ public class HomeFragment extends Fragment {
     public void onDestroy() {
         super.onDestroy();
         getActivity().unregisterReceiver(briefOrderContentReceiver);
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (resultCode == RESULT_OK) {
+            String address = data.getStringExtra("address");
+            tvAddress.setText(address);
+            String tude = data.getStringExtra("tude");
+            boolean isChosen = data.getBooleanExtra("isChosen", false);
+            if (isChosen) {
+                etTude.setText(tude);
+            } else {
+                etTude.setText("");
+                etTude.setHint("请将复制的经纬度粘贴到这里");
+            }
+        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
@@ -204,16 +224,21 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        Button location = getActivity().findViewById(R.id.locationSearch);
-        location.setOnClickListener(v -> {
-            Intent intent = new Intent(v.getContext(), AssistantLocationActivity.class);
-            startActivity(intent);
+        LinearLayout llMenuLocate = getActivity().findViewById(R.id.ll_menu_locate);
+        llMenuLocate.setOnClickListener(v -> {
+            Intent intent = new Intent(v.getContext(), LocateActivity.class);
+            intent.putExtra("address", "");
+            intent.putExtra("tude", "");
+            intent.putExtra("isChosen", false);
+            startActivityForResult(intent, 0);
         });
+
+        tvAddress = getActivity().findViewById(R.id.tv_menu_address);
 
         minPrice = getActivity().findViewById(R.id.minPrice);
         maxPrice = getActivity().findViewById(R.id.maxPrice);
         description = getActivity().findViewById(R.id.tv_description);
-        tude = getActivity().findViewById(R.id.tudeSearch);
+        etTude = getActivity().findViewById(R.id.et_menu_tude);
 
         Button submitSearch = getActivity().findViewById(R.id.submitSearch);
         submitSearch.setOnClickListener(v -> {
@@ -222,7 +247,7 @@ public class HomeFragment extends Fragment {
             String minPriceString = minPrice.getText().toString();
             String maxPriceString = maxPrice.getText().toString();
             String descriptionString = description.getText().toString();
-            String tudeString = tude.getText().toString();
+            String tudeString = etTude.getText().toString();
             if (tudeString.isEmpty()) {
                 Toast.makeText(getActivity(), "请输入经纬度", Toast.LENGTH_SHORT).show();
             } else {

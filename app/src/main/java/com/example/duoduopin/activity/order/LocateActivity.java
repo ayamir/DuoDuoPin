@@ -31,12 +31,12 @@ public class LocateActivity extends AppCompatActivity {
     }
 
     private void init() {
-        addressMap.put("北京邮电大学西门", "39.961075,116.355332");
-        addressMap.put("北京邮电大学学生公寓四号楼", "39.962847,116.356687");
-        addressMap.put("漫咖啡", "39.963710,116.357495");
-        addressMap.put("北京邮电大学东门", "39.962421,116.361011");
-        addressMap.put("北京邮电大学科研楼", "39.964399,116.359094");
-        addressMap.put("北京邮电大学南门", "39.958218,116.357939");
+        addressMap.put("北京邮电大学西门", "116.355332,39.961075");
+        addressMap.put("北京邮电大学学生公寓四号楼", "116.356687,39.962847");
+        addressMap.put("漫咖啡", "116.357495,39.963710");
+        addressMap.put("北京邮电大学东门", "116.361011,39.962421");
+        addressMap.put("北京邮电大学科研楼", "116.359094,39.964399");
+        addressMap.put("北京邮电大学南门", "116.357939,39.958218");
     }
 
     private void putTude(String address, Intent intent) {
