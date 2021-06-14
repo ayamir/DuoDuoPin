@@ -5,6 +5,7 @@ import android.content.Context;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -16,7 +17,11 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.duoduopin.R;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
+import java.util.Objects;
 
 import okhttp3.Call;
 import okhttp3.FormBody;
@@ -28,6 +33,7 @@ import static com.example.duoduopin.activity.MainActivity.client;
 import static com.example.duoduopin.activity.MainActivity.idContent;
 import static com.example.duoduopin.activity.MainActivity.tokenContent;
 import static com.example.duoduopin.handler.GeneralMsgHandler.ERROR;
+import static com.example.duoduopin.handler.GeneralMsgHandler.FAILED;
 import static com.example.duoduopin.handler.GeneralMsgHandler.SUCCESS;
 import static com.example.duoduopin.tool.Constants.changePasswdUrl;
 
@@ -54,6 +60,7 @@ public class EditPasswordActivity extends AppCompatActivity {
             canCommit = checkEmpty(v.getContext());
             if (canCommit) {
                 canCommit = checkEqual();
+                Log.e("commitPassword", String.valueOf(canCommit));
             } else {
                 Toast.makeText(v.getContext(), "请检查密码是否一致~", Toast.LENGTH_SHORT).show();
             }
@@ -65,7 +72,7 @@ public class EditPasswordActivity extends AppCompatActivity {
                         public void handleMessage(@NonNull Message msg) {
                             if (msg.what == SUCCESS) {
                                 Toast.makeText(v.getContext(), "密码修改成功！", Toast.LENGTH_SHORT).show();
-                            } else if (msg.what == ERROR) {
+                            } else if (msg.what == FAILED) {
                                 Toast.makeText(v.getContext(), "请检查旧密码是否正确！", Toast.LENGTH_SHORT).show();
                             } else {
                                 Toast.makeText(v.getContext(), "遇到未知问题，请检查网络之后稍后再试！", Toast.LENGTH_SHORT).show();
@@ -79,7 +86,7 @@ public class EditPasswordActivity extends AppCompatActivity {
                             Message message = new Message();
                             message.what = postChangePassword();
                             changePasswordHandler.sendMessage(message);
-                        } catch (IOException e) {
+                        } catch (IOException | JSONException e) {
                             e.printStackTrace();
                         }
                     }
@@ -88,15 +95,15 @@ public class EditPasswordActivity extends AppCompatActivity {
         });
     }
 
-    private int postChangePassword() throws IOException {
+    private int postChangePassword() throws IOException, JSONException {
         int res;
 
-        final String old = etOldPassword.getText().toString();
-        final String now = etNewPassword.getText().toString();
+        final String old = etOldPassword.getText().toString().trim();
+        final String now = etNewPassword.getText().toString().trim();
 
         RequestBody body = new FormBody.Builder()
                 .add("old", old)
-                .add("new", now)
+                .add("now", now)
                 .build();
 
         final Request request = new Request.Builder()
@@ -107,9 +114,14 @@ public class EditPasswordActivity extends AppCompatActivity {
 
         Call call = client.newCall(request);
         Response response = call.execute();
+        String responseString = Objects.requireNonNull(response.body()).string();
+        JSONObject responseJSON = new JSONObject(responseString);
+        int code = Integer.parseInt(responseJSON.getString("code"));
 
-        if (response.code() == 200) {
+        if (code == 100) {
             res = SUCCESS;
+        } else if (code == -1010) {
+            res = FAILED;
         } else {
             res = ERROR;
         }
@@ -120,7 +132,11 @@ public class EditPasswordActivity extends AppCompatActivity {
     private boolean checkEqual() {
         boolean res = true;
 
-        if (!etNewPassword.getText().equals(etRepeatPassword.getText()))
+        String now = etNewPassword.getText().toString().trim();
+        String re = etRepeatPassword.getText().toString().trim();
+        Log.e("checkEqual", re + ", " + now);
+
+        if (!re.equals(now))
             res = false;
 
         return res;
@@ -131,12 +147,10 @@ public class EditPasswordActivity extends AppCompatActivity {
         if (etOldPassword.getText().length() == 0) {
             res = false;
             Toast.makeText(context, "请先输入旧密码~", Toast.LENGTH_SHORT).show();
-        }
-        if (etNewPassword.getText().length() == 0) {
+        } else if (etNewPassword.getText().length() == 0) {
             res = false;
             Toast.makeText(context, "请先输入新密码~", Toast.LENGTH_SHORT).show();
-        }
-        if (etRepeatPassword.getText().length() == 0) {
+        } else if (etRepeatPassword.getText().length() == 0) {
             res = false;
             Toast.makeText(context, "请重复输入新密码~", Toast.LENGTH_SHORT).show();
         }

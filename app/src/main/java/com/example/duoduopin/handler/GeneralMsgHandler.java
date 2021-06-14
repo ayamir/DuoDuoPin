@@ -8,19 +8,18 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 
 public class GeneralMsgHandler extends Handler {
-    private final Context context;
-
     public static final int SUCCESS = 1;
     public static final int ERROR = -1;
+    public static final int FAILED = 0;
     public static final int JOIN_REPEAT = 2;
     public static final int GROUP_FULL = 3;
-
     public static final int REGISTER = 0;
     public static final int LOGIN = 1;
     public static final int LOGOUT = 2;
     public static final int QUERY_ORDER = 3;
     public static final int QUERY_SYS_MSG = 4;
     public static final int QUERY_GRP_MSG = 5;
+    private final Context context;
 
     public GeneralMsgHandler(Context context) {
         this.context = context;
