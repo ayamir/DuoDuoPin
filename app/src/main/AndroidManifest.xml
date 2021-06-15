@@ -35,7 +35,6 @@
         <activity android:name=".activity.profile.EditUserInfoActivity" />
         <activity android:name=".activity.profile.EditPasswordActivity" />
         <activity android:name=".activity.profile.EditHeadActivity" />
-        <activity android:name=".activity.profile.EditNicknameActivity" />
 
         <activity android:name=".activity.message.GrpDetailsActivity" />
 

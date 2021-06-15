@@ -41,11 +41,6 @@ public class EditUserInfoActivity extends AppCompatActivity {
         ImageView ivEditBack = findViewById(R.id.iv_edit_back);
         ivEditBack.setOnClickListener(v -> finish());
 
-        RelativeLayout rlEditNickname = findViewById(R.id.rl_edit_nickname);
-        rlEditNickname.setOnClickListener(v -> {
-            Intent intent = new Intent(v.getContext(), EditNicknameActivity.class);
-            startActivity(intent);
-        });
         RelativeLayout rlEditCredit = findViewById(R.id.rl_edit_credit);
         rlEditCredit.setOnClickListener(v -> Toast.makeText(v.getContext(), "信誉不能被修改哦！", Toast.LENGTH_SHORT).show());
         RelativeLayout rlEditHead = findViewById(R.id.rl_edit_head);
