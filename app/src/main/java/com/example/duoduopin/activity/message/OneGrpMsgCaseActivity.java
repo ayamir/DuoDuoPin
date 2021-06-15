@@ -96,10 +96,6 @@ public class OneGrpMsgCaseActivity extends AppCompatActivity {
         }
     }
 
-    private void getMemberInfoList() {
-        // TODO: get member info list from server
-    }
-
     @RequiresApi(api = Build.VERSION_CODES.O)
     private void bindItemsAndOps() {
         ImageView ivGroupDetails = findViewById(R.id.iv_group_details);
