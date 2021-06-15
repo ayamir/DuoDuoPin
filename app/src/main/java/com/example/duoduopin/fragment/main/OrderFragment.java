@@ -330,7 +330,6 @@ public class OrderFragment extends Fragment {
                             }
                         }
                     }).start();
-
                 } else {
                     imageUrl = "";
                 }
@@ -455,7 +454,7 @@ public class OrderFragment extends Fragment {
         int res;
 
         RequestBody body = new FormBody.Builder()
-                .add("path", imageUrl)
+                .add("url", imageUrl)
                 .build();
 
         Request request = new Request.Builder()

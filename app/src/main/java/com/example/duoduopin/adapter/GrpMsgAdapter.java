@@ -87,12 +87,7 @@ public class GrpMsgAdapter extends RecyclerView.Adapter<GrpMsgAdapter.GrpMsgView
         } else {
             View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.tip_msg_grp_right, parent, false);
             final GrpMsgViewHolderRight holder = new GrpMsgViewHolderRight(view);
-            holder.msgContent.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    Toast.makeText(v.getContext(), "点击自己的消息", Toast.LENGTH_SHORT).show();
-                }
-            });
+            holder.msgContent.setOnClickListener(v -> Toast.makeText(v.getContext(), "点击自己的消息", Toast.LENGTH_SHORT).show());
             return holder;
         }
     }

@@ -20,7 +20,8 @@ public class Constants {
     public static final String creditUrl = baseUrl + "Credit/";
     public static final String headUploadToServerUrl = baseUrl + "pic/upload/";
     public static final String headUpdateToServerUrl = baseUrl + "pic/update/";
-    public static final String imageUploadToServerUrl = baseUrl + "ShareBill/add/";
+    public static final String imageUploadToServerUrl = baseUrl + "ShareBillPic/add/";
+    public static final String imageDownloadUrl = baseUrl + "ShareBillPic/get/";
     private static final String queryUrl = baseUrl + "ShareBill/";
     public static final String queryByInfoUrl = queryUrl + "info/";
     public static final String createOrderUrl = queryUrl + "add/";
@@ -100,5 +101,9 @@ public class Constants {
 
     public static String getImageUploadToServerUrl(String orderId) {
         return imageUploadToServerUrl + orderId;
+    }
+
+    public static String getImageDownloadUrl(String orderId) {
+        return imageDownloadUrl + orderId;
     }
 }

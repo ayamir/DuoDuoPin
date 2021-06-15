@@ -2,6 +2,7 @@ package com.example.duoduopin.fragment.ordertab;
 
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,10 +23,7 @@ import java.io.File;
 import static com.example.duoduopin.activity.MainActivity.basePath;
 
 public class OrderMainFragment extends Fragment {
-    private String userIdString;
     private String typeString;
-    private String orderIdString;
-    private String imageUrlString = "";
     private String imagePath = "";
     private String priceString;
     private String titleString;
@@ -46,34 +44,21 @@ public class OrderMainFragment extends Fragment {
 
     @Override
     public void onCreate(@Nullable @org.jetbrains.annotations.Nullable Bundle savedInstanceState) {
+        String TAG = "OrderMainOnCreate";
         super.onCreate(savedInstanceState);
         Bundle arguments = getArguments();
         if (getArguments() != null) {
-            userIdString = arguments.getString("userId");
             typeString = arguments.getString("type");
-            orderIdString = arguments.getString("orderIdString");
-            imageUrlString = arguments.getString("imageUrl");
-            imagePath = downloadImage(imageUrlString);
+            imagePath = arguments.getString("imagePath");
             priceString = arguments.getString("price");
             titleString = arguments.getString("title");
             descriptionString = arguments.getString("description");
             nicknameString = arguments.getString("nickname");
             creditString = arguments.getString("credit");
+        } else {
+            Log.e(TAG, "arguments are null");
         }
     }
-
-    private String downloadImage(String imageUrl) {
-        String filepath = "";
-        if (imageUrl != null) {
-            if (!imageUrl.isEmpty()) {
-                String format = imageUrl.substring(imageUrl.lastIndexOf('.'));
-                filepath = basePath + File.separator + orderIdString + "_order" + format;
-                FileDownloader.getImpl().create(imageUrl).setPath(filepath).start();
-            }
-        }
-        return filepath;
-    }
-
 
     @Nullable
     @org.jetbrains.annotations.Nullable
@@ -87,10 +72,12 @@ public class OrderMainFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         ImageView ivImage = view.findViewById(R.id.iv_image);
-        if (typeString.equals("拼车")) {
-            ivImage.setVisibility(View.INVISIBLE);
-        } else {
-            ivImage.setImageBitmap(BitmapFactory.decodeFile(imagePath));
+        if (typeString != null) {
+            if (typeString.equals("拼车")) {
+                ivImage.setVisibility(View.INVISIBLE);
+            } else {
+                ivImage.setImageBitmap(BitmapFactory.decodeFile(imagePath));
+            }
         }
 
         TextView tvTitle = view.findViewById(R.id.tv_title);

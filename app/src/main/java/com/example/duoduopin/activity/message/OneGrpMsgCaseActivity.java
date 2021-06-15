@@ -44,7 +44,6 @@ import static com.example.duoduopin.tool.Constants.group_new_msg_signal;
 public class OneGrpMsgCaseActivity extends AppCompatActivity {
     private String grpId;
     private String grpTitle;
-    private ArrayList<BriefMemberInfo> memberInfoList;
 
     private EditText msgInput;
     private LinearLayoutManager grpMsgLayoutManager;
@@ -103,7 +102,6 @@ public class OneGrpMsgCaseActivity extends AppCompatActivity {
             Intent intent = new Intent(v.getContext(), GrpDetailsActivity.class);
             intent.putExtra("orderId", grpId);
             intent.putExtra("groupTitle", grpTitle);
-            intent.putExtra("memberInfoList", memberInfoList);
             v.getContext().startActivity(intent);
         });
 

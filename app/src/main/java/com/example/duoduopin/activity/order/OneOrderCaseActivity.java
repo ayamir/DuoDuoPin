@@ -25,6 +25,8 @@ import com.example.duoduopin.adapter.OrderTabAdapter;
 import com.example.duoduopin.pojo.BriefMemberInfo;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.tabs.TabLayoutMediator;
+import com.liulishuo.filedownloader.BaseDownloadTask;
+import com.liulishuo.filedownloader.FileDownloadListener;
 import com.liulishuo.filedownloader.FileDownloader;
 
 import org.json.JSONArray;
@@ -51,6 +53,7 @@ import static com.example.duoduopin.handler.GeneralMsgHandler.GROUP_FULL;
 import static com.example.duoduopin.handler.GeneralMsgHandler.JOIN_REPEAT;
 import static com.example.duoduopin.handler.GeneralMsgHandler.SUCCESS;
 import static com.example.duoduopin.tool.Constants.getDelOrderUrl;
+import static com.example.duoduopin.tool.Constants.getImageDownloadUrl;
 import static com.example.duoduopin.tool.Constants.getJoinUrl;
 import static com.example.duoduopin.tool.Constants.getQueryMemberUrl;
 import static com.example.duoduopin.tool.Constants.getQuitUrl;
@@ -78,12 +81,22 @@ public class OneOrderCaseActivity extends FragmentActivity {
     private String descriptionString;
     private String titleString;
     private String imageUrl = "";
-    private String headPath;
-    private String creditString;
+    private String imagePath = "";
     private Button btnDelete, btnJoin, btnLeave;
     private ImageView ivBack;
     private TabLayout tabLayout;
     private ViewPager2 viewPager2;
+
+    public static String getDownloadPath(String memberHeadUrl, String memberId) {
+        if (!memberHeadUrl.equals("null")) {
+            String format = memberHeadUrl.substring(memberHeadUrl.lastIndexOf('.'));
+            String filepath = basePath + File.separator + memberId + "_head" + format;
+            FileDownloader.getImpl().create(memberHeadUrl).setPath(filepath).start();
+            return filepath;
+        } else {
+            return "";
+        }
+    }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     @Override
@@ -109,7 +122,6 @@ public class OneOrderCaseActivity extends FragmentActivity {
         @SuppressLint("HandlerLeak") final Handler isInHandler = new Handler() {
             @Override
             public void handleMessage(@NonNull Message msg) {
-                super.handleMessage(msg);
                 if (msg.what == SUCCESS) {
                     if (isInMembers()) {
                         if (userIdString.equals(idContent))
@@ -136,6 +148,92 @@ public class OneOrderCaseActivity extends FragmentActivity {
             }
         }).start();
 
+
+        @SuppressLint("HandlerLeak") final Handler downloadImageHandler = new Handler() {
+            @Override
+            public void handleMessage(@NonNull Message msg) {
+                if (msg.what == SUCCESS) {
+                    int MAIN_POS = 0;
+                    tabAdapter.setBundle(setMainBundle(), MAIN_POS);
+
+                    int DETAILS_POS = 1;
+                    tabAdapter.setBundle(setDetailsBundle(), DETAILS_POS);
+
+                    viewPager2.setAdapter(tabAdapter);
+
+                    new TabLayoutMediator(tabLayout, viewPager2, (tab, position) -> {
+                        switch (position) {
+                            case 1:
+                                tab.setText(DETAILS_TAB_CONTENT);
+                                break;
+                            case 2:
+                                tab.setText(MEMBER_TAB_CONTENT);
+                                break;
+                            default:
+                                tab.setText(MAIN_TAB_CONTENT);
+                                break;
+                        }
+                    }).attach();
+                }
+            }
+        };
+
+        String TAG = "downloadImage";
+        new Thread(() -> {
+            Message msg = new Message();
+            try {
+                int signal = postGetImageUrl();
+                msg.what = signal;
+                if (signal == SUCCESS) {
+                    Log.e(TAG, imageUrl);
+                    imagePath = downloadImage(imageUrl);
+                }
+            } catch (IOException | JSONException e) {
+                e.printStackTrace();
+            }
+            downloadImageHandler.sendMessage(msg);
+        }).start();
+    }
+
+    private String downloadImage(String imageUrl) {
+        String TAG = "downloadImage";
+        String filepath = "";
+        if (!imageUrl.isEmpty() && !imageUrl.equals("null")) {
+            String format = imageUrl.substring(imageUrl.lastIndexOf('.'));
+            filepath = basePath + File.separator + orderIdString + "_order" + format;
+            FileDownloader.getImpl().create(imageUrl).setPath(filepath).setListener(new FileDownloadListener() {
+                @Override
+                protected void pending(BaseDownloadTask task, int soFarBytes, int totalBytes) {
+
+                }
+
+                @Override
+                protected void progress(BaseDownloadTask task, int soFarBytes, int totalBytes) {
+                    Log.e(TAG, "task id: " + task.getId() + " soFarBytes: " + soFarBytes + ", totalBytes: " + totalBytes);
+                }
+
+                @Override
+                protected void completed(BaseDownloadTask task) {
+                    Log.e(TAG, "task id: " + task.getId() + " completed, path: " + task.getPath());
+                }
+
+                @Override
+                protected void paused(BaseDownloadTask task, int soFarBytes, int totalBytes) {
+
+                }
+
+                @Override
+                protected void error(BaseDownloadTask task, Throwable e) {
+                    Log.e(TAG, "task id: " + task.getId() + " error!");
+                }
+
+                @Override
+                protected void warn(BaseDownloadTask task) {
+
+                }
+            }).start();
+        }
+        return filepath;
     }
 
     private boolean isInMembers() {
@@ -165,15 +263,16 @@ public class OneOrderCaseActivity extends FragmentActivity {
         }
     }
 
-    public static String getDownloadPath(String memberHeadUrl, String memberId) {
-        if (!memberHeadUrl.equals("null")) {
-            String format = memberHeadUrl.substring(memberHeadUrl.lastIndexOf('.'));
-            String filepath = basePath + File.separator + memberId + "_head" + format;
-            FileDownloader.getImpl().create(memberHeadUrl).setPath(filepath).start();
-            return filepath;
-        } else {
-            return "";
-        }
+    private Bundle setMainBundle() {
+        Bundle bundle = new Bundle();
+        bundle.putString("type", typeString);
+        bundle.putString("imagePath", imagePath);
+        bundle.putString("price", priceString);
+        bundle.putString("title", titleString);
+        bundle.putString("description", descriptionString);
+        bundle.putString("nickname", nicknameString);
+
+        return bundle;
     }
 
     private Bundle setDetailsBundle() {
@@ -206,28 +305,9 @@ public class OneOrderCaseActivity extends FragmentActivity {
     }
 
     private void bindItems() {
-        int MAIN_POS = 0;
-        tabAdapter.setBundle(setMainBundle(), MAIN_POS);
-        int DETAILS_POS = 1;
-        tabAdapter.setBundle(setDetailsBundle(), DETAILS_POS);
-
         tabLayout = findViewById(R.id.tab_layout);
         viewPager2 = findViewById(R.id.viewpager2);
         viewPager2.setOrientation(ViewPager2.ORIENTATION_HORIZONTAL);
-        viewPager2.setAdapter(tabAdapter);
-        new TabLayoutMediator(tabLayout, viewPager2, (tab, position) -> {
-            switch (position) {
-                case 1:
-                    tab.setText(DETAILS_TAB_CONTENT);
-                    break;
-                case 2:
-                    tab.setText(MEMBER_TAB_CONTENT);
-                    break;
-                default:
-                    tab.setText(MAIN_TAB_CONTENT);
-                    break;
-            }
-        }).attach();
 
         btnJoin = findViewById(R.id.btn_join);
         btnLeave = findViewById(R.id.btn_leave);
@@ -382,18 +462,28 @@ public class OneOrderCaseActivity extends FragmentActivity {
         ivBack.setOnClickListener(v -> finish());
     }
 
-    private Bundle setMainBundle() {
-        Bundle bundle = new Bundle();
-        bundle.putString("type", typeString);
-        bundle.putString("imageUrl", imageUrl);
-        bundle.putString("price", priceString);
-        bundle.putString("title", titleString);
-        bundle.putString("description", descriptionString);
-        bundle.putString("userId", userIdString);
-        bundle.putString("nickname", nicknameString);
-        bundle.putString("credit", creditString);
+    private int postGetImageUrl() throws IOException, JSONException {
+        final String TAG = "postGetImageUrl";
+        int ret;
 
-        return bundle;
+        final Request request = new Request.Builder()
+                .url(getImageDownloadUrl(orderIdString))
+                .header("token", idContent + "_" + tokenContent)
+                .post(RequestBody.create(null, ""))
+                .build();
+
+        Call call = client.newCall(request);
+        Response response = call.execute();
+
+        if (response.code() == 200) {
+            JSONObject responseJSON = new JSONObject(Objects.requireNonNull(response.body()).string());
+            imageUrl = responseJSON.getString("content");
+            ret = SUCCESS;
+        } else {
+            ret = ERROR;
+        }
+
+        return ret;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
