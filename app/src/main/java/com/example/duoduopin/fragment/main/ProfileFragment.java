@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.BitmapFactory;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Message;
@@ -40,6 +41,7 @@ import okhttp3.Response;
 import static com.example.duoduopin.activity.MainActivity.client;
 import static com.example.duoduopin.activity.MainActivity.creditContent;
 import static com.example.duoduopin.activity.MainActivity.head;
+import static com.example.duoduopin.activity.MainActivity.headPath;
 import static com.example.duoduopin.activity.MainActivity.idContent;
 import static com.example.duoduopin.activity.MainActivity.nicknameContent;
 import static com.example.duoduopin.activity.MainActivity.prefs;
@@ -109,7 +111,7 @@ public class ProfileFragment extends Fragment {
         });
 
         ImageView ivUserHead = view.findViewById(R.id.iv_profile_user_head);
-        ivUserHead.setImageBitmap(head);
+        ivUserHead.setImageBitmap(BitmapFactory.decodeFile(headPath));
 
         tvProfileNickname = Objects.requireNonNull(view).findViewById(R.id.tv_profile_nickname);
         tvProfileNickname.setText(nicknameContent);
@@ -188,6 +190,10 @@ public class ProfileFragment extends Fragment {
         SharedPreferences.Editor editor = prefs.edit();
         editor.remove("id");
         editor.remove("token");
+        editor.remove("username");
+        editor.remove("nickname");
+        editor.remove("credit");
+        editor.remove("headPath");
         editor.remove("lastOnlineTime");
         editor.remove("lastLatitude");
         editor.remove("lastLongitude");

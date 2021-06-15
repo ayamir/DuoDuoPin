@@ -50,7 +50,6 @@ import java.util.regex.Pattern;
 
 import static android.app.Activity.RESULT_OK;
 import static com.example.duoduopin.activity.MainActivity.isLoaded;
-import static com.example.duoduopin.activity.MainActivity.recBriefOrderContentList;
 import static com.example.duoduopin.activity.MainActivity.recOrderContentList;
 import static com.example.duoduopin.tool.Constants.brief_order_content_load_signal;
 
@@ -296,7 +295,7 @@ public class HomeFragment extends Fragment {
         select.setOnClickListener(v -> Toast.makeText(getActivity(), "请从屏幕左边缘向右滑动", Toast.LENGTH_SHORT).show());
 
         srlHomeContent = view.findViewById(R.id.srl_home_content);
-        if (!isLoaded && recBriefOrderContentList.size() == 0) {
+        if (!isLoaded || recOrderContentList.size() == 0) {
             srlHomeContent.setRefreshing(true);
         }
         srlHomeContent.setOnRefreshListener(() -> {

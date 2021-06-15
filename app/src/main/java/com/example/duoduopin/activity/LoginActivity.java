@@ -136,7 +136,7 @@ public class LoginActivity extends AppCompatActivity {
 
                         @Override
                         protected void completed(BaseDownloadTask task) {
-                            Log.e(TAG, "Task " + task.getUrl() + "finished");
+                            Log.e(TAG, "Task " + task.getUrl() + " finished");
                         }
 
                         @Override
@@ -146,7 +146,7 @@ public class LoginActivity extends AppCompatActivity {
 
                         @Override
                         protected void error(BaseDownloadTask task, Throwable e) {
-                            Log.e(TAG, "Task " + task.getUrl() + "error!");
+                            Log.e(TAG, "Task " + task.getUrl() + " error!");
                         }
 
                         @Override

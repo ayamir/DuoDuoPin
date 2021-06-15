@@ -89,7 +89,6 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     public static String headPath = "";
     public static Bitmap head;
     public static ArrayList<OrderContent> recOrderContentList;
-    public static ArrayList<BriefOrderContent> recBriefOrderContentList = new ArrayList<>();
     private final int LOCATION_REQUEST_CODE = 1;
 
 
