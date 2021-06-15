@@ -93,11 +93,11 @@ public class HomeFragment extends Fragment {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
-        bindMainItems();
-        bindMenuItems();
+        bindMainItems(view);
+        bindMenuItems(view);
 
         briefOrderContentReceiver = new BriefOrderContentReceiver();
         IntentFilter intentFilter = new IntentFilter(brief_order_content_load_signal);
@@ -105,9 +105,19 @@ public class HomeFragment extends Fragment {
     }
 
     @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        getActivity().unregisterReceiver(briefOrderContentReceiver);
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
-        getActivity().unregisterReceiver(briefOrderContentReceiver);
     }
 
     @Override
@@ -126,10 +136,10 @@ public class HomeFragment extends Fragment {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.N)
-    private void bindMenuItems() {
-        searchId = getActivity().findViewById(R.id.searchId);
+    private void bindMenuItems(View view) {
+        searchId = view.findViewById(R.id.searchId);
 
-        Button searchByUserId = getActivity().findViewById(R.id.searchByUserId);
+        Button searchByUserId = view.findViewById(R.id.searchByUserId);
         searchByUserId.setOnClickListener(v -> {
             searchIdString = searchId.getText().toString();
             if (searchIdString.isEmpty()) {
@@ -142,7 +152,7 @@ public class HomeFragment extends Fragment {
                 startActivity(toIntent);
             }
         });
-        Button searchByOrderId = getActivity().findViewById(R.id.searchByOrderId);
+        Button searchByOrderId = view.findViewById(R.id.searchByOrderId);
         searchByOrderId.setOnClickListener(v -> {
             searchIdString = searchId.getText().toString();
             if (searchIdString.isEmpty()) {
@@ -155,7 +165,7 @@ public class HomeFragment extends Fragment {
                 startActivity(toIntent);
             }
         });
-        Spinner typeSpinner = getActivity().findViewById(R.id.type);
+        Spinner typeSpinner = view.findViewById(R.id.type);
         ArrayAdapter<CharSequence> typeAdapter = ArrayAdapter.createFromResource(getActivity(), R.array.searchItemType, android.R.layout.simple_spinner_item);
         typeAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         typeSpinner.setAdapter(typeAdapter);
@@ -178,16 +188,16 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        timeStart = getActivity().findViewById(R.id.timeStart);
+        timeStart = view.findViewById(R.id.timeStart);
         timeStart.setOnClickListener(v -> pvTimeStart.show());
 
-        timeEnd = getActivity().findViewById(R.id.timeEnd);
+        timeEnd = view.findViewById(R.id.timeEnd);
         timeEnd.setOnClickListener(v -> pvTimeEnd.show());
         initTimeStartPicker();
         initTimeEndPicker();
 
-        Spinner distanceSpinner = Objects.requireNonNull(getActivity()).findViewById(R.id.distance);
-        ArrayAdapter<CharSequence> distanceAdapter = ArrayAdapter.createFromResource(getActivity(), R.array.distanceType, android.R.layout.simple_spinner_item);
+        Spinner distanceSpinner = Objects.requireNonNull(view).findViewById(R.id.distance);
+        ArrayAdapter<CharSequence> distanceAdapter = ArrayAdapter.createFromResource(view.getContext(), R.array.distanceType, android.R.layout.simple_spinner_item);
         distanceAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         distanceSpinner.setAdapter(distanceAdapter);
         distanceSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -216,7 +226,7 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        ImageView ivLocate = getActivity().findViewById(R.id.iv_locate);
+        ImageView ivLocate = view.findViewById(R.id.iv_locate);
         ivLocate.setOnClickListener(v -> {
             Intent intent = new Intent(v.getContext(), LocateActivity.class);
             intent.putExtra("address", "");
@@ -225,12 +235,12 @@ public class HomeFragment extends Fragment {
             startActivityForResult(intent, 0);
         });
 
-        minPrice = getActivity().findViewById(R.id.minPrice);
-        maxPrice = getActivity().findViewById(R.id.maxPrice);
-        description = getActivity().findViewById(R.id.tv_description);
-        etTude = getActivity().findViewById(R.id.et_menu_tude);
+        minPrice = view.findViewById(R.id.minPrice);
+        maxPrice = view.findViewById(R.id.maxPrice);
+        description = view.findViewById(R.id.tv_description);
+        etTude = view.findViewById(R.id.et_menu_tude);
 
-        Button submitSearch = getActivity().findViewById(R.id.submitSearch);
+        Button submitSearch = view.findViewById(R.id.submitSearch);
         submitSearch.setOnClickListener(v -> {
             String timeStartString = timeStart.getText().toString();
             String timeEndString = timeEnd.getText().toString();
@@ -266,26 +276,26 @@ public class HomeFragment extends Fragment {
         });
     }
 
-    private void bindMainItems() {
-        FloatingActionButton fabOrder = getActivity().findViewById(R.id.fab_order);
+    private void bindMainItems(View view) {
+        FloatingActionButton fabOrder = view.findViewById(R.id.fab_order);
         fabOrder.setOnClickListener(v -> displayBillOrCar(true));
 
-        FloatingActionButton fabCar = getActivity().findViewById(R.id.fab_car);
+        FloatingActionButton fabCar = view.findViewById(R.id.fab_car);
         fabCar.setOnClickListener(v -> displayBillOrCar(false));
 
-        EditText searchBar = getActivity().findViewById(R.id.searchBar);
+        EditText searchBar = view.findViewById(R.id.searchBar);
         searchBar.setOnClickListener(v -> {
             String keyword = searchBar.getText().toString().trim();
             filterByKeyword(keyword);
         });
 
-        ImageView selectLogo = getActivity().findViewById(R.id.selectLogo);
+        ImageView selectLogo = view.findViewById(R.id.selectLogo);
         selectLogo.setOnClickListener(v -> Toast.makeText(getActivity(), "请从屏幕左边缘向右滑动", Toast.LENGTH_SHORT).show());
 
-        TextView select = getActivity().findViewById(R.id.select);
+        TextView select = view.findViewById(R.id.select);
         select.setOnClickListener(v -> Toast.makeText(getActivity(), "请从屏幕左边缘向右滑动", Toast.LENGTH_SHORT).show());
 
-        srlHomeContent = getActivity().findViewById(R.id.srl_home_content);
+        srlHomeContent = view.findViewById(R.id.srl_home_content);
         if (!isLoaded && recBriefOrderContentList.size() == 0) {
             srlHomeContent.setRefreshing(true);
         }
@@ -297,8 +307,8 @@ public class HomeFragment extends Fragment {
             }
         });
 
-        rvContentList = getActivity().findViewById(R.id.rv_content_list);
-        LinearLayoutManager homeContentLayoutManager = new LinearLayoutManager(getActivity(), RecyclerView.VERTICAL, false);
+        rvContentList = view.findViewById(R.id.rv_content_list);
+        LinearLayoutManager homeContentLayoutManager = new LinearLayoutManager(view.getContext(), RecyclerView.VERTICAL, false);
         rvContentList.setLayoutManager(homeContentLayoutManager);
 
         if (recOrderContentList != null) {

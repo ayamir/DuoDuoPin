@@ -94,29 +94,31 @@ public class ProfileFragment extends Fragment {
 
     @RequiresApi(api = Build.VERSION_CODES.R)
     @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        final GeneralMsgHandler myMsgHandler = new GeneralMsgHandler(getActivity());
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+
+        final GeneralMsgHandler myMsgHandler = new GeneralMsgHandler(view.getContext());
 
         super.onActivityCreated(savedInstanceState);
 
-        TextView tvProfileEdit = getActivity().findViewById(R.id.tv_profile_edit);
+        TextView tvProfileEdit = view.findViewById(R.id.tv_profile_edit);
         tvProfileEdit.setOnClickListener(v -> {
             Intent intent = new Intent(v.getContext(), EditUserInfoActivity.class);
             intent.putExtra("credit", creditContent);
             startActivityForResult(intent, EDIT_USER_INFO_REQUEST);
         });
 
-        ImageView ivUserHead = getActivity().findViewById(R.id.iv_profile_user_head);
+        ImageView ivUserHead = view.findViewById(R.id.iv_profile_user_head);
         ivUserHead.setImageBitmap(head);
 
-        tvProfileNickname = Objects.requireNonNull(getActivity()).findViewById(R.id.tv_profile_nickname);
+        tvProfileNickname = Objects.requireNonNull(view).findViewById(R.id.tv_profile_nickname);
         tvProfileNickname.setText(nicknameContent);
 
-        TextView tvProfileUserCredit = Objects.requireNonNull(getActivity().findViewById(R.id.tv_profile_user_credit));
+        TextView tvProfileUserCredit = Objects.requireNonNull(view.findViewById(R.id.tv_profile_user_credit));
         tvProfileUserCredit.setText(creditContent);
 
 
-        LinearLayout carCaseLayout = getActivity().findViewById(R.id.car_case_layout);
+        LinearLayout carCaseLayout = view.findViewById(R.id.car_case_layout);
         carCaseLayout.setOnClickListener(v -> {
             Intent intent = new Intent(v.getContext(), OrderCaseActivity.class);
             intent.putExtra("from", "userId");
@@ -125,7 +127,7 @@ public class ProfileFragment extends Fragment {
             startActivity(intent);
         });
 
-        LinearLayout orderCaseLayout = getActivity().findViewById(R.id.order_case_layout);
+        LinearLayout orderCaseLayout = view.findViewById(R.id.order_case_layout);
         orderCaseLayout.setOnClickListener(v -> {
             Intent intent = new Intent(v.getContext(), OrderCaseActivity.class);
             intent.putExtra("from", "userId");
@@ -137,10 +139,10 @@ public class ProfileFragment extends Fragment {
         DialogInterface.OnClickListener clearListener = (dialog, which) -> {
             switch (which) {
                 case DialogInterface.BUTTON_POSITIVE:
-                    final MyDBHelper clearStorage = new MyDBHelper(getActivity(), "DuoDuoPin.db", null, 1);
+                    final MyDBHelper clearStorage = new MyDBHelper(view.getContext(), "DuoDuoPin.db", null, 1);
                     SQLiteDatabase db = clearStorage.getWritableDatabase();
                     clearStorage.dropTables(db);
-                    Toast.makeText(getActivity(), "清除成功！", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(view.getContext(), "清除成功！", Toast.LENGTH_SHORT).show();
                     clearStorage.onCreate(db);
                     break;
                 case DialogInterface.BUTTON_NEGATIVE:
@@ -149,16 +151,16 @@ public class ProfileFragment extends Fragment {
             }
         };
 
-        final AlertDialog.Builder clearBuilder = new AlertDialog.Builder(getActivity());
+        final AlertDialog.Builder clearBuilder = new AlertDialog.Builder(view.getContext());
         clearBuilder.setTitle("确定清除吗？");
         clearBuilder.setMessage("你会失去保存在本地的消息记录！")
                 .setPositiveButton("确定", clearListener)
                 .setNegativeButton("取消", clearListener);
 
-        LinearLayout clearStorage = getActivity().findViewById(R.id.clear_storage_layout);
+        LinearLayout clearStorage = view.findViewById(R.id.clear_storage_layout);
         clearStorage.setOnClickListener(v -> clearBuilder.show());
 
-        Button logout = Objects.requireNonNull(getActivity()).findViewById(R.id.logout);
+        Button logout = Objects.requireNonNull(view).findViewById(R.id.logout);
         logout.setOnClickListener(v -> {
             new Thread(() -> {
                 try {
@@ -180,12 +182,15 @@ public class ProfileFragment extends Fragment {
         });
     }
 
+
     private void cleanPrefs() {
         @SuppressLint("CommitPrefEdits")
         SharedPreferences.Editor editor = prefs.edit();
         editor.remove("id");
         editor.remove("token");
         editor.remove("lastOnlineTime");
+        editor.remove("lastLatitude");
+        editor.remove("lastLongitude");
         editor.apply();
 
         Log.e("logout", "cleanPrefs() executed!");

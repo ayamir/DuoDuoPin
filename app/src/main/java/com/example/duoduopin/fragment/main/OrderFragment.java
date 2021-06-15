@@ -191,41 +191,41 @@ public class OrderFragment extends Fragment {
 
     @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
 
-        LinearLayout llLocate = getActivity().findViewById(R.id.ll_locate);
+        LinearLayout llLocate = view.findViewById(R.id.ll_locate);
         llLocate.setOnClickListener(v -> {
-            Intent intent = new Intent(this.getActivity(), LocateActivity.class);
+            Intent intent = new Intent(view.getContext(), LocateActivity.class);
             intent.putExtra("address", "");
             intent.putExtra("isChosen", false);
             intent.putExtra("tude", "");
             startActivityForResult(intent, 0);
         });
 
-        ivUploadPic = getActivity().findViewById(R.id.iv_upload_pic);
+        ivUploadPic = view.findViewById(R.id.iv_upload_pic);
         ivUploadPic.setOnClickListener(v -> {
             selectImage(v.getContext());
         });
-        tvUploadPic = getActivity().findViewById(R.id.tv_upload_pic);
+        tvUploadPic = view.findViewById(R.id.tv_upload_pic);
         tvUploadPic.setOnClickListener(v -> {
             selectImage(v.getContext());
         });
-        etTitle = getActivity().findViewById(R.id.et_title);
-        etDescription = getActivity().findViewById(R.id.et_description);
-        tvAddress = getActivity().findViewById(R.id.tv_address);
-        tvTime = getActivity().findViewById(R.id.tv_time);
-        etCurPeople = getActivity().findViewById(R.id.et_cur_people);
-        etMaxPeople = getActivity().findViewById(R.id.et_max_people);
-        etPrice = getActivity().findViewById(R.id.et_price);
-        etTude = getActivity().findViewById(R.id.et_tude);
+        etTitle = view.findViewById(R.id.et_title);
+        etDescription = view.findViewById(R.id.et_description);
+        tvAddress = view.findViewById(R.id.tv_address);
+        tvTime = view.findViewById(R.id.tv_time);
+        etCurPeople = view.findViewById(R.id.et_cur_people);
+        etMaxPeople = view.findViewById(R.id.et_max_people);
+        etPrice = view.findViewById(R.id.et_price);
+        etTude = view.findViewById(R.id.et_tude);
 
-        tvTime = getActivity().findViewById(R.id.tv_time);
+        tvTime = view.findViewById(R.id.tv_time);
         tvTime.setOnClickListener(v -> pvTime.show(v));
         initTimePicker();
 
-        Spinner spinner = getActivity().findViewById(R.id.typeInput);
-        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(getActivity(), R.array.newOrderItemType, android.R.layout.simple_spinner_item);
+        Spinner spinner = view.findViewById(R.id.typeInput);
+        ArrayAdapter<CharSequence> adapter = ArrayAdapter.createFromResource(view.getContext(), R.array.newOrderItemType, android.R.layout.simple_spinner_item);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         spinner.setAdapter(adapter);
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -249,7 +249,7 @@ public class OrderFragment extends Fragment {
             }
         });
 
-        Button submitOrder = getActivity().findViewById(R.id.submitOrderButton);
+        Button submitOrder = view.findViewById(R.id.submitOrderButton);
         submitOrder.setOnClickListener(v -> {
             boolean canPost = true;
 
@@ -384,8 +384,8 @@ public class OrderFragment extends Fragment {
                                     }
                                 }
                             }).start();
-                            Toast.makeText(getActivity(), "创建成功", Toast.LENGTH_SHORT).show();
-                            Intent intent = new Intent(getActivity(), OneOrderCaseActivity.class);
+                            Toast.makeText(view.getContext(), "创建成功", Toast.LENGTH_SHORT).show();
+                            Intent intent = new Intent(view.getContext(), OneOrderCaseActivity.class);
                             intent.putExtra("orderId", orderId);
                             intent.putExtra("userId", idContent);
                             intent.putExtra("nickname", nicknameContent);
@@ -402,7 +402,7 @@ public class OrderFragment extends Fragment {
                             }
                             startActivity(intent);
                         } else {
-                            Toast.makeText(getActivity(), "创建失败，请稍后再试！", Toast.LENGTH_SHORT).show();
+                            Toast.makeText(view.getContext(), "创建失败，请稍后再试！", Toast.LENGTH_SHORT).show();
                         }
                     }
                 };
@@ -417,6 +417,13 @@ public class OrderFragment extends Fragment {
                 }).start();
             }
         });
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.N)
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+
     }
 
     private int postNotifyMessage() throws IOException {

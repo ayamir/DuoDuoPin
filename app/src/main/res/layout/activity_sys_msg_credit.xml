@@ -65,7 +65,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="20dp"
-                    android:text="群组名为"
+                    android:text="ID为"
                     android:textSize="18sp" />
 
                 <TextView
@@ -81,7 +81,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="20dp"
-                    android:text="的拼单已经结束"
+                    android:text="的拼单/拼车已经结束"
                     android:textSize="18sp" />
 
             </LinearLayout>

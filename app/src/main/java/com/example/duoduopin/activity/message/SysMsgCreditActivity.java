@@ -6,6 +6,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
@@ -16,6 +17,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.duoduopin.R;
@@ -67,6 +69,7 @@ public class SysMsgCreditActivity extends AppCompatActivity {
         tvCreditGroupName.setText(groupId);
 
         rvCredit = findViewById(R.id.rv_credit);
+        rvCredit.setLayoutManager(new LinearLayoutManager(this));
 
         Button btnSubmitCredit = findViewById(R.id.btn_submit_credit);
         if (isRead.equals("true")) {
@@ -96,10 +99,14 @@ public class SysMsgCreditActivity extends AppCompatActivity {
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT)
     private void getDataFromIntent() {
+        String TAG = "getDataFromIntent";
         Intent fromIntent = getIntent();
         if (fromIntent != null) {
             isRead = fromIntent.getStringExtra("isRead");
             groupId = fromIntent.getStringExtra("groupId");
+            Log.e(TAG, isRead);
+            Log.e(TAG, groupId);
+
 
             new Thread(new Runnable() {
                 @SuppressLint("HandlerLeak")
@@ -151,8 +158,10 @@ public class SysMsgCreditActivity extends AppCompatActivity {
                 for (int i = 0; i < contentArray.length(); i++) {
                     String userId = contentArray.getJSONObject(i).getString("userId");
                     String nickname = contentArray.getJSONObject(i).getString("nickname");
-                    nicknameList.add(nickname);
-                    userIdList.add(userId);
+                    if (!userId.equals(idContent)) {
+                        nicknameList.add(nickname);
+                        userIdList.add(userId);
+                    }
                 }
             } else {
                 ret = FAILED;

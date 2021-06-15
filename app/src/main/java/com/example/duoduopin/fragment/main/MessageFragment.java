@@ -73,8 +73,28 @@ public class MessageFragment extends Fragment {
     public static RecGrpMsgService recGrpMsgService;
     private final HashMap<String, ArrayList<GrpMsgContent>> allGrpsMsgListMap = new HashMap<>();
     private final HashMap<String, BriefGrpMsg> briefGrpMsgMap = new HashMap<>();
+    private final ServiceConnection connection = new ServiceConnection() {
+        @RequiresApi(api = Build.VERSION_CODES.O)
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder iBinder) {
+            // Bind service
+            RecGrpMsgService.RecGrpMsgBinder binder = (RecGrpMsgService.RecGrpMsgBinder) iBinder;
+            recGrpMsgService = binder.getService();
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            Log.e("MessageFragment", "onServiceDisconnected");
+        }
+    };
+    private final int unread = 0;
+    private ListView listView;
+    private SwipeRefreshLayout swipeRefreshLayout;
+    private ArrayList<String> grpIdList;
+    private MyDBHelper myDBHelper;
     @SuppressLint("HandlerLeak")
     final Handler handler = new Handler() {
+        @RequiresApi(api = Build.VERSION_CODES.M)
         @Override
         public void handleMessage(@NonNull Message msg) {
             if (msg.what == SUCCESS) {
@@ -95,40 +115,21 @@ public class MessageFragment extends Fragment {
             }
         }
     };
-    private ListView listView;
-    private SwipeRefreshLayout swipeRefreshLayout;
-    private ArrayList<String> grpIdList;
-    private MyDBHelper myDBHelper;
-    private final ServiceConnection connection = new ServiceConnection() {
-        @RequiresApi(api = Build.VERSION_CODES.O)
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder iBinder) {
-            // Bind service
-            RecGrpMsgService.RecGrpMsgBinder binder = (RecGrpMsgService.RecGrpMsgBinder) iBinder;
-            recGrpMsgService = binder.getService();
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            Log.e("MessageFragment", "onServiceDisconnected");
-        }
-    };
-    private final int unread = 0;
     private GrpMsgReceiverBrief grpMsgReceiverBrief;
     private GrpQuitReceiver grpQuitReceiver;
     private GrpIdLoadedReceiver grpIdLoadedReceiver;
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    private void bindItemsAndOps() {
-        listView = getActivity().findViewById(R.id.grp_msg_list);
+    private void bindItemsAndOps(View view) {
+        listView = view.findViewById(R.id.grp_msg_list);
 
-        ConstraintLayout sysMsgClick = getActivity().findViewById(R.id.sys_msg_click);
+        ConstraintLayout sysMsgClick = view.findViewById(R.id.sys_msg_click);
         sysMsgClick.setOnClickListener(v -> {
             Intent toIntent = new Intent(v.getContext(), SysMsgCaseActivity.class);
             startActivity(toIntent);
         });
 
-        swipeRefreshLayout = getActivity().findViewById(R.id.grp_msg_layout);
+        swipeRefreshLayout = view.findViewById(R.id.grp_msg_layout);
         swipeRefreshLayout.setOnRefreshListener(() -> {
             @SuppressLint("HandlerLeak") final Handler refreshHandler = new Handler() {
                 @Override
@@ -202,21 +203,26 @@ public class MessageFragment extends Fragment {
         }
     }
 
-    @RequiresApi(api = Build.VERSION_CODES.O)
     @Override
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
-        myDBHelper = new MyDBHelper(getActivity(), "DuoDuoPin.db", null, 1);
-        bindItemsAndOps();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.O)
+    @Override
+    public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        myDBHelper = new MyDBHelper(view.getContext(), "DuoDuoPin.db", null, 1);
+        bindItemsAndOps(view);
 
         doRegisterReceiver();
-        Intent bindIntent = new Intent(this.getActivity(), RecGrpMsgService.class);
+        Intent bindIntent = new Intent(view.getContext(), RecGrpMsgService.class);
         getActivity().bindService(bindIntent, connection, Context.BIND_AUTO_CREATE);
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
+    public void onDestroyView() {
+        super.onDestroyView();
         getActivity().unregisterReceiver(grpMsgReceiverBrief);
         getActivity().unregisterReceiver(grpQuitReceiver);
         getActivity().unregisterReceiver(grpIdLoadedReceiver);
@@ -224,6 +230,12 @@ public class MessageFragment extends Fragment {
         getActivity().unbindService(connection);
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
     private void showItems() {
         final String TAG = "showItems";
         final ArrayList<HashMap<String, String>> cases = new ArrayList<>();
@@ -238,13 +250,13 @@ public class MessageFragment extends Fragment {
             cases.add(map);
         }
 
-        SimpleAdapter adapter = new SimpleAdapter(getActivity(), cases, R.layout.tip_msg_grp,
+        SimpleAdapter adapter = new SimpleAdapter(getContext(), cases, R.layout.tip_msg_grp,
                 new String[]{"grpMsgTime", "msgOwnerNickname", "grpMsgContent", "grpTitle"},
                 new int[]{R.id.grp_msg_time, R.id.grp_msg_nickname, R.id.grp_msg_content, R.id.grp_title});
         listView.setAdapter(adapter);
 
         listView.setOnItemClickListener((parent, view, position, id) -> {
-            Intent toIntent = new Intent(getActivity(), OneGrpMsgCaseActivity.class);
+            Intent toIntent = new Intent(getContext(), OneGrpMsgCaseActivity.class);
             toIntent.putExtra("grpId", cases.get((int) id).get("grpId"));
             toIntent.putExtra("grpTitle", cases.get((int) id).get("grpTitle"));
             startActivityForResult(toIntent, 1);
@@ -252,11 +264,11 @@ public class MessageFragment extends Fragment {
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
-    private int checkOfflineMsg(boolean isOffLine) {
+    private int checkOfflineMsg() {
         int res = SUCCESS;
         for (final String grpId : grpIdList) {
             try {
-                int state = postQueryMsgs(grpId, isOffLine);
+                int state = postQueryMsgs(grpId, false);
                 if (state != SUCCESS) {
                     res = ERROR;
                 }
@@ -313,6 +325,7 @@ public class MessageFragment extends Fragment {
         return ret;
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -367,6 +380,7 @@ public class MessageFragment extends Fragment {
     }
 
     private class GrpMsgReceiverBrief extends BroadcastReceiver {
+        @RequiresApi(api = Build.VERSION_CODES.M)
         @Override
         public void onReceive(Context context, Intent intent) {
             GrpMsgContent newMsg = (GrpMsgContent) intent.getSerializableExtra("newMsg");
@@ -381,7 +395,7 @@ public class MessageFragment extends Fragment {
     }
 
     private class GrpQuitReceiver extends BroadcastReceiver {
-        @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+        @RequiresApi(api = Build.VERSION_CODES.M)
         @Override
         public void onReceive(Context context, Intent intent) {
             String quitGrpId = intent.getStringExtra("quitGrpId");
@@ -411,10 +425,9 @@ public class MessageFragment extends Fragment {
                     // Get full message records from server
                     new Thread(() -> {
                         Message message = new Message();
-                        message.what = checkOfflineMsg(false);
+                        message.what = checkOfflineMsg();
                         handler.sendMessage(message);
                     }).start();
-                    Log.e("MessageFragment", "onServiceConnected");
                 } else {
                     Log.e(TAG, "grpIdList == null");
                 }

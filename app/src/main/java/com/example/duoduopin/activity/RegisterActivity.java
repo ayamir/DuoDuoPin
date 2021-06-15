@@ -1,6 +1,5 @@
 package com.example.duoduopin.activity;
 
-import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.StrictMode;
@@ -89,8 +88,7 @@ public class RegisterActivity extends AppCompatActivity {
                         StrictMode.setThreadPolicy(policy);
                         int state = putRequest(jwt.toString());
                         if (state == 1) {
-                            Intent intent = new Intent(v.getContext(), LoginActivity.class);
-                            startActivity(intent);
+                            finish();
                             Toast.makeText(v.getContext(), "注册成功！", Toast.LENGTH_SHORT).show();
                         } else if (state == 2) {
                             Toast.makeText(v.getContext(), "此用户已存在！", Toast.LENGTH_SHORT).show();

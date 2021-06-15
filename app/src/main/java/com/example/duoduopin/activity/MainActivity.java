@@ -75,7 +75,6 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
             .writeTimeout(60, TimeUnit.SECONDS)
             .connectTimeout(60, TimeUnit.SECONDS)
             .build();
-    public static String latitude, longitude;
     public static SharedPreferences prefs;
     public static boolean isMessageClicked = false;
     public static boolean isLoaded = false;
@@ -84,6 +83,8 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     public static String usernameContent;
     public static String nicknameContent;
     public static String creditContent;
+    public static String lastLatitudeContent;
+    public static String lastLongitudeContent;
     public static String headUrl;
     public static String headPath = "";
     public static Bitmap head;
@@ -154,6 +155,8 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
         String username = prefs.getString("username", "");
         String nickname = prefs.getString("nickname", "");
         String credit = prefs.getString("credit", "");
+        String lastLatitude = prefs.getString("lastLatitude", "");
+        String lastLongitude = prefs.getString("lastLongitude", "");
         headPath = prefs.getString("headPath", "");
         Long lastOnlineTime = prefs.getLong("lastOnlineTime", 0);
         Long nowTime = System.currentTimeMillis() / 1000L;
@@ -172,14 +175,23 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
             usernameContent = username;
             nicknameContent = nickname;
             creditContent = credit;
+            lastLatitudeContent = lastLatitude;
+            lastLongitudeContent = lastLongitude;
             if (!headPath.isEmpty()) {
                 head = BitmapFactory.decodeFile(headPath);
             }
-
-            if (checkPermission()) {
-                getLocatePermission();
+            if (lastLatitudeContent.isEmpty() || lastLongitudeContent.isEmpty()) {
+                if (checkPermission()) {
+                    getLocatePermission();
+                } else {
+                    startLocationRequest();
+                }
             } else {
-                startLocationRequest();
+                new Thread(() -> {
+                    Message message = new Message();
+                    message.what = SUCCESS;
+                    locateSuccessHandler.sendMessage(message);
+                }).start();
             }
 
             Intent bindIntent = new Intent(this, RecSysMsgService.class);
@@ -256,9 +268,13 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
             if (aMapLocation != null) {
                 Log.e(TAG, "aMapLocation has response");
                 if (aMapLocation.getErrorCode() == 0) {
-                    latitude = String.valueOf(aMapLocation.getLatitude());
-                    longitude = String.valueOf(aMapLocation.getLongitude());
-                    Log.e(TAG, "latitude = " + latitude + ", longitude = " + longitude);
+                    lastLatitudeContent = String.valueOf(aMapLocation.getLatitude());
+                    lastLongitudeContent = String.valueOf(aMapLocation.getLongitude());
+                    Log.e(TAG, "latitude = " + lastLatitudeContent + ", longitude = " + lastLongitudeContent);
+                    SharedPreferences.Editor editor = prefs.edit();
+                    editor.putString("lastLatitude", lastLatitudeContent);
+                    editor.putString("lastLongitude", lastLongitudeContent);
+                    editor.apply();
                     new Thread(() -> {
                         Message message = new Message();
                         message.what = SUCCESS;
@@ -279,10 +295,10 @@ public class MainActivity extends FragmentActivity implements View.OnClickListen
     private void postQueryRecOrderList() throws IOException, JSONException {
         final String TAG = "getRecOrderList";
 
-        if (latitude != null && longitude != null) {
+        if (lastLongitudeContent != null) {
             JSONObject bodyJSON = new JSONObject();
-            bodyJSON.put("latitude", latitude);
-            bodyJSON.put("longitude", longitude);
+            bodyJSON.put("latitude", lastLatitudeContent);
+            bodyJSON.put("longitude", lastLongitudeContent);
 
             RequestBody body = RequestBody.create(bodyJSON.toString(), JSON);
 

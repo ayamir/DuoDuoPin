@@ -97,6 +97,7 @@ public class EditHeadActivity extends AppCompatActivity {
                             Log.e(TAG, "imageUrl: " + imageUrl);
                             int res;
                             File file = new File(headPath);
+                            Log.e(TAG, headPath);
                             if (!imageUrl.isEmpty()) {
                                 if (file.exists()) {
                                     Log.e(TAG, "update");

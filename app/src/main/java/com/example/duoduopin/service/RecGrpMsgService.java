@@ -78,6 +78,16 @@ public class RecGrpMsgService extends Service {
         loadGrpTips();
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        for (String grpId : grpIdList) {
+            if (grpId != null) {
+                webSocketMap.get(grpId).close(1000, "bye");
+            }
+        }
+    }
+
     public ArrayList<String> getGrpIdList() {
         return grpIdList;
     }

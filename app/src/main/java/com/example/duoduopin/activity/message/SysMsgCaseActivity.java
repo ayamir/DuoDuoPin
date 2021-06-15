@@ -148,7 +148,7 @@ public class SysMsgCaseActivity extends AppCompatActivity {
             String isRead = dCases.get((int) id).get("isRead");
             if (type != null) {
                 Intent toIntent;
-                if (type.equals("COMPL")) {
+                if (!type.equals("COMPL")) {
                     toIntent = new Intent(view.getContext(), OneSysMsgCaseActivity.class);
                     toIntent.putExtra("messageId", messageId);
                     toIntent.putExtra("senderId", senderId);

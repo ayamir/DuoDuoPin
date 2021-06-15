@@ -2,7 +2,6 @@ package com.example.duoduopin.activity.order;
 
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -51,7 +50,6 @@ public class LocateActivity extends AppCompatActivity {
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         setResult(RESULT_OK, setReturnIntent());
-        Log.e("KeyDown", "keydown pressed");
         return super.onKeyDown(keyCode, event);
     }
 
@@ -65,7 +63,6 @@ public class LocateActivity extends AppCompatActivity {
         ImageView ivLocateBack = findViewById(R.id.iv_locate_back);
         ivLocateBack.setOnClickListener(v -> {
             setResult(RESULT_OK, setReturnIntent());
-            Log.e("back", "keydown pressed");
             finish();
         });
 

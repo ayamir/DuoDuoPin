@@ -1,5 +1,6 @@
 package com.example.duoduopin.adapter;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,7 +20,7 @@ import java.util.HashMap;
 public class CreditAdapter extends RecyclerView.Adapter<CreditAdapter.CreditItemViewHolder> {
     private final ArrayList<String> creditNicknameList;
     private final ArrayList<String> creditUserIdList;
-    private HashMap<String, Integer> creditMap;
+    private final HashMap<String, Integer> creditMap = new HashMap<>();
 
     public CreditAdapter(ArrayList<String> creditNicknameList, ArrayList<String> creditUserIdList) {
         this.creditNicknameList = creditNicknameList;
@@ -40,6 +41,8 @@ public class CreditAdapter extends RecyclerView.Adapter<CreditAdapter.CreditItem
 
     @Override
     public void onBindViewHolder(@NonNull @NotNull CreditItemViewHolder holder, int position) {
+        String TAG = "CreditAdapter";
+        Log.e(TAG, "nicknameList size: " + creditNicknameList.size() + ", userIdList size: " + creditUserIdList.size());
         String nickname = creditNicknameList.get(position);
         holder.tvCreditNickname.setText(nickname);
 
