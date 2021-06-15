@@ -233,7 +233,7 @@ public class SysMsgCaseActivity extends AppCompatActivity {
                     }
                     showItems(sysMsgCasesFromServer, sysMsgDetailedCasesFromServer);
                 } else {
-                    Toast.makeText(mContext, "遇到未知错误，请稍后再试！", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(mContext, "遇到未知错误，请尝试重新登陆！", Toast.LENGTH_SHORT).show();
                 }
             }
         };

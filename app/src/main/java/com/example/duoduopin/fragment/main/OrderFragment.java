@@ -33,6 +33,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.bigkoo.pickerview.builder.TimePickerBuilder;
 import com.bigkoo.pickerview.view.TimePickerView;
@@ -194,6 +195,8 @@ public class OrderFragment extends Fragment {
     public void onViewCreated(View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
+        SwipeRefreshLayout srlOrderFragment = view.findViewById(R.id.srl_order_fragment);
+
         LinearLayout llLocate = view.findViewById(R.id.ll_locate);
         llLocate.setOnClickListener(v -> {
             Intent intent = new Intent(view.getContext(), LocateActivity.class);
@@ -294,45 +297,6 @@ public class OrderFragment extends Fragment {
             }
             if (canPost) {
                 boolean isBill = typeString.equals("BILL");
-                if (isBill) {
-                    new Thread(new Runnable() {
-                        @SuppressLint("HandlerLeak")
-                        final Handler uploadOrderImageHandler = new Handler() {
-                            @Override
-                            public void handleMessage(@NonNull Message msg) {
-                                if (msg.what == SUCCESS) {
-                                    imageUrl = (String) msg.obj;
-                                    Log.e("uploadToBed", imageUrl);
-                                    Toast.makeText(v.getContext(), "图片上传成功！", Toast.LENGTH_SHORT).show();
-                                } else {
-                                    imageUrl = (String) msg.obj;
-                                    Log.e("headUpload", "failed: imageUrl = " + imageUrl);
-                                }
-
-                            }
-                        };
-
-                        @Override
-                        public void run() {
-                            try {
-                                Message message = new Message();
-                                String url = uploadToBed(imageType, imagePath);
-                                Log.e("uploadToBed", "picLink = " + url);
-                                if (url.isEmpty()) {
-                                    message.what = ERROR;
-                                } else {
-                                    message.what = SUCCESS;
-                                    message.obj = url;
-                                }
-                                uploadOrderImageHandler.sendMessage(message);
-                            } catch (IOException | JSONException e) {
-                                e.printStackTrace();
-                            }
-                        }
-                    }).start();
-                } else {
-                    imageUrl = "";
-                }
                 final JSONObject jsonObject = new JSONObject();
                 try {
                     jsonObject.put("title", titleString);
@@ -348,14 +312,18 @@ public class OrderFragment extends Fragment {
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
-                Log.d("JSONBuild", jsonObject.toString());
-                @SuppressLint("HandlerLeak") final Handler newOrderHandler = new Handler() {
-                    @Override
-                    public void handleMessage(@NonNull Message msg) {
-                        if (msg.what == SUCCESS) {
-                            new Thread(new Runnable() {
-                                @SuppressLint("HandlerLeak")
-                                final Handler uploadImageToServerHandler = new Handler() {
+                Log.e("JSONBuild", jsonObject.toString());
+
+
+                Toast.makeText(v.getContext(), "创建过程可能很长，请耐心等待~", Toast.LENGTH_SHORT).show();
+                srlOrderFragment.setRefreshing(true);
+                if (isBill) {
+                    @SuppressLint("HandlerLeak") final Handler newOrderHandler = new Handler() {
+                        @Override
+                        public void handleMessage(@NonNull Message msg) {
+                            if (msg.arg1 == SUCCESS && msg.arg2 == SUCCESS) {
+                                imageUrl = (String) msg.obj;
+                                @SuppressLint("HandlerLeak") final Handler uploadToServerHandler = new Handler() {
                                     @Override
                                     public void handleMessage(@NonNull Message msg) {
                                         if (msg.what == SUCCESS) {
@@ -369,60 +337,112 @@ public class OrderFragment extends Fragment {
                                     }
                                 };
 
-                                @Override
-                                public void run() {
+                                new Thread(() -> {
                                     try {
                                         Message message = new Message();
                                         if (imageUrl != null) {
                                             message.what = postUploadImage(imageUrl);
                                         }
                                         message.arg1 = postNotifyMessage();
-                                        uploadImageToServerHandler.sendMessage(message);
+                                        uploadToServerHandler.sendMessage(message);
                                     } catch (IOException e) {
                                         e.printStackTrace();
                                     }
-                                }
-                            }).start();
-                            Toast.makeText(view.getContext(), "创建成功", Toast.LENGTH_SHORT).show();
-                            Intent intent = new Intent(view.getContext(), OneOrderCaseActivity.class);
-                            intent.putExtra("orderId", orderId);
-                            intent.putExtra("userId", idContent);
-                            intent.putExtra("nickname", nicknameContent);
-                            intent.putExtra("type", typeString);
-                            intent.putExtra("price", priceString);
-                            intent.putExtra("address", addrString);
-                            intent.putExtra("curPeople", curPeopleString);
-                            intent.putExtra("maxPeople", maxPeopleString);
-                            intent.putExtra("time", timeString);
-                            intent.putExtra("description", descString);
-                            intent.putExtra("title", titleString);
-                            if (isBill) {
+                                }).start();
+                                srlOrderFragment.setRefreshing(false);
+                                Toast.makeText(view.getContext(), "创建成功", Toast.LENGTH_SHORT).show();
+                                Intent intent = new Intent(view.getContext(), OneOrderCaseActivity.class);
+                                intent.putExtra("orderId", orderId);
+                                intent.putExtra("userId", idContent);
+                                intent.putExtra("nickname", nicknameContent);
+                                intent.putExtra("type", typeString);
+                                intent.putExtra("price", priceString);
+                                intent.putExtra("address", addrString);
+                                intent.putExtra("curPeople", curPeopleString);
+                                intent.putExtra("maxPeople", maxPeopleString);
+                                intent.putExtra("time", timeString);
+                                intent.putExtra("description", descString);
+                                intent.putExtra("title", titleString);
                                 intent.putExtra("imageUrl", imageUrl);
+                                startActivity(intent);
+                            } else if (msg.arg1 == SUCCESS) {
+                                Toast.makeText(view.getContext(), "拼单创建至服务器失败，请检查网络情况！", Toast.LENGTH_SHORT).show();
+                                srlOrderFragment.setRefreshing(false);
+                            } else if (msg.arg2 == SUCCESS) {
+                                Toast.makeText(view.getContext(), "拼单图片上传失败，请检查网络状况稍后再试！", Toast.LENGTH_SHORT).show();
+                                srlOrderFragment.setRefreshing(false);
+                            } else {
+                                Toast.makeText(view.getContext(), "创建失败，请稍后再试！", Toast.LENGTH_SHORT).show();
+                                srlOrderFragment.setRefreshing(false);
                             }
-                            startActivity(intent);
-                        } else {
-                            Toast.makeText(view.getContext(), "创建失败，请稍后再试！", Toast.LENGTH_SHORT).show();
                         }
-                    }
-                };
-                new Thread(() -> {
-                    try {
-                        Message message = new Message();
-                        message.what = putRequest(jsonObject.toString());
-                        newOrderHandler.sendMessage(message);
-                    } catch (IOException | JSONException e) {
-                        e.printStackTrace();
-                    }
-                }).start();
+                    };
+                    new Thread(() -> {
+                        try {
+                            Message message = new Message();
+
+                            String url = uploadToBed(imageType, imagePath);
+                            message.arg2 = putRequest(jsonObject.toString());
+
+                            Log.e("uploadToBed", "picLink = " + url);
+                            if (url.isEmpty()) {
+                                message.arg1 = ERROR;
+                            } else {
+                                message.arg1 = SUCCESS;
+                                message.obj = url;
+                            }
+
+                            newOrderHandler.sendMessage(message);
+
+                        } catch (IOException | JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }).start();
+                } else {
+                    @SuppressLint("HandlerLeak") final Handler carHandler = new Handler() {
+                        @Override
+                        public void handleMessage(@NonNull Message msg) {
+                            if (msg.what == SUCCESS) {
+                                srlOrderFragment.setRefreshing(false);
+                                Toast.makeText(view.getContext(), "创建成功", Toast.LENGTH_SHORT).show();
+                                Intent intent = new Intent(view.getContext(), OneOrderCaseActivity.class);
+                                intent.putExtra("orderId", orderId);
+                                intent.putExtra("userId", idContent);
+                                intent.putExtra("nickname", nicknameContent);
+                                intent.putExtra("type", typeString);
+                                intent.putExtra("price", priceString);
+                                intent.putExtra("address", addrString);
+                                intent.putExtra("curPeople", curPeopleString);
+                                intent.putExtra("maxPeople", maxPeopleString);
+                                intent.putExtra("time", timeString);
+                                intent.putExtra("description", descString);
+                                intent.putExtra("title", titleString);
+                                startActivity(intent);
+                            }
+                            if (msg.arg1 != SUCCESS) {
+                                Log.e("notifyMessage", "failed");
+                            }
+                        }
+                    };
+
+                    new Thread(() -> {
+                        try {
+                            Message message = new Message();
+                            int putSignal = putRequest(jsonObject.toString());
+                            message.what = putSignal;
+                            if (putSignal == SUCCESS) {
+                                message.arg1 = postNotifyMessage();
+                            }
+                            carHandler.sendMessage(message);
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                    }).start();
+                }
             }
         });
-    }
-
-    @RequiresApi(api = Build.VERSION_CODES.N)
-    @Override
-    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
-        super.onActivityCreated(savedInstanceState);
-
     }
 
     private int postNotifyMessage() throws IOException {
