@@ -19,11 +19,12 @@
         android:id="@+id/sys_msg_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginLeft="15dp"
         android:layout_marginTop="8dp"
         android:text="系统消息"
         android:textSize="16sp"
         android:textStyle="bold"
-        app:layout_constraintHorizontal_bias="0.053"
+        app:layout_constraintHorizontal_bias="0"
         app:layout_constraintLeft_toRightOf="@id/msg_pic"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toTopOf="@id/msg_pic" />
@@ -32,6 +33,7 @@
         android:id="@+id/sys_msg_content"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginLeft="15dp"
         android:layout_marginBottom="8dp"
         android:ellipsize="end"
         android:maxEms="13"
@@ -39,7 +41,7 @@
         android:text="最新一个的内容内容内容內容內容內容內容內容"
         android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="@id/msg_pic"
-        app:layout_constraintHorizontal_bias="0.13"
+        app:layout_constraintHorizontal_bias="0"
         app:layout_constraintLeft_toRightOf="@id/msg_pic"
         app:layout_constraintRight_toRightOf="parent" />
 
