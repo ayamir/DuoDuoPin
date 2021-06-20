@@ -1,3 +1,4 @@
 .idea/
 .gradle/
 build/intermediates
+app/release/
