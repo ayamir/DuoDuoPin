@@ -16,6 +16,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.example.duoduopin.R;
 import com.example.duoduopin.tool.GlideEngine;
@@ -60,6 +61,9 @@ public class EditHeadActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_head);
 
+        SwipeRefreshLayout srlEditHead = findViewById(R.id.srl_edit_head);
+        srlEditHead.setOnRefreshListener(() -> srlEditHead.setRefreshing(false));
+
         ImageView ivBackEditHead = findViewById(R.id.iv_back_edit_head);
         ivBackEditHead.setOnClickListener(v -> finish());
 
@@ -72,51 +76,52 @@ public class EditHeadActivity extends AppCompatActivity {
 
         Button btnCommitHead = findViewById(R.id.btn_commit_head);
         btnCommitHead.setOnClickListener(v -> {
-            new Thread(new Runnable() {
-                @SuppressLint("HandlerLeak")
-                final Handler commitHeadHandler = new Handler() {
-                    @Override
-                    public void handleMessage(@NonNull Message msg) {
-                        if (msg.what == SUCCESS) {
-                            Toast.makeText(v.getContext(), "头像上传成功！", Toast.LENGTH_SHORT).show();
-                        } else {
-                            String imageUrl = (String) msg.obj;
-                            Log.e("headUpload", "failed: imageUrl = " + imageUrl);
-                        }
+            srlEditHead.setRefreshing(true);
+            Toast.makeText(v.getContext(), "开始上传头像，请耐心等候~", Toast.LENGTH_LONG).show();
 
-                    }
-                };
-
+            @SuppressLint("HandlerLeak")
+            final Handler commitHeadHandler = new Handler() {
                 @Override
-                public void run() {
-                    try {
-                        if (!imagePath.isEmpty()) {
-                            String TAG = "uploadToServer";
-                            Message message = new Message();
-                            String imageUrl = uploadToBed(imageType, imagePath);
-                            Log.e(TAG, "imageUrl: " + imageUrl);
-                            int res;
-                            File file = new File(headPath);
-                            Log.e(TAG, headPath);
-                            if (!imageUrl.isEmpty()) {
-                                if (file.exists()) {
-                                    Log.e(TAG, "update");
-                                    res = uploadHead(true, imageUrl);
-                                } else {
-                                    Log.e(TAG, "upload");
-                                    res = uploadHead(false, imageUrl);
-                                }
-                            } else {
-                                res = ERROR;
-                                Log.e(TAG, "imageUrl: " + imageUrl);
-                            }
-                            message.what = res;
-                            message.obj = imageUrl;
-                            commitHeadHandler.sendMessage(message);
-                        }
-                    } catch (IOException | JSONException e) {
-                        e.printStackTrace();
+                public void handleMessage(@NonNull Message msg) {
+                    if (msg.what == SUCCESS) {
+                        srlEditHead.setRefreshing(false);
+                        Toast.makeText(v.getContext(), "头像上传成功，请重新登录查看新头像~", Toast.LENGTH_SHORT).show();
+                    } else {
+                        String imageUrl = (String) msg.obj;
+                        Log.e("headUpload", "failed: imageUrl = " + imageUrl);
                     }
+
+                }
+            };
+
+            new Thread(() -> {
+                try {
+                    if (!imagePath.isEmpty()) {
+                        String TAG = "uploadToServer";
+                        Message message = new Message();
+                        String imageUrl = uploadToBed(imageType, imagePath);
+                        Log.e(TAG, "imageUrl: " + imageUrl);
+                        int res;
+                        File file = new File(headPath);
+                        Log.e(TAG, headPath);
+                        if (!imageUrl.isEmpty()) {
+                            if (file.exists()) {
+                                Log.e(TAG, "update");
+                                res = uploadHead(true, imageUrl);
+                            } else {
+                                Log.e(TAG, "upload");
+                                res = uploadHead(false, imageUrl);
+                            }
+                        } else {
+                            res = ERROR;
+                            Log.e(TAG, "imageUrl: " + imageUrl);
+                        }
+                        message.what = res;
+                        message.obj = imageUrl;
+                        commitHeadHandler.sendMessage(message);
+                    }
+                } catch (IOException | JSONException e) {
+                    e.printStackTrace();
                 }
             }).start();
         });

@@ -42,46 +42,51 @@
             app:layout_constraintVertical_bias="0.5" />
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <RelativeLayout
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/srl_edit_head"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_weight="0">
+        android:layout_height="match_parent">
 
-        <ImageView
-            android:id="@+id/iv_head"
-            android:layout_width="150dp"
-            android:layout_height="150dp"
-            android:layout_centerHorizontal="true"
-            android:layout_centerVertical="false"
-            android:layout_marginTop="100dp" />
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="0">
 
-        <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@id/iv_head"
-            android:layout_centerHorizontal="true"
-            android:layout_marginTop="50dp"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/btn_modify_head"
+            <ImageView
+                android:id="@+id/iv_head"
                 android:layout_width="150dp"
+                android:layout_height="150dp"
+                android:layout_centerHorizontal="true"
+                android:layout_centerVertical="false"
+                android:layout_marginTop="100dp" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/button_circle_shape"
-                android:text="更换头像"
-                android:textSize="18sp" />
+                android:layout_below="@id/iv_head"
+                android:layout_centerHorizontal="true"
+                android:layout_marginTop="50dp"
+                android:orientation="horizontal">
 
-            <Button
-                android:id="@+id/btn_commit_head"
-                android:layout_width="150dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="50dp"
-                android:layout_marginLeft="50dp"
-                android:background="@drawable/button_circle_shape"
-                android:text="确定更换"
-                android:textSize="18sp" />
-        </LinearLayout>
+                <Button
+                    android:id="@+id/btn_modify_head"
+                    android:layout_width="150dp"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/button_circle_shape"
+                    android:text="更换头像"
+                    android:textSize="18sp" />
 
-    </RelativeLayout>
+                <Button
+                    android:id="@+id/btn_commit_head"
+                    android:layout_width="150dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="50dp"
+                    android:layout_marginLeft="50dp"
+                    android:background="@drawable/button_circle_shape"
+                    android:text="确定更换"
+                    android:textSize="18sp" />
+            </LinearLayout>
 
+        </RelativeLayout>
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 </LinearLayout>

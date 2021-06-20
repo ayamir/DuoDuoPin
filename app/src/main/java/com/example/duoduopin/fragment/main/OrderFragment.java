@@ -196,6 +196,7 @@ public class OrderFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
 
         SwipeRefreshLayout srlOrderFragment = view.findViewById(R.id.srl_order_fragment);
+        srlOrderFragment.setOnRefreshListener(() -> srlOrderFragment.setRefreshing(false));
 
         LinearLayout llLocate = view.findViewById(R.id.ll_locate);
         llLocate.setOnClickListener(v -> {
@@ -315,7 +316,7 @@ public class OrderFragment extends Fragment {
                 Log.e("JSONBuild", jsonObject.toString());
 
 
-                Toast.makeText(v.getContext(), "创建过程可能很长，请耐心等待~", Toast.LENGTH_SHORT).show();
+                Toast.makeText(v.getContext(), "创建过程可能很长，请耐心等待~", Toast.LENGTH_LONG).show();
                 srlOrderFragment.setRefreshing(true);
                 if (isBill) {
                     @SuppressLint("HandlerLeak") final Handler newOrderHandler = new Handler() {
